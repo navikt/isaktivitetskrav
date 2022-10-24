@@ -1,0 +1,54 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: isaktivitetskrav
+  namespace: teamsykefravr
+  labels:
+    team: teamsykefravr
+spec:
+  image: {{ image }}
+  port: 8080
+  replicas:
+    min: 2
+    max: 4
+    cpuThresholdPercentage: 70
+  startup:
+    path: /internal/is_ready
+    periodSeconds: 5
+    timeout: 5
+    failureThreshold: 30
+  liveness:
+    path: /internal/is_alive
+    periodSeconds: 5
+    timeout: 5
+    failureThreshold: 3
+  readiness:
+    path: /internal/is_ready
+    periodSeconds: 5
+    timeout: 5
+    failureThreshold: 3
+  leaderElection: true
+  prometheus:
+    enabled: true
+    path: /internal/metrics
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 384Mi
+  ingresses:
+    - "https://isaktivitetskrav.dev.intern.nav.no"
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_14
+        databases:
+          - name: isaktivitetskrav-db
+        diskAutoresize: true
+  azure:
+    application:
+      enabled: true
+  env:
+    - name: KTOR_ENV
+      value: "production"

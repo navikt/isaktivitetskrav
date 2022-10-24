@@ -1,0 +1,22 @@
+name: Security
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/gradle@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          ORG_GRADLE_PROJECT_githubUser: x-access-token
+          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          command: monitor
+          args: --org=teamsykefravr --project-name=${{ github.repository }}
