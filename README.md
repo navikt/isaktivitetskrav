@@ -7,6 +7,7 @@ Applikasjon for vurdering av aktivitetskravet i sykefraværsoppfølgingen
 
 * Docker
 * Gradle
+* Kafka
 * Kotlin
 * Ktor
 * Postgres
