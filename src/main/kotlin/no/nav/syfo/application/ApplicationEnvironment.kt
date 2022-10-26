@@ -2,6 +2,7 @@ package no.nav.syfo.application
 
 import io.ktor.server.application.*
 import no.nav.syfo.application.database.DatabaseEnvironment
+import no.nav.syfo.application.kafka.KafkaEnvironment
 
 const val NAIS_DATABASE_ENV_PREFIX = "NAIS_DATABASE_ISAKTIVITETSKRAV_ISAKTIVITETSKRAV_DB"
 
@@ -13,6 +14,14 @@ data class Environment(
         username = getEnvVar("${NAIS_DATABASE_ENV_PREFIX}_USERNAME"),
         password = getEnvVar("${NAIS_DATABASE_ENV_PREFIX}_PASSWORD"),
     ),
+    val kafka: KafkaEnvironment = KafkaEnvironment(
+        aivenBootstrapServers = getEnvVar("KAFKA_BROKERS"),
+        aivenCredstorePassword = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
+        aivenKeystoreLocation = getEnvVar("KAFKA_KEYSTORE_PATH"),
+        aivenSecurityProtocol = "SSL",
+        aivenTruststoreLocation = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
+    ),
+    val kafkaOppfolgingstilfellePersonProcessingEnabled: Boolean = getEnvVar("TOGGLE_KAFKA_OPPFOLGINGSTILFELLE_PERSON_PROCESSING_ENABLED").toBoolean(),
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =

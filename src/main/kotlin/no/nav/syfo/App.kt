@@ -10,6 +10,7 @@ import no.nav.syfo.application.Environment
 import no.nav.syfo.application.api.apiModule
 import no.nav.syfo.application.database.applicationDatabase
 import no.nav.syfo.application.database.databaseModule
+import no.nav.syfo.application.kafka.launchKafkaModule
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
@@ -39,7 +40,11 @@ fun main() {
 
     applicationEngineEnvironment.monitor.subscribe(ApplicationStarted) {
         applicationState.ready = true
-        logger.info("Application is ready")
+        logger.info("Application is ready, running Java VM ${Runtime.version()}")
+        launchKafkaModule(
+            applicationState = applicationState,
+            environment = environment,
+        )
     }
 
     val server = embeddedServer(

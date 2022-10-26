@@ -7,6 +7,8 @@ version = "0.0.1"
 object Versions {
     const val flyway = "9.5.0"
     const val hikari = "5.0.1"
+    const val jackson = "2.13.4"
+    const val kafka = "3.3.1"
     const val kluent = "1.68"
     const val ktor = "2.1.2"
     const val logback = "1.4.4"
@@ -53,6 +55,16 @@ dependencies {
     implementation("org.flywaydb:flyway-core:${Versions.flyway}")
     testImplementation("com.opentable.components:otj-pg-embedded:${Versions.postgresEmbedded}")
 
+    // (De-)serialization
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jackson}")
+
+    // Kafka
+    val excludeLog4j = fun ExternalModuleDependency.() {
+        exclude(group = "log4j")
+    }
+    implementation("org.apache.kafka:kafka_2.13:${Versions.kafka}", excludeLog4j)
+
+    // Tests
     testImplementation("io.ktor:ktor-server-tests:${Versions.ktor}")
     testImplementation("io.mockk:mockk:${Versions.mockk}")
     testImplementation("org.amshove.kluent:kluent:${Versions.kluent}")

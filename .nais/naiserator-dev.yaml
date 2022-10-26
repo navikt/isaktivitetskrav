@@ -49,6 +49,10 @@ spec:
   azure:
     application:
       enabled: true
+  kafka:
+    pool: nav-dev
   env:
     - name: KTOR_ENV
       value: "production"
+    - name: TOGGLE_KAFKA_OPPFOLGINGSTILFELLE_PERSON_PROCESSING_ENABLED
+      value: "false"
