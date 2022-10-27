@@ -54,6 +54,14 @@ dependencies {
     implementation("com.zaxxer:HikariCP:${Versions.hikari}")
     implementation("org.flywaydb:flyway-core:${Versions.flyway}")
     testImplementation("com.opentable.components:otj-pg-embedded:${Versions.postgresEmbedded}")
+    constraints {
+        implementation("org.apache.commons:commons-compress") {
+            because("com.opentable.components:otj-pg-embedded:${Versions.postgresEmbedded} -> https://www.cve.org/CVERecord?id=CVE-2021-36090")
+            version {
+                require("1.21")
+            }
+        }
+    }
 
     // (De-)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jackson}")
