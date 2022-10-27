@@ -17,6 +17,7 @@ object Versions {
     const val mockk = "1.13.2"
     const val postgres = "42.5.0"
     const val postgresEmbedded = "0.13.4"
+    const val scala = "2.13.9"
     const val spek = "2.0.19"
 }
 
@@ -71,6 +72,11 @@ dependencies {
         exclude(group = "log4j")
     }
     implementation("org.apache.kafka:kafka_2.13:${Versions.kafka}", excludeLog4j)
+    implementation("org.scala-lang:scala-library") {
+        version {
+            strictly(Versions.scala)
+        }
+    }
 
     // Tests
     testImplementation("io.ktor:ktor-server-tests:${Versions.ktor}")
