@@ -27,6 +27,16 @@ class TestDatabase : DatabaseInterface {
     }
 }
 
+fun DatabaseInterface.dropData() {
+    val queryList = emptyList<String>()
+    this.connection.use { connection ->
+        queryList.forEach { query ->
+            connection.prepareStatement(query).execute()
+        }
+        connection.commit()
+    }
+}
+
 class TestDatabaseNotResponding : DatabaseInterface {
 
     override val connection: Connection

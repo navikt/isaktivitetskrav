@@ -42,6 +42,7 @@ fun main() {
         applicationState.ready = true
         logger.info("Application is ready, running Java VM ${Runtime.version()}")
         launchKafkaModule(
+            database = applicationDatabase,
             applicationState = applicationState,
             environment = environment,
         )

@@ -2,6 +2,8 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import io.ktor.server.testing.*
 import io.mockk.*
+import no.nav.syfo.testhelper.ExternalMockEnvironment
+import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.*
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -13,7 +15,16 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
     with(TestApplicationEngine()) {
         start()
 
-        val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService()
+        val externalMockEnvironment = ExternalMockEnvironment.instance
+        val database = externalMockEnvironment.database
+
+        beforeEachTest {
+            database.dropData()
+        }
+
+        val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
+            database = database
+        )
 
         val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson()
         val kafkaOppfolgingstilfellePersonRecord =
