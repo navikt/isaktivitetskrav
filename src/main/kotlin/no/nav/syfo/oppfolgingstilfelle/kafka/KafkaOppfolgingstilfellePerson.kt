@@ -1,7 +1,7 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.oppfolgingstilfelle.Oppfolgingstilfelle
+import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
