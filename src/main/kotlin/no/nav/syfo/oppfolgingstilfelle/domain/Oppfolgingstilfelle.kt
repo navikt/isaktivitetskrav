@@ -1,6 +1,7 @@
-package no.nav.syfo.oppfolgingstilfelle
+package no.nav.syfo.oppfolgingstilfelle.domain
 
 import no.nav.syfo.aktivitetskrav.domain.AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import java.time.*
 import java.time.temporal.ChronoUnit
@@ -19,6 +20,13 @@ data class Oppfolgingstilfelle(
 
 fun Oppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt(): Boolean =
     durationInWeeks() >= AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS
+
+// TODO: Sjekke grad av aktivitet på oppfolgingstilfelle (krever utvidelse av isoppfolgingstilfelle)
+fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering =
+    AktivitetskravVurdering.ny(
+        personIdent = this.personIdent,
+        tilfelleStart = this.tilfelleStart,
+    )
 
 private fun Oppfolgingstilfelle.durationInWeeks(): Long =
     ChronoUnit.WEEKS.between(this.tilfelleStart, this.tilfelleEnd)

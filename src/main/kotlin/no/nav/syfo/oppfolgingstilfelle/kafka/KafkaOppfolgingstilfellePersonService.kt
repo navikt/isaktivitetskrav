@@ -1,15 +1,18 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
+import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.kafka.KafkaConsumerService
-import no.nav.syfo.oppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt
+import no.nav.syfo.oppfolgingstilfelle.domain.*
 import org.apache.kafka.clients.consumer.*
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.time.Duration
 
-class KafkaOppfolgingstilfellePersonService(val database: DatabaseInterface) :
-    KafkaConsumerService<KafkaOppfolgingstilfellePerson> {
+class KafkaOppfolgingstilfellePersonService(
+    private val database: DatabaseInterface,
+    private val aktivitetskravVurderingService: AktivitetskravVurderingService,
+) : KafkaConsumerService<KafkaOppfolgingstilfellePerson> {
 
     override val pollDurationInMillis: Long = 1000
 
@@ -61,12 +64,11 @@ class KafkaOppfolgingstilfellePersonService(val database: DatabaseInterface) :
         }
 
         if (latestOppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt()) {
-            /*
-            Sjekk grad av aktivitet:
-            - Hvis INGEN_AKTIVITET: Aktivitetskrav skal vurderes -> lagre ny vurdering og publisere på kafka (produsere til topic i en consumer?)
-            - Hvis GRADERT_AKTIVITET: Aktivitetskrav skal ikke vurderes -> skippe helt eller lagre ny vurdering som oppfylt (eller annen status) og droppe kafka-publisering?
-            - Hva med FULL_AKTIVITET eller UKJENT_AKTIVITET (mulige tags)
-             */
+            val aktivitetskravVurdering = latestOppfolgingstilfelle.toAktivitetskravVurdering()
+            aktivitetskravVurderingService.createAktivitetskravVurdering(
+                connection = connection,
+                aktivitetskravVurdering = aktivitetskravVurdering,
+            )
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_CREATED.increment()
         } else {
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NOT_AKTIVITETSKRAV_VURDERING.increment()

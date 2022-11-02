@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import org.flywaydb.core.Flyway
 import java.sql.Connection
+import java.sql.ResultSet
 
 data class DatabaseConfig(
     val jdbcUrl: String,
@@ -49,4 +50,10 @@ class Database(
 
 interface DatabaseInterface {
     val connection: Connection
+}
+
+fun <T> ResultSet.toList(mapper: ResultSet.() -> T) = mutableListOf<T>().apply {
+    while (next()) {
+        add(mapper())
+    }
 }
