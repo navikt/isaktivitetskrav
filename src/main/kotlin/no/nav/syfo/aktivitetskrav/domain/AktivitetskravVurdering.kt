@@ -14,6 +14,7 @@ enum class AktivitetskravVurderingStatus {
     AVVENT,
     UNNTAK,
     OPPFYLT,
+    AUTOMATISK_OPPFYLT,
     STANS
 }
 
@@ -38,14 +39,36 @@ data class AktivitetskravVurdering private constructor(
         )
 
         fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): AktivitetskravVurdering =
-            AktivitetskravVurdering(
-                uuid = UUID.randomUUID(),
+            create(
                 personIdent = personIdent,
-                createdAt = nowUTC(),
-                updatedAt = nowUTC(),
-                status = AktivitetskravVurderingStatus.NY,
                 tilfelleStart = tilfelleStart,
+                status = AktivitetskravVurderingStatus.NY,
                 beskrivelse = null,
             )
+
+        fun automatiskOppfyltGradert(
+            personIdent: PersonIdent,
+            tilfelleStart: LocalDate,
+        ): AktivitetskravVurdering = create(
+            personIdent = personIdent,
+            tilfelleStart = tilfelleStart,
+            status = AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT,
+            beskrivelse = "Gradert aktivitet",
+        )
+
+        private fun create(
+            personIdent: PersonIdent,
+            tilfelleStart: LocalDate,
+            status: AktivitetskravVurderingStatus,
+            beskrivelse: String?,
+        ) = AktivitetskravVurdering(
+            uuid = UUID.randomUUID(),
+            personIdent = personIdent,
+            createdAt = nowUTC(),
+            updatedAt = nowUTC(),
+            status = status,
+            tilfelleStart = tilfelleStart,
+            beskrivelse = beskrivelse,
+        )
     }
 }

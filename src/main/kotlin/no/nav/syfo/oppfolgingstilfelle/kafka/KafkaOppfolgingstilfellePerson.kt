@@ -17,6 +17,7 @@ data class KafkaOppfolgingstilfellePerson(
 )
 
 data class KafkaOppfolgingstilfelle(
+    val gradertAtTilfelleEnd: Boolean?,
     val arbeidstakerAtTilfelleEnd: Boolean,
     val start: LocalDate,
     val end: LocalDate,
@@ -39,4 +40,5 @@ fun KafkaOppfolgingstilfellePerson.toOppfolgingstilfelle(
     tilfelleEnd = latestOppfolgingsTilfelle.end,
     referanseTilfelleBitUuid = UUID.fromString(this.referanseTilfelleBitUuid),
     referanseTilfelleBitInntruffet = this.referanseTilfelleBitInntruffet,
+    gradertAtTilfelleEnd = latestOppfolgingsTilfelle.gradertAtTilfelleEnd,
 )
