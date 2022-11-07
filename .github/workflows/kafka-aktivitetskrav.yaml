@@ -1,0 +1,38 @@
+name: kafka
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/kafka-aktivitetskrav.yaml'
+      - '.nais/kafka/aktivitetskrav.yaml'
+      - '.nais/kafka/dev.json'
+      - '.nais/kafka/prod.json'
+
+jobs:
+  deploy-kafka-aktivitetskrav-dev:
+    name: Deploy Kafka topic Aktivitetskrav to NAIS dev-gcp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/kafka/aktivitetskrav.yaml
+          VARS: .nais/kafka/dev.json
+
+  deploy-kafka-aktivitetskrav-prod:
+    name: Deploy Kafka topic Aktivitetskrav to NAIS prod-gcp
+    needs: deploy-kafka-aktivitetskrav-dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: prod-gcp
+          RESOURCE: .nais/kafka/aktivitetskrav.yaml
+          VARS: .nais/kafka/prod.json
+

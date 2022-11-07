@@ -32,6 +32,16 @@ Run checking: `./gradlew --continue ktlintCheck`
 
 Run formatting: `./gradlew ktlintFormat`
 
+## Kafka
+
+This application produces the following topic(s):
+
+* teamsykefravr.aktivitetskrav-vurdering
+
+This application consumes the following topic(s):
+
+* teamsykefravr.isoppfolgingstilfelle-oppfolgingstilfelle-person
+
 ## Contact
 
 ### For NAV employees
