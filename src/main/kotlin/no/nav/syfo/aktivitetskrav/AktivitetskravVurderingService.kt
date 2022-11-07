@@ -2,12 +2,17 @@ package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.database.createAktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import java.sql.Connection
 
-class AktivitetskravVurderingService {
+class AktivitetskravVurderingService(
+    private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
+) {
 
     fun createAktivitetskravVurdering(connection: Connection, aktivitetskravVurdering: AktivitetskravVurdering) {
         connection.createAktivitetskravVurdering(aktivitetskravVurdering = aktivitetskravVurdering)
-        // TODO: Publisere på kafka
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
+            aktivitetskravVurdering = aktivitetskravVurdering
+        )
     }
 }
