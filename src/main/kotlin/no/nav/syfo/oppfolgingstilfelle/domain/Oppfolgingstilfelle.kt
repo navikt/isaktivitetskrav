@@ -16,17 +16,25 @@ data class Oppfolgingstilfelle(
     val tilfelleEnd: LocalDate,
     val referanseTilfelleBitUuid: UUID,
     val referanseTilfelleBitInntruffet: OffsetDateTime,
+    val gradertAtTilfelleEnd: Boolean?,
 )
 
 fun Oppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt(): Boolean =
     durationInWeeks() >= AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS
 
-// TODO: Sjekke grad av aktivitet på oppfolgingstilfelle (krever utvidelse av isoppfolgingstilfelle)
-fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering =
-    AktivitetskravVurdering.ny(
-        personIdent = this.personIdent,
-        tilfelleStart = this.tilfelleStart,
-    )
+fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering {
+    return if (gradertAtTilfelleEnd == true) {
+        AktivitetskravVurdering.automatiskOppfyltGradert(
+            personIdent = this.personIdent,
+            tilfelleStart = this.tilfelleStart,
+        )
+    } else {
+        AktivitetskravVurdering.ny(
+            personIdent = this.personIdent,
+            tilfelleStart = this.tilfelleStart,
+        )
+    }
+}
 
 private fun Oppfolgingstilfelle.durationInWeeks(): Long =
     ChronoUnit.WEEKS.between(this.tilfelleStart, this.tilfelleEnd)

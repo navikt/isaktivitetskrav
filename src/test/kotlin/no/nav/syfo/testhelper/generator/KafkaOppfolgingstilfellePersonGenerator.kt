@@ -11,7 +11,8 @@ import java.util.*
 
 fun createKafkaOppfolgingstilfellePerson(
     personIdent: PersonIdent,
-    tilfelleDurationInDays: Long
+    tilfelleDurationInDays: Long,
+    gradert: Boolean,
 ): KafkaOppfolgingstilfellePerson = KafkaOppfolgingstilfellePerson(
     uuid = UUID.randomUUID().toString(),
     createdAt = nowUTC(),
@@ -23,7 +24,8 @@ fun createKafkaOppfolgingstilfellePerson(
             end = LocalDate.now(),
             virksomhetsnummerList = listOf(
                 VIRKSOMHETSNUMMER_DEFAULT.value,
-            )
+            ),
+            gradertAtTilfelleEnd = gradert,
         ),
     ),
     referanseTilfelleBitUuid = UUID.randomUUID().toString(),
