@@ -1,0 +1,24 @@
+apiVersion: kafka.nais.io/v1
+kind: Topic
+metadata:
+  annotations:
+    dcat.data.nav.no/title: "Aktivitetskrav-vurderinger for sykmeldte personer"
+    dcat.data.nav.no/description: >-
+      Topic inneholder informasjon om aktivitetskrav-vurderinger for sykmeldte personer.
+  name: aktivitetskrav-vurdering
+  namespace: teamsykefravr
+  labels:
+    team: teamsykefravr
+spec:
+  pool: {{ kafkaPool }}
+  config:
+    cleanupPolicy: delete
+    minimumInSyncReplicas: 1
+    partitions: 4
+    replication: 3
+    retentionBytes: -1  # -1 means unlimited
+    retentionHours: -1  # -1 means unlimited
+  acl:
+    - team: teamsykefravr
+      application: isaktivitetskrav
+      access: readwrite
