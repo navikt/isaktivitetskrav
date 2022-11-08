@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.domain
 
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
@@ -72,3 +73,13 @@ data class AktivitetskravVurdering private constructor(
         )
     }
 }
+
+fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskravVurdering(
+    uuid = this.uuid.toString(),
+    personIdent = this.personIdent.value,
+    createdAt = this.createdAt,
+    updatedAt = this.updatedAt,
+    status = this.status.name,
+    tilfelleStart = this.tilfelleStart,
+    beskrivelse = this.beskrivelse,
+)
