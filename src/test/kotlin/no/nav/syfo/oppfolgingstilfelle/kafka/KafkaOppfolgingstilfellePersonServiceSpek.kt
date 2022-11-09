@@ -18,9 +18,11 @@ import org.apache.kafka.clients.producer.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
+import java.time.LocalDate
 import java.util.concurrent.Future
 
-private const val DAYS_IN_WEEK = 7
+private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
+private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
 
 class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
     with(TestApplicationEngine()) {
@@ -61,7 +63,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             it("creates AktivitetskravVurdering(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert") {
                 val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleDurationInDays = DAYS_IN_WEEK * 9L,
+                    tilfelleStart = nineWeeksAgo,
+                    tilfelleEnd = LocalDate.now(),
                     gradert = false,
                 )
                 val kafkaOppfolgingstilfellePersonRecord =
@@ -90,18 +93,22 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 aktivitetskravVurderinger.size shouldBeEqualTo 1
                 val aktivitetskravVurdering = aktivitetskravVurderinger.first()
                 aktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
+                aktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                aktivitetskravVurdering.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8L)
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                 kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskravVurdering.personIdent.value
                 kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskravVurdering.status.name
+                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskravVurdering.stoppunktAt
             }
 
             it("creates AktivitetskravVurdering(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert") {
                 val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleDurationInDays = DAYS_IN_WEEK * 9L,
+                    tilfelleStart = nineWeeksAgo,
+                    tilfelleEnd = LocalDate.now(),
                     gradert = true,
                 )
                 val kafkaOppfolgingstilfellePersonRecord =
@@ -130,18 +137,22 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 aktivitetskravVurderinger.size shouldBeEqualTo 1
                 val aktivitetskravVurdering = aktivitetskravVurderinger.first()
                 aktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
+                aktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                aktivitetskravVurdering.stoppunktAt shouldBeEqualTo null
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                 kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskravVurdering.personIdent.value
                 kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskravVurdering.status.name
+                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskravVurdering.stoppunktAt
             }
 
             it("creates no AktivitetskravVurdering for oppfolgingstilfelle lasting 7 weeks, not gradert") {
                 val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleDurationInDays = DAYS_IN_WEEK * 7L,
+                    tilfelleStart = sevenWeeksAgo,
+                    tilfelleEnd = LocalDate.now(),
                     gradert = false,
                 )
                 val kafkaOppfolgingstilfellePersonRecord =
@@ -162,6 +173,9 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 verify(exactly = 1) {
                     mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                 }
+                verify(exactly = 0) {
+                    kafkaProducer.send(any())
+                }
 
                 val aktivitetskravVurderinger = database.getAktivitetskravVurderinger(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -173,7 +187,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             it("creates no AktivitetskravVurdering for oppfolgingstilfelle lasting 7 weeks, gradert") {
                 val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleDurationInDays = DAYS_IN_WEEK * 7L,
+                    tilfelleStart = sevenWeeksAgo,
+                    tilfelleEnd = LocalDate.now(),
                     gradert = true,
                 )
                 val kafkaOppfolgingstilfellePersonRecord =
@@ -193,6 +208,9 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
 
                 verify(exactly = 1) {
                     mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                }
+                verify(exactly = 0) {
+                    kafkaProducer.send(any())
                 }
 
                 val aktivitetskravVurderinger = database.getAktivitetskravVurderinger(

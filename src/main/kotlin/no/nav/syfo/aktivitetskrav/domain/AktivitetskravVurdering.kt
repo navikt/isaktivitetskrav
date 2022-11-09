@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
-const val AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS = 8
+const val AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS = 8L
 
 enum class AktivitetskravVurderingStatus {
     NY,
@@ -25,8 +25,9 @@ data class AktivitetskravVurdering private constructor(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
     val status: AktivitetskravVurderingStatus,
-    val tilfelleStart: LocalDate,
     val beskrivelse: String?,
+    val stoppunktAt: LocalDate?,
+    val updatedBy: String?,
 ) {
     companion object {
         fun createFromDatabase(pAktivitetskravVurdering: PAktivitetskravVurdering) = AktivitetskravVurdering(
@@ -36,40 +37,39 @@ data class AktivitetskravVurdering private constructor(
             updatedAt = pAktivitetskravVurdering.updatedAt,
             status = AktivitetskravVurderingStatus.valueOf(pAktivitetskravVurdering.status),
             beskrivelse = pAktivitetskravVurdering.beskrivelse,
-            tilfelleStart = pAktivitetskravVurdering.tilfelleStart,
+            stoppunktAt = pAktivitetskravVurdering.stoppunktAt,
+            updatedBy = pAktivitetskravVurdering.updatedBy,
         )
 
         fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): AktivitetskravVurdering =
             create(
                 personIdent = personIdent,
-                tilfelleStart = tilfelleStart,
                 status = AktivitetskravVurderingStatus.NY,
-                beskrivelse = null,
+                stoppunktAt = tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS),
             )
 
         fun automatiskOppfyltGradert(
             personIdent: PersonIdent,
-            tilfelleStart: LocalDate,
         ): AktivitetskravVurdering = create(
             personIdent = personIdent,
-            tilfelleStart = tilfelleStart,
             status = AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT,
             beskrivelse = "Gradert aktivitet",
         )
 
         private fun create(
             personIdent: PersonIdent,
-            tilfelleStart: LocalDate,
             status: AktivitetskravVurderingStatus,
-            beskrivelse: String?,
+            stoppunktAt: LocalDate? = null,
+            beskrivelse: String? = null,
         ) = AktivitetskravVurdering(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
             createdAt = nowUTC(),
             updatedAt = nowUTC(),
             status = status,
-            tilfelleStart = tilfelleStart,
             beskrivelse = beskrivelse,
+            stoppunktAt = stoppunktAt,
+            updatedBy = null,
         )
     }
 }
@@ -80,6 +80,7 @@ fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskr
     createdAt = this.createdAt,
     updatedAt = this.updatedAt,
     status = this.status.name,
-    tilfelleStart = this.tilfelleStart,
     beskrivelse = this.beskrivelse,
+    stoppunktAt = this.stoppunktAt,
+    updatedBy = this.updatedBy,
 )
