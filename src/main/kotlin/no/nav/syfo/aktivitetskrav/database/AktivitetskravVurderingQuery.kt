@@ -18,8 +18,9 @@ const val queryCreateAktivitetskravVurdering =
         personident,
         status,
         beskrivelse,
-        tilfelle_start
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?)
+        stoppunkt_at,
+        updated_by
+    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING id
     """
 
@@ -33,7 +34,8 @@ fun Connection.createAktivitetskravVurdering(
         it.setString(4, aktivitetskravVurdering.personIdent.value)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
-        it.setDate(7, Date.valueOf(aktivitetskravVurdering.tilfelleStart))
+        it.setDate(7, Date.valueOf(aktivitetskravVurdering.stoppunktAt))
+        it.setString(8, aktivitetskravVurdering.updatedBy)
         it.executeQuery().toList { getInt("id") }
     }
 
@@ -50,7 +52,7 @@ const val queryGetAktivitetskravVurdering =
     """
 
 fun DatabaseInterface.getAktivitetskravVurderinger(
-    personIdent: PersonIdent
+    personIdent: PersonIdent,
 ): List<PAktivitetskravVurdering> = this.connection.use { connection ->
     connection.prepareStatement(queryGetAktivitetskravVurdering).use {
         it.setString(1, personIdent.value)
@@ -66,5 +68,6 @@ private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = P
     updatedAt = getObject("updated_at", OffsetDateTime::class.java),
     status = getString("status"),
     beskrivelse = getString("beskrivelse"),
-    tilfelleStart = getDate("tilfelle_start").toLocalDate()
+    stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
+    updatedBy = getString("updated_by"),
 )

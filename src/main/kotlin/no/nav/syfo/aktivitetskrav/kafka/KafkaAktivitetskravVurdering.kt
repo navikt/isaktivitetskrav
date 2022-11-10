@@ -9,6 +9,7 @@ data class KafkaAktivitetskravVurdering(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
     val status: String,
-    val tilfelleStart: LocalDate,
     val beskrivelse: String?,
+    val stoppunktAt: LocalDate?,
+    val updatedBy: String?,
 )
