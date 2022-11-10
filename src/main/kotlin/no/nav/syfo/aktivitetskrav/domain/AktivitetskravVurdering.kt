@@ -25,8 +25,8 @@ data class AktivitetskravVurdering private constructor(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
     val status: AktivitetskravVurderingStatus,
+    val stoppunktAt: LocalDate,
     val beskrivelse: String?,
-    val stoppunktAt: LocalDate?,
     val updatedBy: String?,
 ) {
     companion object {
@@ -36,8 +36,8 @@ data class AktivitetskravVurdering private constructor(
             createdAt = pAktivitetskravVurdering.createdAt,
             updatedAt = pAktivitetskravVurdering.updatedAt,
             status = AktivitetskravVurderingStatus.valueOf(pAktivitetskravVurdering.status),
-            beskrivelse = pAktivitetskravVurdering.beskrivelse,
             stoppunktAt = pAktivitetskravVurdering.stoppunktAt,
+            beskrivelse = pAktivitetskravVurdering.beskrivelse,
             updatedBy = pAktivitetskravVurdering.updatedBy,
         )
 
@@ -45,21 +45,23 @@ data class AktivitetskravVurdering private constructor(
             create(
                 personIdent = personIdent,
                 status = AktivitetskravVurderingStatus.NY,
-                stoppunktAt = tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS),
+                tilfelleStart = tilfelleStart,
             )
 
         fun automatiskOppfyltGradert(
             personIdent: PersonIdent,
+            tilfelleStart: LocalDate,
         ): AktivitetskravVurdering = create(
             personIdent = personIdent,
             status = AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT,
+            tilfelleStart = tilfelleStart,
             beskrivelse = "Gradert aktivitet",
         )
 
         private fun create(
             personIdent: PersonIdent,
             status: AktivitetskravVurderingStatus,
-            stoppunktAt: LocalDate? = null,
+            tilfelleStart: LocalDate,
             beskrivelse: String? = null,
         ) = AktivitetskravVurdering(
             uuid = UUID.randomUUID(),
@@ -67,8 +69,8 @@ data class AktivitetskravVurdering private constructor(
             createdAt = nowUTC(),
             updatedAt = nowUTC(),
             status = status,
+            stoppunktAt = tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS),
             beskrivelse = beskrivelse,
-            stoppunktAt = stoppunktAt,
             updatedBy = null,
         )
     }

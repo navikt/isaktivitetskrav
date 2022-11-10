@@ -138,7 +138,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravVurdering = aktivitetskravVurderinger.first()
                 aktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
                 aktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                aktivitetskravVurdering.stoppunktAt shouldBeEqualTo null
+                aktivitetskravVurdering.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8L)
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }

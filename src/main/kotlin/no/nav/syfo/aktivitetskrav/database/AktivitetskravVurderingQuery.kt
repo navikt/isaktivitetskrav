@@ -34,7 +34,7 @@ fun Connection.createAktivitetskravVurdering(
         it.setString(4, aktivitetskravVurdering.personIdent.value)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
-        it.setDate(7, aktivitetskravVurdering.stoppunktAt?.let { date -> Date.valueOf(date) })
+        it.setDate(7, Date.valueOf(aktivitetskravVurdering.stoppunktAt))
         it.setString(8, aktivitetskravVurdering.updatedBy)
         it.executeQuery().toList { getInt("id") }
     }
@@ -68,6 +68,6 @@ private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = P
     updatedAt = getObject("updated_at", OffsetDateTime::class.java),
     status = getString("status"),
     beskrivelse = getString("beskrivelse"),
-    stoppunktAt = getDate("stoppunkt_at")?.toLocalDate(),
+    stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
     updatedBy = getString("updated_by"),
 )

@@ -13,9 +13,9 @@ data class PAktivitetskravVurdering(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
     val status: String,
+    val stoppunktAt: LocalDate,
     val beskrivelse: String?,
     val updatedBy: String?,
-    val stoppunktAt: LocalDate?,
 )
 
 fun List<PAktivitetskravVurdering>.toAktivitetskravVurderinger() = map { it.toAktivitetskravVurdering() }

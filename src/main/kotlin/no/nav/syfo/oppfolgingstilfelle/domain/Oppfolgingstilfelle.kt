@@ -26,6 +26,7 @@ fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering {
     return if (gradertAtTilfelleEnd == true) {
         AktivitetskravVurdering.automatiskOppfyltGradert(
             personIdent = this.personIdent,
+            tilfelleStart = this.tilfelleStart,
         )
     } else {
         AktivitetskravVurdering.ny(
