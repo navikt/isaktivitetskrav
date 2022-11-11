@@ -1,6 +1,8 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
+import no.nav.syfo.aktivitetskrav.database.*
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.kafka.KafkaConsumerService
 import no.nav.syfo.oppfolgingstilfelle.domain.*
@@ -63,15 +65,59 @@ class KafkaOppfolgingstilfellePersonService(
             return
         }
 
-        if (latestOppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt()) {
-            val aktivitetskravVurdering = latestOppfolgingstilfelle.toAktivitetskravVurdering()
-            aktivitetskravVurderingService.createAktivitetskravVurdering(
-                connection = connection,
-                aktivitetskravVurdering = aktivitetskravVurdering,
-            )
-            COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_CREATED.increment()
+        val aktivitetskravVurderinger = connection.getAktivitetskravVurderinger(
+            personIdent = latestOppfolgingstilfelle.personIdent
+        ).toAktivitetskravVurderinger()
+
+        /*
+        Hva om vi tidligere har opprettet en vurdering for tilfellet og så oppdateres tilfelle slik at det ikke passerer stoppunkt lenger - kan det skje?
+        gjelderOppfolgingstilfelle vil da kunne gi false selv om en vurdering med status NY egentlig eksisterer for tilfellet
+         */
+        val latestVurderingForTilfelle =
+            aktivitetskravVurderinger.firstOrNull { it.gjelderOppfolgingstilfelle(latestOppfolgingstilfelle) }
+
+        if (latestVurderingForTilfelle == null) {
+            if (latestOppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt()) {
+                aktivitetskravVurderingService.createAktivitetskravVurdering(
+                    connection = connection,
+                    aktivitetskravVurdering = latestOppfolgingstilfelle.toAktivitetskravVurdering(),
+                )
+                COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_CREATED.increment()
+            } else {
+                // Kan komme hit dersom tilfellet nå ikke passerer stoppunkt, men det har gjort det tidligere, se kommentar over.
+                COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NOT_AKTIVITETSKRAV_VURDERING.increment()
+            }
         } else {
-            COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NOT_AKTIVITETSKRAV_VURDERING.increment()
+            // MÅ vi sjekke om oppfolgingstilfelle fortsatt passerer stoppunkt og hva skjer med eksisterende vurdering om det ikke gjør det lenger?
+            when {
+                latestVurderingForTilfelle.isNy() -> {
+                    aktivitetskravVurderingService.updateAktivitetskravVurdering(
+                        connection = connection,
+                        aktivitetskravVurdering = latestVurderingForTilfelle,
+                        oppfolgingstilfelle = latestOppfolgingstilfelle,
+                    )
+                    COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_UPDATED.increment()
+                }
+                latestVurderingForTilfelle.isAutomatiskOppfylt() -> {
+                    if (latestOppfolgingstilfelle.isGradertAtTilfelleEnd()) {
+                        aktivitetskravVurderingService.updateAktivitetskravVurdering(
+                            connection = connection,
+                            aktivitetskravVurdering = latestVurderingForTilfelle,
+                            oppfolgingstilfelle = latestOppfolgingstilfelle
+                        )
+                        COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_UPDATED.increment()
+                    } else {
+                        aktivitetskravVurderingService.createAktivitetskravVurdering(
+                            connection = connection,
+                            aktivitetskravVurdering = latestOppfolgingstilfelle.toAktivitetskravVurdering(),
+                        )
+                        COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_CREATED.increment()
+                    }
+                }
+                else -> {
+                    // Hvis latest vurdering for tilfelle har annen status (UNNTAK/OPPFYLT/AVVENTER): Avhengig av status og tilfellet kan det måtte gjøres ny vurdering senere? Avventer foreløpig.
+                }
+            }
         }
     }
 

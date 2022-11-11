@@ -3,6 +3,8 @@ package no.nav.syfo.aktivitetskrav.domain
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
+import no.nav.syfo.oppfolgingstilfelle.domain.isGradertAtTilfelleEnd
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -69,10 +71,16 @@ data class AktivitetskravVurdering private constructor(
             createdAt = nowUTC(),
             updatedAt = nowUTC(),
             status = status,
-            stoppunktAt = tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS),
+            stoppunktAt = stoppunktDato(tilfelleStart),
             beskrivelse = beskrivelse,
             updatedBy = null,
         )
+
+        fun stoppunktDato(tilfelleStart: LocalDate): LocalDate =
+            tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS)
+
+        fun status(oppfolgingstilfelle: Oppfolgingstilfelle): AktivitetskravVurderingStatus =
+            if (oppfolgingstilfelle.isGradertAtTilfelleEnd()) AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT else AktivitetskravVurderingStatus.NY
     }
 }
 
@@ -86,3 +94,12 @@ fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskr
     stoppunktAt = this.stoppunktAt,
     updatedBy = this.updatedBy,
 )
+
+fun AktivitetskravVurdering.gjelderOppfolgingstilfelle(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
+    this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfter(
+        stoppunktAt
+    )
+
+fun AktivitetskravVurdering.isNy(): Boolean = this.status == AktivitetskravVurderingStatus.NY
+fun AktivitetskravVurdering.isAutomatiskOppfylt(): Boolean =
+    this.status == AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
