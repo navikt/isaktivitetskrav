@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.database
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
 import java.time.OffsetDateTime
@@ -44,20 +45,43 @@ fun Connection.createAktivitetskravVurdering(
     }
 }
 
+const val queryUpdateAktivitetskravVurdering =
+    """
+        UPDATE AKTIVITETSKRAV_VURDERING SET status=?, stoppunkt_at=?, updated_at=?, beskrivelse=?, updated_by=? WHERE uuid = ?
+    """
+
+fun Connection.updateAktivitetskravVurdering(
+    aktivitetskravVurdering: AktivitetskravVurdering,
+) {
+    val vurderingUuid = aktivitetskravVurdering.uuid
+    this.prepareStatement(queryUpdateAktivitetskravVurdering).use { preparedStatement ->
+        preparedStatement.setString(1, aktivitetskravVurdering.status.name)
+        preparedStatement.setDate(2, Date.valueOf(aktivitetskravVurdering.stoppunktAt))
+        preparedStatement.setObject(3, nowUTC())
+        preparedStatement.setString(4, aktivitetskravVurdering.beskrivelse)
+        preparedStatement.setString(5, aktivitetskravVurdering.updatedBy)
+        preparedStatement.setString(6, vurderingUuid.toString())
+        preparedStatement.executeUpdate().also { updateCount ->
+            if (updateCount != 1) {
+                throw SQLException("Failed to update aktivitetskrav-vurdering with uuid $vurderingUuid - Unexpected update count: $updateCount")
+            }
+        }
+    }
+}
+
 const val queryGetAktivitetskravVurdering =
     """
         SELECT *
         FROM AKTIVITETSKRAV_VURDERING
         WHERE personident = ?
+        ORDER BY created_at DESC;
     """
 
-fun DatabaseInterface.getAktivitetskravVurderinger(
+fun Connection.getAktivitetskravVurderinger(
     personIdent: PersonIdent,
-): List<PAktivitetskravVurdering> = this.connection.use { connection ->
-    connection.prepareStatement(queryGetAktivitetskravVurdering).use {
-        it.setString(1, personIdent.value)
-        it.executeQuery().toList { toPAktivitetskravVurdering() }
-    }
+): List<PAktivitetskravVurdering> = prepareStatement(queryGetAktivitetskravVurdering).use {
+    it.setString(1, personIdent.value)
+    it.executeQuery().toList { toPAktivitetskravVurdering() }
 }
 
 private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(

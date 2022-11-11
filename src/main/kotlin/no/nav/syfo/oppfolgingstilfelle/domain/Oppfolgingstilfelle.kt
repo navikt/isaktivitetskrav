@@ -23,7 +23,7 @@ fun Oppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt(): Boolean =
     durationInWeeks() >= AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS
 
 fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering {
-    return if (gradertAtTilfelleEnd == true) {
+    return if (isGradertAtTilfelleEnd()) {
         AktivitetskravVurdering.automatiskOppfyltGradert(
             personIdent = this.personIdent,
             tilfelleStart = this.tilfelleStart,
@@ -35,6 +35,8 @@ fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering {
         )
     }
 }
+
+fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
 
 private fun Oppfolgingstilfelle.durationInWeeks(): Long =
     ChronoUnit.WEEKS.between(this.tilfelleStart, this.tilfelleEnd)
