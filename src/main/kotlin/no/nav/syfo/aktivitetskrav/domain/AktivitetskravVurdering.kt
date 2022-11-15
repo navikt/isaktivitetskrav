@@ -95,8 +95,8 @@ fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskr
     updatedBy = this.updatedBy,
 )
 
-fun AktivitetskravVurdering.gjelderOppfolgingstilfelle(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
-    this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfter(
+infix fun AktivitetskravVurdering.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
+    this.personIdent == oppfolgingstilfelle.personIdent && this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfter(
         stoppunktAt
     )
 

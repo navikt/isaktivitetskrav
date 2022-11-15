@@ -9,5 +9,6 @@ object UserConstants {
     private const val VIRKSOMHETSNUMMER = "123456789"
 
     val ARBEIDSTAKER_PERSONIDENT = PersonIdent(ARBEIDSTAKER_FNR)
+    val OTHER_ARBEIDSTAKER_PERSONIDENT = PersonIdent(ARBEIDSTAKER_PERSONIDENT.value.replace("2", "1"))
     val VIRKSOMHETSNUMMER_DEFAULT = Virksomhetsnummer(VIRKSOMHETSNUMMER)
 }
