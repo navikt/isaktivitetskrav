@@ -15,6 +15,7 @@ object Versions {
     const val logstashEncoder = "7.2"
     const val micrometerRegistry = "1.10.0"
     const val mockk = "1.13.2"
+    const val nimbusJoseJwt = "9.25.6"
     const val postgres = "42.5.0"
     const val postgresEmbedded = "0.13.4"
     const val scala = "2.13.9"
@@ -35,6 +36,8 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 
+    implementation("io.ktor:ktor-client-apache:${Versions.ktor}")
+    implementation("io.ktor:ktor-client-content-negotiation:${Versions.ktor}")
     implementation("io.ktor:ktor-serialization-jackson:${Versions.ktor}")
     implementation("io.ktor:ktor-server-auth-jwt:${Versions.ktor}")
     implementation("io.ktor:ktor-server-call-id:${Versions.ktor}")
@@ -81,6 +84,7 @@ dependencies {
     // Tests
     testImplementation("io.ktor:ktor-server-tests:${Versions.ktor}")
     testImplementation("io.mockk:mockk:${Versions.mockk}")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:${Versions.nimbusJoseJwt}")
     testImplementation("org.amshove.kluent:kluent:${Versions.kluent}")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:${Versions.spek}")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:${Versions.spek}")
