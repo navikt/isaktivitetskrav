@@ -22,3 +22,6 @@ spec:
     - team: teamsykefravr
       application: isaktivitetskrav
       access: readwrite
+    - team: teamsykefravr
+      application: syfooversiktsrv
+      access: read
