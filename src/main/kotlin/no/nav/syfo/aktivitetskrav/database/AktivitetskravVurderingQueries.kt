@@ -84,6 +84,14 @@ fun Connection.getAktivitetskravVurderinger(
     it.executeQuery().toList { toPAktivitetskravVurdering() }
 }
 
+fun DatabaseInterface.getAktivitetskravVurderinger(
+    personIdent: PersonIdent,
+): List<PAktivitetskravVurdering> = this.connection.use {
+    it.getAktivitetskravVurderinger(
+        personIdent = personIdent
+    )
+}
+
 private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
     id = getInt("id"),
     uuid = UUID.fromString(getString("uuid")),

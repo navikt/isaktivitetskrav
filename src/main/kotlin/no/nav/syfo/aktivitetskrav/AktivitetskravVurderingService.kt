@@ -1,14 +1,16 @@
 package no.nav.syfo.aktivitetskrav
 
-import no.nav.syfo.aktivitetskrav.database.createAktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.database.updateAktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
 
 class AktivitetskravVurderingService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
+    private val database: DatabaseInterface,
 ) {
 
     fun createAktivitetskravVurdering(
@@ -50,4 +52,7 @@ class AktivitetskravVurderingService(
             aktivitetskravVurdering = aktivitetskravVurdering
         )
     }
+
+    fun getAktivitetskravVurderinger(personIdent: PersonIdent): List<AktivitetskravVurdering> =
+        database.getAktivitetskravVurderinger(personIdent = personIdent).toAktivitetskravVurderinger()
 }

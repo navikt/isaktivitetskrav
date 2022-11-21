@@ -37,6 +37,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         )
         val aktivitetskravVurderingService = AktivitetskravVurderingService(
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
+            database = database,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,
