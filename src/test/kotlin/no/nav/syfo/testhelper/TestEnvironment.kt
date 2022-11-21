@@ -3,10 +3,13 @@ package no.nav.syfo.testhelper
 import no.nav.syfo.application.*
 import no.nav.syfo.application.database.DatabaseEnvironment
 import no.nav.syfo.application.kafka.KafkaEnvironment
+import no.nav.syfo.client.ClientEnvironment
+import no.nav.syfo.client.ClientsEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
 
 fun testEnvironment(
     azureOpenIdTokenEndpoint: String,
+    syfoTilgangskontrollUrl: String,
 ) = Environment(
     database = DatabaseEnvironment(
         host = "localhost",
@@ -27,6 +30,12 @@ fun testEnvironment(
         aivenKeystoreLocation = "keystore",
         aivenSecurityProtocol = "SSL",
         aivenTruststoreLocation = "truststore",
+    ),
+    clients = ClientsEnvironment(
+        syfotilgangskontroll = ClientEnvironment(
+            baseUrl = syfoTilgangskontrollUrl,
+            clientId = "dev-fss.teamsykefravr.syfotilgangskontroll",
+        ),
     ),
     kafkaOppfolgingstilfellePersonProcessingEnabled = true,
 )

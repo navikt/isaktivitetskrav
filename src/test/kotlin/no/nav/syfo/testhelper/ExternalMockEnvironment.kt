@@ -4,6 +4,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.client.wellknown.WellKnown
 import no.nav.syfo.testhelper.mock.AzureADMock
+import no.nav.syfo.testhelper.mock.SyfoTilgangskontrollMock
 import java.nio.file.Paths
 
 fun wellKnownInternalAzureAD(): WellKnown {
@@ -20,14 +21,17 @@ class ExternalMockEnvironment private constructor() {
     val database = TestDatabase()
 
     private val azureAdMock = AzureADMock()
+    private val syfoTilgangskontrollMock = SyfoTilgangskontrollMock()
 
     val externalMocks = hashMapOf(
         azureAdMock.name to azureAdMock.server,
+        syfoTilgangskontrollMock.name to syfoTilgangskontrollMock.server,
     )
 
     val environment: Environment by lazy {
         testEnvironment(
             azureOpenIdTokenEndpoint = azureAdMock.url(),
+            syfoTilgangskontrollUrl = syfoTilgangskontrollMock.url(),
         )
     }
 
