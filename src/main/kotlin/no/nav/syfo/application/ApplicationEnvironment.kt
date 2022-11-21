@@ -3,6 +3,8 @@ package no.nav.syfo.application
 import io.ktor.server.application.*
 import no.nav.syfo.application.database.DatabaseEnvironment
 import no.nav.syfo.application.kafka.KafkaEnvironment
+import no.nav.syfo.client.ClientEnvironment
+import no.nav.syfo.client.ClientsEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
 
 const val NAIS_DATABASE_ENV_PREFIX = "NAIS_DATABASE_ISAKTIVITETSKRAV_ISAKTIVITETSKRAV_DB"
@@ -29,6 +31,12 @@ data class Environment(
         aivenTruststoreLocation = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
     ),
     val kafkaOppfolgingstilfellePersonProcessingEnabled: Boolean = getEnvVar("TOGGLE_KAFKA_OPPFOLGINGSTILFELLE_PERSON_PROCESSING_ENABLED").toBoolean(),
+    val clients: ClientsEnvironment = ClientsEnvironment(
+        syfotilgangskontroll = ClientEnvironment(
+            baseUrl = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
+            clientId = getEnvVar("SYFOTILGANGSKONTROLL_CLIENT_ID"),
+        ),
+    ),
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =

@@ -56,3 +56,7 @@ spec:
       value: "production"
     - name: TOGGLE_KAFKA_OPPFOLGINGSTILFELLE_PERSON_PROCESSING_ENABLED
       value: "false"
+    - name: SYFOTILGANGSKONTROLL_CLIENT_ID
+      value: "prod-fss.teamsykefravr.syfo-tilgangskontroll"
+    - name: SYFOTILGANGSKONTROLL_URL
+      value: "https://syfo-tilgangskontroll.prod-fss-pub.nais.io"
