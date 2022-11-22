@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.domain
 
+import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
@@ -103,3 +104,13 @@ infix fun AktivitetskravVurdering.gjelder(oppfolgingstilfelle: Oppfolgingstilfel
 fun AktivitetskravVurdering.isNy(): Boolean = this.status == AktivitetskravVurderingStatus.NY
 fun AktivitetskravVurdering.isAutomatiskOppfylt(): Boolean =
     this.status == AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
+fun List<AktivitetskravVurdering>.toResponseDTOList() = this.map {
+    AktivitetskravVurderingResponseDTO(
+        uuid = it.uuid.toString(),
+        createdAt = it.createdAt.toLocalDateTime(),
+        updatedAt = it.updatedAt.toLocalDateTime(),
+        status = it.status.name,
+        updatedBy = it.updatedBy,
+        beskrivelse = it.beskrivelse,
+    )
+}
