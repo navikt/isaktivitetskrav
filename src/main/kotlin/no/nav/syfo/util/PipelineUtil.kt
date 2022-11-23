@@ -18,5 +18,11 @@ fun ApplicationCall.getConsumerClientId(): String? =
         JWT.decode(it).claims[JWT_CLAIM_AZP]?.asString()
     }
 
+fun ApplicationCall.getNAVIdent(): String {
+    val token = getBearerHeader() ?: throw Error("No Authorization header supplied")
+    return JWT.decode(token).claims[JWT_CLAIM_NAVIDENT]?.asString()
+        ?: throw Error("Missing NAVident in private claims")
+}
+
 fun ApplicationCall.getBearerHeader(): String? =
     this.request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")
