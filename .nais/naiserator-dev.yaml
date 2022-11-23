@@ -55,7 +55,7 @@ spec:
     - name: KTOR_ENV
       value: "production"
     - name: TOGGLE_KAFKA_OPPFOLGINGSTILFELLE_PERSON_PROCESSING_ENABLED
-      value: "false"
+      value: "true"
     - name: SYFOTILGANGSKONTROLL_CLIENT_ID
       value: "dev-fss.teamsykefravr.syfo-tilgangskontroll"
     - name: SYFOTILGANGSKONTROLL_URL
