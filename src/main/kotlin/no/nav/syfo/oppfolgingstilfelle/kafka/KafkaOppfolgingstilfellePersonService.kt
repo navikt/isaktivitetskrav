@@ -65,7 +65,7 @@ class KafkaOppfolgingstilfellePersonService(
             return
         }
         if (!latestOppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt()) {
-            log.info("Skipped processing of record: Oppfolgingstilfelle not relevant for aktivitetskrav-vurdering.")
+            log.info("Skipped processing of record: Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} not relevant for aktivitetskrav-vurdering.")
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NOT_AKTIVITETSKRAV_VURDERING.increment()
             return
         }
@@ -74,18 +74,23 @@ class KafkaOppfolgingstilfellePersonService(
             personIdent = latestOppfolgingstilfelle.personIdent
         ).toAktivitetskravVurderinger()
 
+        log.info("Found ${aktivitetskravVurderinger.size} vurderinger for person from latestOppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
+
         val latestVurderingForTilfelle =
             aktivitetskravVurderinger.firstOrNull { it gjelder latestOppfolgingstilfelle }
 
         if (latestVurderingForTilfelle == null) {
+            log.info("Found no vurdering for latestOppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} - creating vurdering")
             aktivitetskravVurderingService.createAktivitetskravVurdering(
                 connection = connection,
                 aktivitetskravVurdering = latestOppfolgingstilfelle.toAktivitetskravVurdering(),
             )
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_CREATED.increment()
         } else {
+            log.info("Found vurdering for latestOppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
             when {
                 latestVurderingForTilfelle.isNy() -> {
+                    log.info("latestVurderingForTilfelle with uuid ${latestVurderingForTilfelle.uuid} is NY: Updating")
                     aktivitetskravVurderingService.updateAktivitetskravVurdering(
                         connection = connection,
                         aktivitetskravVurdering = latestVurderingForTilfelle,
@@ -95,7 +100,9 @@ class KafkaOppfolgingstilfellePersonService(
                 }
 
                 latestVurderingForTilfelle.isAutomatiskOppfylt() -> {
+                    log.info("latestVurderingForTilfelle with uuid ${latestVurderingForTilfelle.uuid} is AUTOMATISK_OPPFYLT")
                     if (latestOppfolgingstilfelle.isGradertAtTilfelleEnd()) {
+                        log.info("isGradertAtTilfelleEnd: Updating")
                         aktivitetskravVurderingService.updateAktivitetskravVurdering(
                             connection = connection,
                             aktivitetskravVurdering = latestVurderingForTilfelle,
@@ -103,6 +110,7 @@ class KafkaOppfolgingstilfellePersonService(
                         )
                         COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_VURDERING_UPDATED.increment()
                     } else {
+                        log.info("not isGradertAtTilfelleEnd: Creating")
                         aktivitetskravVurderingService.createAktivitetskravVurdering(
                             connection = connection,
                             aktivitetskravVurdering = latestOppfolgingstilfelle.toAktivitetskravVurdering(),
