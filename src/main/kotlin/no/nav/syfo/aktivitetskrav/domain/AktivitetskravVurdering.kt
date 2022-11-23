@@ -26,7 +26,7 @@ data class AktivitetskravVurdering private constructor(
     val uuid: UUID,
     val personIdent: PersonIdent,
     val createdAt: OffsetDateTime,
-    val updatedAt: OffsetDateTime,
+    val sistEndret: OffsetDateTime,
     val status: AktivitetskravVurderingStatus,
     val stoppunktAt: LocalDate,
     val beskrivelse: String?,
@@ -37,7 +37,7 @@ data class AktivitetskravVurdering private constructor(
             uuid = pAktivitetskravVurdering.uuid,
             personIdent = pAktivitetskravVurdering.personIdent,
             createdAt = pAktivitetskravVurdering.createdAt,
-            updatedAt = pAktivitetskravVurdering.updatedAt,
+            sistEndret = pAktivitetskravVurdering.updatedAt,
             status = AktivitetskravVurderingStatus.valueOf(pAktivitetskravVurdering.status),
             stoppunktAt = pAktivitetskravVurdering.stoppunktAt,
             beskrivelse = pAktivitetskravVurdering.beskrivelse,
@@ -70,7 +70,7 @@ data class AktivitetskravVurdering private constructor(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
             createdAt = nowUTC(),
-            updatedAt = nowUTC(),
+            sistEndret = nowUTC(),
             status = status,
             stoppunktAt = stoppunktDato(tilfelleStart),
             beskrivelse = beskrivelse,
@@ -89,7 +89,7 @@ fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskr
     uuid = this.uuid.toString(),
     personIdent = this.personIdent.value,
     createdAt = this.createdAt,
-    updatedAt = this.updatedAt,
+    updatedAt = this.sistEndret,
     status = this.status.name,
     beskrivelse = this.beskrivelse,
     stoppunktAt = this.stoppunktAt,
@@ -104,13 +104,25 @@ infix fun AktivitetskravVurdering.gjelder(oppfolgingstilfelle: Oppfolgingstilfel
 fun AktivitetskravVurdering.isNy(): Boolean = this.status == AktivitetskravVurderingStatus.NY
 fun AktivitetskravVurdering.isAutomatiskOppfylt(): Boolean =
     this.status == AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
+
 fun List<AktivitetskravVurdering>.toResponseDTOList() = this.map {
     AktivitetskravVurderingResponseDTO(
         uuid = it.uuid.toString(),
         createdAt = it.createdAt.toLocalDateTime(),
-        updatedAt = it.updatedAt.toLocalDateTime(),
-        status = it.status.name,
+        sistEndret = it.sistEndret.toLocalDateTime(),
+        status = it.status,
         updatedBy = it.updatedBy,
         beskrivelse = it.beskrivelse,
     )
 }
+
+fun AktivitetskravVurdering.vurder(
+    status: AktivitetskravVurderingStatus,
+    vurdertAv: String,
+    beskrivelse: String?,
+): AktivitetskravVurdering = this.copy(
+    status = status,
+    beskrivelse = beskrivelse,
+    sistEndret = nowUTC(),
+    updatedBy = vurdertAv,
+)

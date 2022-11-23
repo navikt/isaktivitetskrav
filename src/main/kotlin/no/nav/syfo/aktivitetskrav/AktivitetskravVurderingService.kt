@@ -1,12 +1,15 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingRequestDTO
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
+import no.nav.syfo.util.nowUTC
 import java.sql.Connection
+import java.util.*
 
 class AktivitetskravVurderingService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
@@ -33,6 +36,7 @@ class AktivitetskravVurderingService(
         val updatedAktivitetskravVurdering = aktivitetskravVurdering.copy(
             status = status,
             stoppunktAt = stoppunktDato,
+            sistEndret = nowUTC(),
         )
 
         updateAktivitetskravVurdering(
@@ -41,7 +45,7 @@ class AktivitetskravVurderingService(
         )
     }
 
-    fun updateAktivitetskravVurdering(
+    private fun updateAktivitetskravVurdering(
         connection: Connection,
         aktivitetskravVurdering: AktivitetskravVurdering,
     ) {
@@ -53,6 +57,29 @@ class AktivitetskravVurderingService(
         )
     }
 
-    fun getAktivitetskravVurderinger(personIdent: PersonIdent): List<AktivitetskravVurdering> =
+    internal fun getAktivitetskravVurderinger(personIdent: PersonIdent): List<AktivitetskravVurdering> =
         database.getAktivitetskravVurderinger(personIdent = personIdent).toAktivitetskravVurderinger()
+
+    internal fun vurderAktivitetskrav(
+        aktivitetskravVurdering: AktivitetskravVurdering,
+        aktivitetskravVurderingRequestDTO: AktivitetskravVurderingRequestDTO,
+        veilederIdent: String,
+    ) {
+        val updatedAktivitetskravVurdering = aktivitetskravVurdering.vurder(
+            status = aktivitetskravVurderingRequestDTO.status,
+            beskrivelse = aktivitetskravVurderingRequestDTO.beskrivelse,
+            vurdertAv = veilederIdent,
+        )
+
+        database.connection.use { connection ->
+            updateAktivitetskravVurdering(
+                connection = connection,
+                aktivitetskravVurdering = updatedAktivitetskravVurdering,
+            )
+            connection.commit()
+        }
+    }
+
+    internal fun getAktivitetskravVurdering(uuid: UUID): AktivitetskravVurdering? =
+        database.getAktivitetskravVurdering(uuid = uuid)?.toAktivitetskravVurdering()
 }

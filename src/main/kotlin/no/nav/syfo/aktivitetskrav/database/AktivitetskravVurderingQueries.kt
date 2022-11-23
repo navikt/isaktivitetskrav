@@ -3,7 +3,6 @@ package no.nav.syfo.aktivitetskrav.database
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
 import java.time.OffsetDateTime
@@ -31,7 +30,7 @@ fun Connection.createAktivitetskravVurdering(
     val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use {
         it.setString(1, aktivitetskravVurdering.uuid.toString())
         it.setObject(2, aktivitetskravVurdering.createdAt)
-        it.setObject(3, aktivitetskravVurdering.updatedAt)
+        it.setObject(3, aktivitetskravVurdering.sistEndret)
         it.setString(4, aktivitetskravVurdering.personIdent.value)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
@@ -57,7 +56,7 @@ fun Connection.updateAktivitetskravVurdering(
     this.prepareStatement(queryUpdateAktivitetskravVurdering).use { preparedStatement ->
         preparedStatement.setString(1, aktivitetskravVurdering.status.name)
         preparedStatement.setDate(2, Date.valueOf(aktivitetskravVurdering.stoppunktAt))
-        preparedStatement.setObject(3, nowUTC())
+        preparedStatement.setObject(3, aktivitetskravVurdering.sistEndret)
         preparedStatement.setString(4, aktivitetskravVurdering.beskrivelse)
         preparedStatement.setString(5, aktivitetskravVurdering.updatedBy)
         preparedStatement.setString(6, vurderingUuid.toString())
@@ -69,7 +68,7 @@ fun Connection.updateAktivitetskravVurdering(
     }
 }
 
-const val queryGetAktivitetskravVurdering =
+const val queryGetAktivitetskravVurderinger =
     """
         SELECT *
         FROM AKTIVITETSKRAV_VURDERING
@@ -79,7 +78,7 @@ const val queryGetAktivitetskravVurdering =
 
 fun Connection.getAktivitetskravVurderinger(
     personIdent: PersonIdent,
-): List<PAktivitetskravVurdering> = prepareStatement(queryGetAktivitetskravVurdering).use {
+): List<PAktivitetskravVurdering> = prepareStatement(queryGetAktivitetskravVurderinger).use {
     it.setString(1, personIdent.value)
     it.executeQuery().toList { toPAktivitetskravVurdering() }
 }
@@ -90,6 +89,22 @@ fun DatabaseInterface.getAktivitetskravVurderinger(
     it.getAktivitetskravVurderinger(
         personIdent = personIdent
     )
+}
+
+const val queryGetAktivitetskravVurdering =
+    """
+        SELECT *
+        FROM AKTIVITETSKRAV_VURDERING
+        WHERE uuid = ?
+    """
+
+fun DatabaseInterface.getAktivitetskravVurdering(
+    uuid: UUID,
+): PAktivitetskravVurdering? = this.connection.use { connection ->
+    connection.prepareStatement(queryGetAktivitetskravVurdering).use {
+        it.setString(1, uuid.toString())
+        it.executeQuery().toList { toPAktivitetskravVurdering() }.firstOrNull()
+    }
 }
 
 private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
