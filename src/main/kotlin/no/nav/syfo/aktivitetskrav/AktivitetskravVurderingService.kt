@@ -7,7 +7,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
-import no.nav.syfo.util.nowUTC
 import java.sql.Connection
 import java.util.*
 
@@ -31,12 +30,8 @@ class AktivitetskravVurderingService(
         aktivitetskravVurdering: AktivitetskravVurdering,
         oppfolgingstilfelle: Oppfolgingstilfelle,
     ) {
-        val status = AktivitetskravVurdering.status(oppfolgingstilfelle)
-        val stoppunktDato = AktivitetskravVurdering.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
-        val updatedAktivitetskravVurdering = aktivitetskravVurdering.copy(
-            status = status,
-            stoppunktAt = stoppunktDato,
-            sistEndret = nowUTC(),
+        val updatedAktivitetskravVurdering = aktivitetskravVurdering.updateFrom(
+            oppfolgingstilfelle = oppfolgingstilfelle,
         )
 
         updateAktivitetskravVurdering(

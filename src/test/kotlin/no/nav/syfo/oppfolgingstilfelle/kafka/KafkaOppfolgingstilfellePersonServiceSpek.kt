@@ -166,6 +166,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
                     aktivitetskravVurdering.updatedBy shouldBeEqualTo null
                     aktivitetskravVurdering.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskravVurdering.beskrivelse shouldBeEqualTo "Gradert aktivitet"
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
@@ -173,6 +174,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskravVurdering.personIdent.value
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskravVurdering.status.name
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskravVurdering.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo aktivitetskravVurdering.beskrivelse
                 }
                 it("creates no AktivitetskravVurdering for oppfolgingstilfelle lasting 7 weeks, not gradert") {
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
@@ -265,12 +267,14 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val latestVurdering = aktivitetskravVurderinger.first()
                     latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
                     latestVurdering.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestVurdering.beskrivelse shouldBeEqualTo "Gradert aktivitet"
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestVurdering.status.name
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestVurdering.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
                 }
                 it("updates AktivitetskravVurdering stoppunkt_at if oppfolgingstilfelle not gradert") {
                     createAktivitetskravVurdering(nyAktivitetskravVurdering)
@@ -301,12 +305,14 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val latestVurdering = aktivitetskravVurderinger.first()
                     latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
                     latestVurdering.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestVurdering.beskrivelse shouldBeEqualTo null
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestVurdering.status.name
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestVurdering.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
                 }
             }
             describe("AktivitetskravVurdering(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle") {
@@ -342,11 +348,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravVurderinger.size shouldBeEqualTo 2
                     val latestVurdering = aktivitetskravVurderinger.first()
                     latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
+                    latestVurdering.beskrivelse shouldBeEqualTo null
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY.name
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
                 }
                 it("updates AktivitetskravVurdering stoppunkt_at if oppfolgingstilfelle gradert") {
                     createAktivitetskravVurdering(automatiskOppfyltAktivitetskravVurdering)
@@ -378,12 +386,14 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
                     latestVurdering.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
                     latestVurdering.uuid shouldBeEqualTo automatiskOppfyltAktivitetskravVurdering.uuid
+                    latestVurdering.beskrivelse shouldBeEqualTo "Gradert aktivitet"
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestVurdering.status.name
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestVurdering.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
                 }
             }
         }

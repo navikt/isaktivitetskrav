@@ -12,6 +12,7 @@ import java.time.OffsetDateTime
 import java.util.*
 
 const val AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS = 8L
+const val AUTOMATISK_OPPFYLT_BESKRIVELSE = "Gradert aktivitet"
 
 enum class AktivitetskravVurderingStatus {
     NY,
@@ -58,7 +59,7 @@ data class AktivitetskravVurdering private constructor(
             personIdent = personIdent,
             status = AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT,
             tilfelleStart = tilfelleStart,
-            beskrivelse = "Gradert aktivitet",
+            beskrivelse = AUTOMATISK_OPPFYLT_BESKRIVELSE,
         )
 
         private fun create(
@@ -79,9 +80,6 @@ data class AktivitetskravVurdering private constructor(
 
         fun stoppunktDato(tilfelleStart: LocalDate): LocalDate =
             tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS)
-
-        fun status(oppfolgingstilfelle: Oppfolgingstilfelle): AktivitetskravVurderingStatus =
-            if (oppfolgingstilfelle.isGradertAtTilfelleEnd()) AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT else AktivitetskravVurderingStatus.NY
     }
 }
 
@@ -116,7 +114,22 @@ fun List<AktivitetskravVurdering>.toResponseDTOList() = this.map {
     )
 }
 
-fun AktivitetskravVurdering.vurder(
+internal fun AktivitetskravVurdering.updateFrom(oppfolgingstilfelle: Oppfolgingstilfelle): AktivitetskravVurdering {
+    val status =
+        if (oppfolgingstilfelle.isGradertAtTilfelleEnd()) AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT else AktivitetskravVurderingStatus.NY
+    val stoppunktDato = AktivitetskravVurdering.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
+    val beskrivelse =
+        if (status == AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT) AUTOMATISK_OPPFYLT_BESKRIVELSE else null
+
+    return this.copy(
+        status = status,
+        stoppunktAt = stoppunktDato,
+        sistEndret = nowUTC(),
+        beskrivelse = beskrivelse,
+    )
+}
+
+internal fun AktivitetskravVurdering.vurder(
     status: AktivitetskravVurderingStatus,
     vurdertAv: String,
     beskrivelse: String?,
