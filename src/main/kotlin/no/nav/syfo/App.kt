@@ -5,7 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurderingSerializer
 import no.nav.syfo.application.ApplicationState
@@ -37,7 +37,7 @@ fun main() {
             )
         )
     )
-    lateinit var aktivitetskravVurderingService: AktivitetskravVurderingService
+    lateinit var aktivitetskravService: AktivitetskravService
 
     val applicationEngineEnvironment = applicationEngineEnvironment {
         log = logger
@@ -49,7 +49,7 @@ fun main() {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
-            aktivitetskravVurderingService = AktivitetskravVurderingService(
+            aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 database = applicationDatabase,
             )
@@ -58,7 +58,7 @@ fun main() {
                 database = applicationDatabase,
                 environment = environment,
                 wellKnownInternalAzureAD = wellKnownInternalAzureAD,
-                aktivitetskravVurderingService = aktivitetskravVurderingService,
+                aktivitetskravService = aktivitetskravService,
             )
         }
     }
@@ -70,7 +70,7 @@ fun main() {
             applicationState = applicationState,
             environment = environment,
             database = applicationDatabase,
-            aktivitetskravVurderingService = aktivitetskravVurderingService,
+            aktivitetskravService = aktivitetskravService,
         )
     }
 

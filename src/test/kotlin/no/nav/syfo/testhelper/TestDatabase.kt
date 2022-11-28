@@ -30,7 +30,7 @@ class TestDatabase : DatabaseInterface {
 fun DatabaseInterface.dropData() {
     val queryList = listOf(
         """
-        DELETE FROM AKTIVITETSKRAV_VURDERING
+        DELETE FROM AKTIVITETSKRAV
         """.trimIndent(),
     )
     this.connection.use { connection ->

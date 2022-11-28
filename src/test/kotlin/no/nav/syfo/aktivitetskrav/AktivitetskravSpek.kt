@@ -1,6 +1,6 @@
 package no.nav.syfo.aktivitetskrav
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.gjelder
 import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -14,7 +14,7 @@ import java.time.LocalDate
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
 private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
 
-class AktivitetskravVurderingSpek : Spek({
+class AktivitetskravSpek : Spek({
     val oppfolgingstilfelle = createKafkaOppfolgingstilfellePerson(
         personIdent = ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = nineWeeksAgo,
@@ -24,31 +24,31 @@ class AktivitetskravVurderingSpek : Spek({
 
     describe("gjelder Oppfolgingstilfelle") {
         it("returns false when different arbeidstakere") {
-            val aktivitetskravVurdering =
-                AktivitetskravVurdering.ny(
+            val aktivitetskrav =
+                Aktivitetskrav.ny(
                     personIdent = OTHER_ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo
                 )
 
-            aktivitetskravVurdering gjelder oppfolgingstilfelle!! shouldBeEqualTo false
+            aktivitetskrav gjelder oppfolgingstilfelle!! shouldBeEqualTo false
         }
         it("returns true when equal arbeidstaker and stoppunkt between tilfelle start and end") {
-            val aktivitetskravVurdering =
-                AktivitetskravVurdering.ny(
+            val aktivitetskrav =
+                Aktivitetskrav.ny(
                     personIdent = ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo
                 )
 
-            aktivitetskravVurdering gjelder oppfolgingstilfelle!! shouldBeEqualTo true
+            aktivitetskrav gjelder oppfolgingstilfelle!! shouldBeEqualTo true
         }
         it("returns false when equal arbeidstaker and stoppunkt after tilfelle end") {
-            val aktivitetskravVurdering =
-                AktivitetskravVurdering.ny(
+            val aktivitetskrav =
+                Aktivitetskrav.ny(
                     personIdent = ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = sevenWeeksAgo
                 )
 
-            aktivitetskravVurdering gjelder oppfolgingstilfelle!! shouldBeEqualTo false
+            aktivitetskrav gjelder oppfolgingstilfelle!! shouldBeEqualTo false
         }
     }
 })

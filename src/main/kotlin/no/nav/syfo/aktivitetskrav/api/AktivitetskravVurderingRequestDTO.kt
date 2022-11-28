@@ -1,8 +1,8 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurderingStatus
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 
 data class AktivitetskravVurderingRequestDTO(
-    val status: AktivitetskravVurderingStatus,
+    val status: AktivitetskravStatus,
     val beskrivelse: String?,
 )

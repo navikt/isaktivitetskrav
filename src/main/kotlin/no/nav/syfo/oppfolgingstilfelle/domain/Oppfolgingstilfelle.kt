@@ -1,7 +1,7 @@
 package no.nav.syfo.oppfolgingstilfelle.domain
 
-import no.nav.syfo.aktivitetskrav.domain.AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.AKTIVITETSKRAV_STOPPUNKT_WEEKS
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
 import java.time.*
 import java.time.temporal.ChronoUnit
@@ -19,17 +19,17 @@ data class Oppfolgingstilfelle(
     val gradertAtTilfelleEnd: Boolean?,
 )
 
-fun Oppfolgingstilfelle.passererAktivitetskravVurderingStoppunkt(): Boolean =
-    durationInWeeks() >= AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS
+fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
+    durationInWeeks() >= AKTIVITETSKRAV_STOPPUNKT_WEEKS
 
-fun Oppfolgingstilfelle.toAktivitetskravVurdering(): AktivitetskravVurdering {
+fun Oppfolgingstilfelle.toAktivitetskrav(): Aktivitetskrav {
     return if (isGradertAtTilfelleEnd()) {
-        AktivitetskravVurdering.automatiskOppfyltGradert(
+        Aktivitetskrav.automatiskOppfyltGradert(
             personIdent = this.personIdent,
             tilfelleStart = this.tilfelleStart,
         )
     } else {
-        AktivitetskravVurdering.ny(
+        Aktivitetskrav.ny(
             personIdent = this.personIdent,
             tilfelleStart = this.tilfelleStart,
         )

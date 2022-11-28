@@ -5,10 +5,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import no.nav.syfo.aktivitetskrav.database.createAktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskravVurderinger
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurderingStatus
+import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
+import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
@@ -24,21 +24,21 @@ import java.util.concurrent.Future
 
 class AktivitetskravApiSpek : Spek({
     val objectMapper: ObjectMapper = configuredJacksonMapper()
-    val urlAktivitetskravVurderingerPerson = "$aktivitetskravApiBasePath/$aktivitetskravApiPersonidentPath"
+    val urlAktivitetskravPerson = "$aktivitetskravApiBasePath/$aktivitetskravApiPersonidentPath"
 
-    val nyAktivitetskravVurdering = AktivitetskravVurdering.ny(
+    val nyAktivitetskrav = Aktivitetskrav.ny(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().minusWeeks(10),
     ).copy(
         createdAt = nowUTC().minusWeeks(2)
     )
-    val nyAktivitetskravVurderingAnnenPerson = AktivitetskravVurdering.ny(
+    val nyAktivitetskravAnnenPerson = Aktivitetskrav.ny(
         personIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().minusWeeks(10),
     ).copy(
         createdAt = nowUTC().minusWeeks(2)
     )
-    val automatiskOppfyltVurdering = AktivitetskravVurdering.automatiskOppfyltGradert(
+    val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfyltGradert(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().minusYears(2),
     ).copy(
@@ -68,10 +68,10 @@ class AktivitetskravApiSpek : Spek({
                 database.dropData()
             }
 
-            fun createAktivitetskravVurderinger(vararg aktivitetskravVurdering: AktivitetskravVurdering) {
+            fun createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav) {
                 database.connection.use { connection ->
-                    aktivitetskravVurdering.forEach {
-                        connection.createAktivitetskravVurdering(it)
+                    aktivitetskrav.forEach {
+                        connection.createAktivitetskrav(it)
                     }
                     connection.commit()
                 }
@@ -83,17 +83,17 @@ class AktivitetskravApiSpek : Spek({
                 navIdent = UserConstants.VEILEDER_IDENT,
             )
 
-            describe("Get aktivitetskrav-vurderinger for person") {
+            describe("Get aktivitetskrav for person") {
                 describe("Happy path") {
-                    it("Returns aktivitetskrav-vurderinger for person") {
-                        createAktivitetskravVurderinger(
-                            nyAktivitetskravVurdering,
-                            nyAktivitetskravVurderingAnnenPerson,
-                            automatiskOppfyltVurdering
+                    it("Returns aktivitetskrav for person") {
+                        createAktivitetskrav(
+                            nyAktivitetskrav,
+                            nyAktivitetskravAnnenPerson,
+                            automatiskOppfyltAktivitetskrav
                         )
 
                         with(
-                            handleRequest(HttpMethod.Get, urlAktivitetskravVurderingerPerson) {
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
                             }
@@ -101,11 +101,11 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.OK
 
                             val responseDTOList =
-                                objectMapper.readValue<List<AktivitetskravVurderingResponseDTO>>(response.content!!)
+                                objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
                             responseDTOList.size shouldBeEqualTo 2
 
                             val first = responseDTOList.first()
-                            first.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
+                            first.status shouldBeEqualTo AktivitetskravStatus.NY
                             first.beskrivelse shouldBeEqualTo null
                             first.updatedBy shouldBeEqualTo null
                             first.createdAt shouldNotBeEqualTo null
@@ -113,7 +113,7 @@ class AktivitetskravApiSpek : Spek({
                             first.uuid shouldNotBeEqualTo null
 
                             val last = responseDTOList.last()
-                            last.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
+                            last.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
                             last.beskrivelse shouldBeEqualTo "Gradert aktivitet"
                             last.updatedBy shouldBeEqualTo null
                             last.createdAt shouldNotBeEqualTo null
@@ -126,14 +126,14 @@ class AktivitetskravApiSpek : Spek({
                 describe("Unhappy path") {
                     it("Returns status Unauthorized if no token is supplied") {
                         with(
-                            handleRequest(HttpMethod.Get, urlAktivitetskravVurderingerPerson) {}
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {}
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                         }
                     }
                     it("returns status Forbidden if denied access to person") {
                         with(
-                            handleRequest(HttpMethod.Get, urlAktivitetskravVurderingerPerson) {
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(
                                     NAV_PERSONIDENT_HEADER,
@@ -146,7 +146,7 @@ class AktivitetskravApiSpek : Spek({
                     }
                     it("should return status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
                         with(
-                            handleRequest(HttpMethod.Get, urlAktivitetskravVurderingerPerson) {
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                             }
                         ) {
@@ -155,7 +155,7 @@ class AktivitetskravApiSpek : Spek({
                     }
                     it("should return status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
                         with(
-                            handleRequest(HttpMethod.Get, urlAktivitetskravVurderingerPerson) {
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(
                                     NAV_PERSONIDENT_HEADER,
@@ -171,21 +171,21 @@ class AktivitetskravApiSpek : Spek({
 
             describe("Vurder aktivitetskrav for person") {
                 beforeEachTest {
-                    createAktivitetskravVurderinger(
-                        nyAktivitetskravVurdering,
+                    createAktivitetskrav(
+                        nyAktivitetskrav,
                     )
                 }
 
                 val urlVurderAktivitetskrav =
-                    "$aktivitetskravApiBasePath/${nyAktivitetskravVurdering.uuid}$vurderAktivitetskravPath"
+                    "$aktivitetskravApiBasePath/${nyAktivitetskrav.uuid}$vurderAktivitetskravPath"
 
                 val requestDTO = AktivitetskravVurderingRequestDTO(
-                    status = AktivitetskravVurderingStatus.OPPFYLT,
+                    status = AktivitetskravStatus.OPPFYLT,
                     beskrivelse = "Aktivitetskravet er oppfylt",
                 )
 
                 describe("Happy path") {
-                    it("Updates AktivitetskravVurdering and produces to Kafka if request is succesful") {
+                    it("Updates Aktivitetskrav with vurdering and produces to Kafka if request is succesful") {
                         with(
                             handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -200,20 +200,20 @@ class AktivitetskravApiSpek : Spek({
                                 kafkaProducer.send(capture(producerRecordSlot))
                             }
 
-                            val latestAktivitetskravVurdering =
-                                database.getAktivitetskravVurderinger(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                            val latestAktivitetskrav =
+                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
-                            latestAktivitetskravVurdering.status shouldBeEqualTo requestDTO.status.name
-                            latestAktivitetskravVurdering.beskrivelse shouldBeEqualTo requestDTO.beskrivelse
-                            latestAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            latestAktivitetskravVurdering.updatedAt shouldBeGreaterThan latestAktivitetskravVurdering.createdAt
+                            latestAktivitetskrav.status shouldBeEqualTo requestDTO.status.name
+                            latestAktivitetskrav.beskrivelse shouldBeEqualTo requestDTO.beskrivelse
+                            latestAktivitetskrav.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskravVurdering.status
-                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskravVurdering.beskrivelse
-                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo latestAktivitetskravVurdering.updatedBy
-                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskravVurdering.updatedAt.truncatedTo(
+                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
+                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskrav.beskrivelse
+                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo latestAktivitetskrav.updatedBy
+                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
                                 ChronoUnit.MILLIS
                             )
                         }

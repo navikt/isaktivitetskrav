@@ -1,6 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
 import java.sql.*
@@ -8,9 +8,9 @@ import java.sql.Date
 import java.time.OffsetDateTime
 import java.util.*
 
-const val queryCreateAktivitetskravVurdering =
+const val queryCreateAktivitetskrav =
     """
-    INSERT INTO AKTIVITETSKRAV_VURDERING (
+    INSERT INTO AKTIVITETSKRAV (
         id,
         uuid,
         created_at,
@@ -24,90 +24,90 @@ const val queryCreateAktivitetskravVurdering =
     RETURNING id
     """
 
-fun Connection.createAktivitetskravVurdering(
-    aktivitetskravVurdering: AktivitetskravVurdering,
+fun Connection.createAktivitetskrav(
+    aktivitetskrav: Aktivitetskrav,
 ) {
-    val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use {
-        it.setString(1, aktivitetskravVurdering.uuid.toString())
-        it.setObject(2, aktivitetskravVurdering.createdAt)
-        it.setObject(3, aktivitetskravVurdering.sistEndret)
-        it.setString(4, aktivitetskravVurdering.personIdent.value)
-        it.setString(5, aktivitetskravVurdering.status.name)
-        it.setString(6, aktivitetskravVurdering.beskrivelse)
-        it.setDate(7, Date.valueOf(aktivitetskravVurdering.stoppunktAt))
-        it.setString(8, aktivitetskravVurdering.updatedBy)
+    val idList = this.prepareStatement(queryCreateAktivitetskrav).use {
+        it.setString(1, aktivitetskrav.uuid.toString())
+        it.setObject(2, aktivitetskrav.createdAt)
+        it.setObject(3, aktivitetskrav.sistEndret)
+        it.setString(4, aktivitetskrav.personIdent.value)
+        it.setString(5, aktivitetskrav.status.name)
+        it.setString(6, aktivitetskrav.beskrivelse)
+        it.setDate(7, Date.valueOf(aktivitetskrav.stoppunktAt))
+        it.setString(8, aktivitetskrav.updatedBy)
         it.executeQuery().toList { getInt("id") }
     }
 
     if (idList.size != 1) {
-        throw NoElementInsertedException("Creating AKTIVITETSKRAV_VURDERING failed, no rows affected.")
+        throw NoElementInsertedException("Creating AKTIVITETSKRAV failed, no rows affected.")
     }
 }
 
-const val queryUpdateAktivitetskravVurdering =
+const val queryUpdateAktivitetskrav =
     """
-        UPDATE AKTIVITETSKRAV_VURDERING SET status=?, stoppunkt_at=?, updated_at=?, beskrivelse=?, updated_by=? WHERE uuid = ?
+        UPDATE AKTIVITETSKRAV SET status=?, stoppunkt_at=?, updated_at=?, beskrivelse=?, updated_by=? WHERE uuid = ?
     """
 
-fun Connection.updateAktivitetskravVurdering(
-    aktivitetskravVurdering: AktivitetskravVurdering,
+fun Connection.updateAktivitetskrav(
+    aktivitetskrav: Aktivitetskrav,
 ) {
-    val vurderingUuid = aktivitetskravVurdering.uuid
-    this.prepareStatement(queryUpdateAktivitetskravVurdering).use { preparedStatement ->
-        preparedStatement.setString(1, aktivitetskravVurdering.status.name)
-        preparedStatement.setDate(2, Date.valueOf(aktivitetskravVurdering.stoppunktAt))
-        preparedStatement.setObject(3, aktivitetskravVurdering.sistEndret)
-        preparedStatement.setString(4, aktivitetskravVurdering.beskrivelse)
-        preparedStatement.setString(5, aktivitetskravVurdering.updatedBy)
-        preparedStatement.setString(6, vurderingUuid.toString())
+    val aktivitetskravUuid = aktivitetskrav.uuid
+    this.prepareStatement(queryUpdateAktivitetskrav).use { preparedStatement ->
+        preparedStatement.setString(1, aktivitetskrav.status.name)
+        preparedStatement.setDate(2, Date.valueOf(aktivitetskrav.stoppunktAt))
+        preparedStatement.setObject(3, aktivitetskrav.sistEndret)
+        preparedStatement.setString(4, aktivitetskrav.beskrivelse)
+        preparedStatement.setString(5, aktivitetskrav.updatedBy)
+        preparedStatement.setString(6, aktivitetskravUuid.toString())
         preparedStatement.executeUpdate().also { updateCount ->
             if (updateCount != 1) {
-                throw SQLException("Failed to update aktivitetskrav-vurdering with uuid $vurderingUuid - Unexpected update count: $updateCount")
+                throw SQLException("Failed to update AKTIVITETSKRAV with uuid $aktivitetskravUuid - Unexpected update count: $updateCount")
             }
         }
     }
 }
 
-const val queryGetAktivitetskravVurderinger =
+const val queryGetAktivitetskravByPersonident =
     """
         SELECT *
-        FROM AKTIVITETSKRAV_VURDERING
+        FROM AKTIVITETSKRAV
         WHERE personident = ?
         ORDER BY created_at DESC;
     """
 
-fun Connection.getAktivitetskravVurderinger(
+fun Connection.getAktivitetskrav(
     personIdent: PersonIdent,
-): List<PAktivitetskravVurdering> = prepareStatement(queryGetAktivitetskravVurderinger).use {
+): List<PAktivitetskrav> = prepareStatement(queryGetAktivitetskravByPersonident).use {
     it.setString(1, personIdent.value)
-    it.executeQuery().toList { toPAktivitetskravVurdering() }
+    it.executeQuery().toList { toPAktivitetskrav() }
 }
 
-fun DatabaseInterface.getAktivitetskravVurderinger(
+fun DatabaseInterface.getAktivitetskrav(
     personIdent: PersonIdent,
-): List<PAktivitetskravVurdering> = this.connection.use {
-    it.getAktivitetskravVurderinger(
+): List<PAktivitetskrav> = this.connection.use {
+    it.getAktivitetskrav(
         personIdent = personIdent
     )
 }
 
-const val queryGetAktivitetskravVurdering =
+const val queryGetAktivitetskravByUuid =
     """
         SELECT *
-        FROM AKTIVITETSKRAV_VURDERING
+        FROM AKTIVITETSKRAV
         WHERE uuid = ?
     """
 
-fun DatabaseInterface.getAktivitetskravVurdering(
+fun DatabaseInterface.getAktivitetskrav(
     uuid: UUID,
-): PAktivitetskravVurdering? = this.connection.use { connection ->
-    connection.prepareStatement(queryGetAktivitetskravVurdering).use {
+): PAktivitetskrav? = this.connection.use { connection ->
+    connection.prepareStatement(queryGetAktivitetskravByUuid).use {
         it.setString(1, uuid.toString())
-        it.executeQuery().toList { toPAktivitetskravVurdering() }.firstOrNull()
+        it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
     }
 }
 
-private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
+private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     id = getInt("id"),
     uuid = UUID.fromString(getString("uuid")),
     personIdent = PersonIdent(getString("personident")),
