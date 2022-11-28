@@ -2,10 +2,10 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import io.ktor.server.testing.*
 import io.mockk.*
-import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.*
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurderingStatus
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
@@ -35,13 +35,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
             kafkaProducerAktivitetskravVurdering = kafkaProducer,
         )
-        val aktivitetskravVurderingService = AktivitetskravVurderingService(
+        val aktivitetskravService = AktivitetskravService(
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,
-            aktivitetskravVurderingService = aktivitetskravVurderingService,
+            aktivitetskravService = aktivitetskravService,
         )
 
         val kafkaOppfolgingstilfellePersonTopicPartition = createKafkaOppfolgingstilfellePersonTopicPartition()
@@ -93,16 +93,16 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
         }
 
-        fun createAktivitetskravVurdering(aktivitetskravVurdering: AktivitetskravVurdering) {
+        fun createAktivitetskrav(aktivitetskrav: Aktivitetskrav) {
             database.connection.use {
-                it.createAktivitetskravVurdering(aktivitetskravVurdering)
+                it.createAktivitetskrav(aktivitetskrav)
                 it.commit()
             }
         }
 
         describe("${KafkaOppfolgingstilfellePersonService::class.java.simpleName}: pollAndProcessRecords") {
-            describe("no AktivitetskravVurdering exists for oppfolgingstilfelle") {
-                it("creates AktivitetskravVurdering(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert") {
+            describe("no Aktivitetskrav exists for oppfolgingstilfelle") {
+                it("creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert") {
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
                             kafkaOppfolgingstilfellePersonTopicPartition to listOf(
@@ -121,24 +121,24 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.size shouldBeEqualTo 1
-                    val aktivitetskravVurdering = aktivitetskravVurderinger.first()
-                    aktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
-                    aktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                    aktivitetskravVurdering.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskrav = aktivitetskravList.first()
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                    aktivitetskrav.updatedBy shouldBeEqualTo null
+                    aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskravVurdering.personIdent.value
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskravVurdering.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskravVurdering.stoppunktAt
+                    kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskrav.personIdent.value
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status.name
+                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
                 }
-                it("creates AktivitetskravVurdering(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert") {
+                it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert") {
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
                             kafkaOppfolgingstilfellePersonTopicPartition to listOf(
@@ -157,26 +157,26 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.size shouldBeEqualTo 1
-                    val aktivitetskravVurdering = aktivitetskravVurderinger.first()
-                    aktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
-                    aktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                    aktivitetskravVurdering.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
-                    aktivitetskravVurdering.beskrivelse shouldBeEqualTo "Gradert aktivitet"
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskrav = aktivitetskravList.first()
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
+                    aktivitetskrav.updatedBy shouldBeEqualTo null
+                    aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskrav.beskrivelse shouldBeEqualTo "Gradert aktivitet"
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskravVurdering.personIdent.value
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskravVurdering.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskravVurdering.stoppunktAt
-                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo aktivitetskravVurdering.beskrivelse
+                    kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskrav.personIdent.value
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status.name
+                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo aktivitetskrav.beskrivelse
                 }
-                it("creates no AktivitetskravVurdering for oppfolgingstilfelle lasting 7 weeks, not gradert") {
+                it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, not gradert") {
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
                             kafkaOppfolgingstilfellePersonTopicPartition to listOf(
@@ -198,13 +198,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.shouldBeEmpty()
+                    aktivitetskravList.shouldBeEmpty()
                 }
-                it("creates no AktivitetskravVurdering for oppfolgingstilfelle lasting 7 weeks, gradert") {
+                it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, gradert") {
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
                             kafkaOppfolgingstilfellePersonTopicPartition to listOf(
@@ -226,20 +226,20 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.shouldBeEmpty()
+                    aktivitetskravList.shouldBeEmpty()
                 }
             }
-            describe("AktivitetskravVurdering(NY) exists for oppfolgingstilfelle") {
-                val nyAktivitetskravVurdering = AktivitetskravVurdering.ny(
+            describe("Aktivitetskrav(NY) exists for oppfolgingstilfelle") {
+                val nyAktivitetskrav = Aktivitetskrav.ny(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
-                it("updates AktivitetskravVurdering stoppunkt_at and status to AUTOMATISK_OPPFYLT if oppfolgingstilfelle gradert") {
-                    createAktivitetskravVurdering(nyAktivitetskravVurdering)
+                it("updates Aktivitetskrav stoppunkt_at and status to AUTOMATISK_OPPFYLT if oppfolgingstilfelle gradert") {
+                    createAktivitetskrav(nyAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -259,25 +259,25 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.size shouldBeEqualTo 1
-                    val latestVurdering = aktivitetskravVurderinger.first()
-                    latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
-                    latestVurdering.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
-                    latestVurdering.beskrivelse shouldBeEqualTo "Gradert aktivitet"
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val latestAktivitetskrav = aktivitetskravList.first()
+                    latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
+                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestAktivitetskrav.beskrivelse shouldBeEqualTo "Gradert aktivitet"
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestVurdering.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestVurdering.stoppunktAt
-                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
+                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskrav.beskrivelse
                 }
-                it("updates AktivitetskravVurdering stoppunkt_at if oppfolgingstilfelle not gradert") {
-                    createAktivitetskravVurdering(nyAktivitetskravVurdering)
+                it("updates Aktivitetskrav stoppunkt_at if oppfolgingstilfelle not gradert") {
+                    createAktivitetskrav(nyAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -297,31 +297,31 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.size shouldBeEqualTo 1
-                    val latestVurdering = aktivitetskravVurderinger.first()
-                    latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
-                    latestVurdering.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
-                    latestVurdering.beskrivelse shouldBeEqualTo null
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val latestAktivitetskrav = aktivitetskravList.first()
+                    latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestAktivitetskrav.beskrivelse shouldBeEqualTo null
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestVurdering.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestVurdering.stoppunktAt
-                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
+                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskrav.beskrivelse
                 }
             }
-            describe("AktivitetskravVurdering(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle") {
-                val automatiskOppfyltAktivitetskravVurdering = AktivitetskravVurdering.automatiskOppfyltGradert(
+            describe("Aktivitetskrav(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle") {
+                val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfyltGradert(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
-                it("creates AktivitetskravVurdering(NY) if oppfolgingstilfelle not gradert") {
-                    createAktivitetskravVurdering(automatiskOppfyltAktivitetskravVurdering)
+                it("creates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
+                    createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -341,23 +341,23 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.size shouldBeEqualTo 2
-                    val latestVurdering = aktivitetskravVurderinger.first()
-                    latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY
-                    latestVurdering.beskrivelse shouldBeEqualTo null
+                    aktivitetskravList.size shouldBeEqualTo 2
+                    val latestAktivitetskrav = aktivitetskravList.first()
+                    latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                    latestAktivitetskrav.beskrivelse shouldBeEqualTo null
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.NY.name
-                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.NY.name
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskrav.beskrivelse
                 }
-                it("updates AktivitetskravVurdering stoppunkt_at if oppfolgingstilfelle gradert") {
-                    createAktivitetskravVurdering(automatiskOppfyltAktivitetskravVurdering)
+                it("updates Aktivitetskrav stoppunkt_at if oppfolgingstilfelle gradert") {
+                    createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -377,23 +377,23 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravVurderinger = database.connection.getAktivitetskravVurderinger(
+                    val aktivitetskravList = database.connection.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    ).toAktivitetskravVurderinger()
+                    ).toAktivitetskravList()
 
-                    aktivitetskravVurderinger.size shouldBeEqualTo 1
-                    val latestVurdering = aktivitetskravVurderinger.first()
-                    latestVurdering.status shouldBeEqualTo AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
-                    latestVurdering.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
-                    latestVurdering.uuid shouldBeEqualTo automatiskOppfyltAktivitetskravVurdering.uuid
-                    latestVurdering.beskrivelse shouldBeEqualTo "Gradert aktivitet"
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val latestAktivitetskrav = aktivitetskravList.first()
+                    latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
+                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestAktivitetskrav.uuid shouldBeEqualTo automatiskOppfyltAktivitetskrav.uuid
+                    latestAktivitetskrav.beskrivelse shouldBeEqualTo "Gradert aktivitet"
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestVurdering.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestVurdering.stoppunktAt
-                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestVurdering.beskrivelse
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
+                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                    kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskrav.beskrivelse
                 }
             }
         }

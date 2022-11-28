@@ -1,6 +1,6 @@
 package no.nav.syfo.aktivitetskrav.kafka
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.toKafkaAktivitetskravVurdering
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -11,9 +11,9 @@ class AktivitetskravVurderingProducer(
     private val kafkaProducerAktivitetskravVurdering: KafkaProducer<String, KafkaAktivitetskravVurdering>,
 ) {
     fun sendAktivitetskravVurdering(
-        aktivitetskravVurdering: AktivitetskravVurdering,
+        aktivitetskrav: Aktivitetskrav,
     ) {
-        val kafkaAktivitetskravVurdering = aktivitetskravVurdering.toKafkaAktivitetskravVurdering()
+        val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
         val key = UUID.nameUUIDFromBytes(kafkaAktivitetskravVurdering.personIdent.toByteArray()).toString()
         try {
             kafkaProducerAktivitetskravVurdering.send(

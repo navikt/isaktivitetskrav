@@ -3,7 +3,7 @@ package no.nav.syfo.application.api
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
-import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.api.registerAktivitetskravApi
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
@@ -19,7 +19,7 @@ fun Application.apiModule(
     database: DatabaseInterface,
     environment: Environment,
     wellKnownInternalAzureAD: WellKnown,
-    aktivitetskravVurderingService: AktivitetskravVurderingService,
+    aktivitetskravService: AktivitetskravService,
 ) {
     installMetrics()
     installCallId()
@@ -52,7 +52,7 @@ fun Application.apiModule(
         authenticate(JwtIssuerType.INTERNAL_AZUREAD.name) {
             registerAktivitetskravApi(
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
-                aktivitetskravVurderingService = aktivitetskravVurderingService,
+                aktivitetskravService = aktivitetskravService,
             )
         }
     }

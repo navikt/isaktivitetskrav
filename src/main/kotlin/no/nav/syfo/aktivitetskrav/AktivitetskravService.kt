@@ -10,71 +10,71 @@ import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
 import java.util.*
 
-class AktivitetskravVurderingService(
+class AktivitetskravService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val database: DatabaseInterface,
 ) {
 
-    fun createAktivitetskravVurdering(
+    fun createAktivitetskrav(
         connection: Connection,
-        aktivitetskravVurdering: AktivitetskravVurdering,
+        aktivitetskrav: Aktivitetskrav,
     ) {
-        connection.createAktivitetskravVurdering(aktivitetskravVurdering = aktivitetskravVurdering)
+        connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav)
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
-            aktivitetskravVurdering = aktivitetskravVurdering
+            aktivitetskrav = aktivitetskrav
         )
     }
 
-    fun updateAktivitetskravVurdering(
+    fun updateAktivitetskrav(
         connection: Connection,
-        aktivitetskravVurdering: AktivitetskravVurdering,
+        aktivitetskrav: Aktivitetskrav,
         oppfolgingstilfelle: Oppfolgingstilfelle,
     ) {
-        val updatedAktivitetskravVurdering = aktivitetskravVurdering.updateFrom(
+        val updatedAktivitetskrav = aktivitetskrav.updateFrom(
             oppfolgingstilfelle = oppfolgingstilfelle,
         )
 
-        updateAktivitetskravVurdering(
+        updateAktivitetskrav(
             connection = connection,
-            aktivitetskravVurdering = updatedAktivitetskravVurdering,
+            aktivitetskrav = updatedAktivitetskrav,
         )
     }
 
-    private fun updateAktivitetskravVurdering(
+    private fun updateAktivitetskrav(
         connection: Connection,
-        aktivitetskravVurdering: AktivitetskravVurdering,
+        aktivitetskrav: Aktivitetskrav,
     ) {
-        connection.updateAktivitetskravVurdering(
-            aktivitetskravVurdering = aktivitetskravVurdering
+        connection.updateAktivitetskrav(
+            aktivitetskrav = aktivitetskrav
         )
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
-            aktivitetskravVurdering = aktivitetskravVurdering
+            aktivitetskrav = aktivitetskrav
         )
     }
 
-    internal fun getAktivitetskravVurderinger(personIdent: PersonIdent): List<AktivitetskravVurdering> =
-        database.getAktivitetskravVurderinger(personIdent = personIdent).toAktivitetskravVurderinger()
+    internal fun getAktivitetskrav(personIdent: PersonIdent): List<Aktivitetskrav> =
+        database.getAktivitetskrav(personIdent = personIdent).toAktivitetskravList()
 
     internal fun vurderAktivitetskrav(
-        aktivitetskravVurdering: AktivitetskravVurdering,
+        aktivitetskrav: Aktivitetskrav,
         aktivitetskravVurderingRequestDTO: AktivitetskravVurderingRequestDTO,
         veilederIdent: String,
     ) {
-        val updatedAktivitetskravVurdering = aktivitetskravVurdering.vurder(
+        val updatedAktivitetskrav = aktivitetskrav.vurder(
             status = aktivitetskravVurderingRequestDTO.status,
             beskrivelse = aktivitetskravVurderingRequestDTO.beskrivelse,
             vurdertAv = veilederIdent,
         )
 
         database.connection.use { connection ->
-            updateAktivitetskravVurdering(
+            updateAktivitetskrav(
                 connection = connection,
-                aktivitetskravVurdering = updatedAktivitetskravVurdering,
+                aktivitetskrav = updatedAktivitetskrav,
             )
             connection.commit()
         }
     }
 
-    internal fun getAktivitetskravVurdering(uuid: UUID): AktivitetskravVurdering? =
-        database.getAktivitetskravVurdering(uuid = uuid)?.toAktivitetskravVurdering()
+    internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
+        database.getAktivitetskrav(uuid = uuid)?.toAktivitetskrav()
 }

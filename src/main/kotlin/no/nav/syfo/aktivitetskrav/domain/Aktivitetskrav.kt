@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav.domain
 
-import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.api.AktivitetskravResponseDTO
+import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
@@ -11,10 +11,10 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
-const val AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS = 8L
+const val AKTIVITETSKRAV_STOPPUNKT_WEEKS = 8L
 const val AUTOMATISK_OPPFYLT_BESKRIVELSE = "Gradert aktivitet"
 
-enum class AktivitetskravVurderingStatus {
+enum class AktivitetskravStatus {
     NY,
     AVVENT,
     UNNTAK,
@@ -23,51 +23,51 @@ enum class AktivitetskravVurderingStatus {
     STANS
 }
 
-data class AktivitetskravVurdering private constructor(
+data class Aktivitetskrav private constructor(
     val uuid: UUID,
     val personIdent: PersonIdent,
     val createdAt: OffsetDateTime,
     val sistEndret: OffsetDateTime,
-    val status: AktivitetskravVurderingStatus,
+    val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
     val beskrivelse: String?,
     val updatedBy: String?,
 ) {
     companion object {
-        fun createFromDatabase(pAktivitetskravVurdering: PAktivitetskravVurdering) = AktivitetskravVurdering(
-            uuid = pAktivitetskravVurdering.uuid,
-            personIdent = pAktivitetskravVurdering.personIdent,
-            createdAt = pAktivitetskravVurdering.createdAt,
-            sistEndret = pAktivitetskravVurdering.updatedAt,
-            status = AktivitetskravVurderingStatus.valueOf(pAktivitetskravVurdering.status),
-            stoppunktAt = pAktivitetskravVurdering.stoppunktAt,
-            beskrivelse = pAktivitetskravVurdering.beskrivelse,
-            updatedBy = pAktivitetskravVurdering.updatedBy,
+        fun createFromDatabase(pAktivitetskrav: PAktivitetskrav) = Aktivitetskrav(
+            uuid = pAktivitetskrav.uuid,
+            personIdent = pAktivitetskrav.personIdent,
+            createdAt = pAktivitetskrav.createdAt,
+            sistEndret = pAktivitetskrav.updatedAt,
+            status = AktivitetskravStatus.valueOf(pAktivitetskrav.status),
+            stoppunktAt = pAktivitetskrav.stoppunktAt,
+            beskrivelse = pAktivitetskrav.beskrivelse,
+            updatedBy = pAktivitetskrav.updatedBy,
         )
 
-        fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): AktivitetskravVurdering =
+        fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): Aktivitetskrav =
             create(
                 personIdent = personIdent,
-                status = AktivitetskravVurderingStatus.NY,
+                status = AktivitetskravStatus.NY,
                 tilfelleStart = tilfelleStart,
             )
 
         fun automatiskOppfyltGradert(
             personIdent: PersonIdent,
             tilfelleStart: LocalDate,
-        ): AktivitetskravVurdering = create(
+        ): Aktivitetskrav = create(
             personIdent = personIdent,
-            status = AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT,
+            status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
             tilfelleStart = tilfelleStart,
             beskrivelse = AUTOMATISK_OPPFYLT_BESKRIVELSE,
         )
 
         private fun create(
             personIdent: PersonIdent,
-            status: AktivitetskravVurderingStatus,
+            status: AktivitetskravStatus,
             tilfelleStart: LocalDate,
             beskrivelse: String? = null,
-        ) = AktivitetskravVurdering(
+        ) = Aktivitetskrav(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
             createdAt = nowUTC(),
@@ -79,11 +79,11 @@ data class AktivitetskravVurdering private constructor(
         )
 
         fun stoppunktDato(tilfelleStart: LocalDate): LocalDate =
-            tilfelleStart.plusWeeks(AKTIVITETSKRAV_VURDERING_STOPPUNKT_WEEKS)
+            tilfelleStart.plusWeeks(AKTIVITETSKRAV_STOPPUNKT_WEEKS)
     }
 }
 
-fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskravVurdering(
+fun Aktivitetskrav.toKafkaAktivitetskravVurdering() = KafkaAktivitetskravVurdering(
     uuid = this.uuid.toString(),
     personIdent = this.personIdent.value,
     createdAt = this.createdAt,
@@ -94,17 +94,17 @@ fun AktivitetskravVurdering.toKafkaAktivitetskravVurdering() = KafkaAktivitetskr
     updatedBy = this.updatedBy,
 )
 
-infix fun AktivitetskravVurdering.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
+infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
     this.personIdent == oppfolgingstilfelle.personIdent && this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfter(
         stoppunktAt
     )
 
-fun AktivitetskravVurdering.isNy(): Boolean = this.status == AktivitetskravVurderingStatus.NY
-fun AktivitetskravVurdering.isAutomatiskOppfylt(): Boolean =
-    this.status == AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT
+fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
+fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
+    this.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT
 
-fun List<AktivitetskravVurdering>.toResponseDTOList() = this.map {
-    AktivitetskravVurderingResponseDTO(
+fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
+    AktivitetskravResponseDTO(
         uuid = it.uuid.toString(),
         createdAt = it.createdAt.toLocalDateTime(),
         sistEndret = it.sistEndret.toLocalDateTime(),
@@ -114,12 +114,12 @@ fun List<AktivitetskravVurdering>.toResponseDTOList() = this.map {
     )
 }
 
-internal fun AktivitetskravVurdering.updateFrom(oppfolgingstilfelle: Oppfolgingstilfelle): AktivitetskravVurdering {
+internal fun Aktivitetskrav.updateFrom(oppfolgingstilfelle: Oppfolgingstilfelle): Aktivitetskrav {
     val status =
-        if (oppfolgingstilfelle.isGradertAtTilfelleEnd()) AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT else AktivitetskravVurderingStatus.NY
-    val stoppunktDato = AktivitetskravVurdering.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
+        if (oppfolgingstilfelle.isGradertAtTilfelleEnd()) AktivitetskravStatus.AUTOMATISK_OPPFYLT else AktivitetskravStatus.NY
+    val stoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
     val beskrivelse =
-        if (status == AktivitetskravVurderingStatus.AUTOMATISK_OPPFYLT) AUTOMATISK_OPPFYLT_BESKRIVELSE else null
+        if (status == AktivitetskravStatus.AUTOMATISK_OPPFYLT) AUTOMATISK_OPPFYLT_BESKRIVELSE else null
 
     return this.copy(
         status = status,
@@ -129,11 +129,11 @@ internal fun AktivitetskravVurdering.updateFrom(oppfolgingstilfelle: Oppfolgings
     )
 }
 
-internal fun AktivitetskravVurdering.vurder(
-    status: AktivitetskravVurderingStatus,
+internal fun Aktivitetskrav.vurder(
+    status: AktivitetskravStatus,
     vurdertAv: String,
     beskrivelse: String?,
-): AktivitetskravVurdering = this.copy(
+): Aktivitetskrav = this.copy(
     status = status,
     beskrivelse = beskrivelse,
     sistEndret = nowUTC(),

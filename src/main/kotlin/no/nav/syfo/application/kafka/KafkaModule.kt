@@ -1,6 +1,6 @@
 package no.nav.syfo.application.kafka
 
-import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.database.DatabaseInterface
@@ -11,12 +11,12 @@ fun launchKafkaModule(
     applicationState: ApplicationState,
     environment: Environment,
     database: DatabaseInterface,
-    aktivitetskravVurderingService: AktivitetskravVurderingService,
+    aktivitetskravService: AktivitetskravService,
 ) {
     if (environment.kafkaOppfolgingstilfellePersonProcessingEnabled) {
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,
-            aktivitetskravVurderingService = aktivitetskravVurderingService,
+            aktivitetskravService = aktivitetskravService,
         )
         launchKafkaTaskOppfolgingstilfellePerson(
             applicationState = applicationState,

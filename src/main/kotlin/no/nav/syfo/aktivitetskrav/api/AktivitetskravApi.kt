@@ -5,7 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.syfo.aktivitetskrav.AktivitetskravVurderingService
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.domain.toResponseDTOList
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
@@ -15,14 +15,14 @@ import java.util.UUID
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
-const val aktivitetskravVurderingParam = "aktivitetskravVurderingUuid"
+const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
 
 private const val apiAction = "access aktivitetskrav for person"
 
 fun Route.registerAktivitetskravApi(
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
-    aktivitetskravVurderingService: AktivitetskravVurderingService,
+    aktivitetskravService: AktivitetskravService,
 ) {
     route(aktivitetskravApiBasePath) {
         install(VeilederTilgangskontrollPlugin) {
@@ -31,27 +31,27 @@ fun Route.registerAktivitetskravApi(
         }
         get(aktivitetskravApiPersonidentPath) {
             val personIdent = call.personIdent()
-            val responseDTOList = aktivitetskravVurderingService.getAktivitetskravVurderinger(
+            val responseDTOList = aktivitetskravService.getAktivitetskrav(
                 personIdent = personIdent,
             ).toResponseDTOList()
 
             call.respond(responseDTOList)
         }
-        post("/{$aktivitetskravVurderingParam}$vurderAktivitetskravPath") {
+        post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
             val personIdent = call.personIdent()
-            val vurderingUUID = UUID.fromString(call.parameters[aktivitetskravVurderingParam])
+            val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
             val requestDTO = call.receive<AktivitetskravVurderingRequestDTO>()
 
-            val vurderingToUpdate =
-                aktivitetskravVurderingService.getAktivitetskravVurdering(uuid = vurderingUUID)
-                    ?: throw IllegalArgumentException("Failed to vurdere aktivitetskrav: vurdering not found")
+            val aktivitetskravToUpdate =
+                aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
+                    ?: throw IllegalArgumentException("Failed to vurdere aktivitetskrav: aktivitetskrav not found")
 
-            if (vurderingToUpdate.personIdent != personIdent) {
-                throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on vurdering differs from request")
+            if (aktivitetskravToUpdate.personIdent != personIdent) {
+                throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on aktivitetskrav differs from request")
             }
 
-            aktivitetskravVurderingService.vurderAktivitetskrav(
-                aktivitetskravVurdering = vurderingToUpdate,
+            aktivitetskravService.vurderAktivitetskrav(
+                aktivitetskrav = aktivitetskravToUpdate,
                 aktivitetskravVurderingRequestDTO = requestDTO,
                 veilederIdent = call.getNAVIdent(),
             )
