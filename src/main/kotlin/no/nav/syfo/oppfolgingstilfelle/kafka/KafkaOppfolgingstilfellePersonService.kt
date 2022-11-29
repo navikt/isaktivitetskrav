@@ -70,9 +70,11 @@ class KafkaOppfolgingstilfellePersonService(
             return
         }
 
-        val aktivitetskravForPerson = connection.getAktivitetskrav(
-            personIdent = latestOppfolgingstilfelle.personIdent
-        ).toAktivitetskravList()
+        val aktivitetskravForPerson =
+            aktivitetskravService.getAktivitetskrav(
+                connection = connection,
+                personIdent = latestOppfolgingstilfelle.personIdent,
+            )
 
         val latestAktivitetskravForTilfelle =
             aktivitetskravForPerson.firstOrNull { it gjelder latestOppfolgingstilfelle }

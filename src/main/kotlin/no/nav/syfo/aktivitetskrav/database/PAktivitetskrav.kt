@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -14,9 +15,7 @@ data class PAktivitetskrav(
     val updatedAt: OffsetDateTime,
     val status: String,
     val stoppunktAt: LocalDate,
-    val beskrivelse: String?,
-    val updatedBy: String?,
 )
 
-fun List<PAktivitetskrav>.toAktivitetskravList() = map { it.toAktivitetskrav() }
-fun PAktivitetskrav.toAktivitetskrav() = Aktivitetskrav.createFromDatabase(this)
+fun PAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger: List<AktivitetskravVurdering>) =
+    Aktivitetskrav.createFromDatabase(this, aktivitetskravVurderinger = aktivitetskravVurderinger)

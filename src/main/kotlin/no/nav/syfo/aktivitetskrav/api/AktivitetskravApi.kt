@@ -42,18 +42,20 @@ fun Route.registerAktivitetskravApi(
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
             val requestDTO = call.receive<AktivitetskravVurderingRequestDTO>()
 
-            val aktivitetskravToUpdate =
+            val aktivitetskrav =
                 aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
                     ?: throw IllegalArgumentException("Failed to vurdere aktivitetskrav: aktivitetskrav not found")
 
-            if (aktivitetskravToUpdate.personIdent != personIdent) {
+            if (aktivitetskrav.personIdent != personIdent) {
                 throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on aktivitetskrav differs from request")
             }
 
+            val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(
+                createdByIdent = call.getNAVIdent(),
+            )
             aktivitetskravService.vurderAktivitetskrav(
-                aktivitetskrav = aktivitetskravToUpdate,
-                aktivitetskravVurderingRequestDTO = requestDTO,
-                veilederIdent = call.getNAVIdent(),
+                aktivitetskrav = aktivitetskrav,
+                aktivitetskravVurdering = aktivitetskravVurdering,
             )
 
             call.respond(HttpStatusCode.OK)
