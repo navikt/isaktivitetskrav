@@ -5,7 +5,6 @@ import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
-import no.nav.syfo.oppfolgingstilfelle.domain.isGradertAtTilfelleEnd
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -99,7 +98,6 @@ infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Bool
         stoppunktAt
     )
 
-fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
     this.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT
 
@@ -115,17 +113,10 @@ fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
 }
 
 internal fun Aktivitetskrav.updateFrom(oppfolgingstilfelle: Oppfolgingstilfelle): Aktivitetskrav {
-    val status =
-        if (oppfolgingstilfelle.isGradertAtTilfelleEnd()) AktivitetskravStatus.AUTOMATISK_OPPFYLT else AktivitetskravStatus.NY
     val stoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
-    val beskrivelse =
-        if (status == AktivitetskravStatus.AUTOMATISK_OPPFYLT) AUTOMATISK_OPPFYLT_BESKRIVELSE else null
-
     return this.copy(
-        status = status,
         stoppunktAt = stoppunktDato,
         sistEndret = nowUTC(),
-        beskrivelse = beskrivelse,
     )
 }
 

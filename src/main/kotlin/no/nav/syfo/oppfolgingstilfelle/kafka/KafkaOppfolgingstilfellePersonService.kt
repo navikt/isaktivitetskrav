@@ -70,58 +70,36 @@ class KafkaOppfolgingstilfellePersonService(
             return
         }
 
-        val aktivitetskrav = connection.getAktivitetskrav(
+        val aktivitetskravForPerson = connection.getAktivitetskrav(
             personIdent = latestOppfolgingstilfelle.personIdent
         ).toAktivitetskravList()
 
-        log.info("Found ${aktivitetskrav.size} aktivitetskrav for person from latestOppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
-
         val latestAktivitetskravForTilfelle =
-            aktivitetskrav.firstOrNull { it gjelder latestOppfolgingstilfelle }
+            aktivitetskravForPerson.firstOrNull { it gjelder latestOppfolgingstilfelle }
 
         if (latestAktivitetskravForTilfelle == null) {
-            log.info("Found no aktivitetskrav for latestOppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} - creating aktivitetskrav")
+            log.info("Found no aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} - creating aktivitetskrav")
             aktivitetskravService.createAktivitetskrav(
                 connection = connection,
                 aktivitetskrav = latestOppfolgingstilfelle.toAktivitetskrav(),
             )
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_CREATED.increment()
         } else {
-            log.info("Found aktivitetskrav for latestOppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
-            when {
-                latestAktivitetskravForTilfelle.isNy() -> {
-                    log.info("latestAktivitetskravForTilfelle with uuid ${latestAktivitetskravForTilfelle.uuid} is NY: Updating")
-                    aktivitetskravService.updateAktivitetskrav(
-                        connection = connection,
-                        aktivitetskrav = latestAktivitetskravForTilfelle,
-                        oppfolgingstilfelle = latestOppfolgingstilfelle,
-                    )
-                    COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_UPDATED.increment()
-                }
-
-                latestAktivitetskravForTilfelle.isAutomatiskOppfylt() -> {
-                    log.info("latestAktivitetskravForTilfelle with uuid ${latestAktivitetskravForTilfelle.uuid} is AUTOMATISK_OPPFYLT")
-                    if (latestOppfolgingstilfelle.isGradertAtTilfelleEnd()) {
-                        log.info("isGradertAtTilfelleEnd: Updating")
-                        aktivitetskravService.updateAktivitetskrav(
-                            connection = connection,
-                            aktivitetskrav = latestAktivitetskravForTilfelle,
-                            oppfolgingstilfelle = latestOppfolgingstilfelle
-                        )
-                        COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_UPDATED.increment()
-                    } else {
-                        log.info("not isGradertAtTilfelleEnd: Creating")
-                        aktivitetskravService.createAktivitetskrav(
-                            connection = connection,
-                            aktivitetskrav = latestOppfolgingstilfelle.toAktivitetskrav(),
-                        )
-                        COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_CREATED.increment()
-                    }
-                }
-
-                else -> {
-                    // Hvis latest aktivitetskrav for tilfelle har annen status (UNNTAK/OPPFYLT/AVVENTER): Avhengig av status og tilfellet kan det måtte gjøres ny vurdering senere? Avventer foreløpig.
-                }
+            if (latestAktivitetskravForTilfelle.isAutomatiskOppfylt() && !latestOppfolgingstilfelle.isGradertAtTilfelleEnd()) {
+                log.info("Found aktivitetskrav AUTOMATISK_OPPFYLT but Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} not gradert - creating aktivitetskrav")
+                aktivitetskravService.createAktivitetskrav(
+                    connection = connection,
+                    aktivitetskrav = latestOppfolgingstilfelle.toAktivitetskrav(),
+                )
+                COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_CREATED.increment()
+            } else {
+                log.info("Updating aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
+                aktivitetskravService.updateAktivitetskrav(
+                    connection = connection,
+                    aktivitetskrav = latestAktivitetskravForTilfelle,
+                    oppfolgingstilfelle = latestOppfolgingstilfelle,
+                )
+                COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_UPDATED.increment()
             }
         }
     }
