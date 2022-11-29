@@ -547,6 +547,69 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                 }
             }
+            describe("Aktivitetskrav vurdert, then oppfolgingstilfelle gradert, then not gradert") {
+                val nyAktivitetskrav = Aktivitetskrav.ny(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = nineWeeksAgo,
+                )
+                val unntakVurdering = AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.UNNTAK,
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                    beskrivelse = "Unntak",
+                )
+                val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
+
+                it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) and then Aktivitetskrav(NY)") {
+                    createAktivitetskrav(unntakAktivitetskrav)
+
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
+                        mapOf(
+                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
+                                createKafkaOppfolgingstilfellePersonConsumerRecord(
+                                    kafkaOppfolgingstilfelleTenWeeksGradert
+                                ),
+                                createKafkaOppfolgingstilfellePersonConsumerRecord(
+                                    kafkaOppfolgingstilfelleNineWeeksNotGradert
+                                )
+                            )
+                        )
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 3
+
+                    aktivitetskravList[2].status shouldBeEqualTo AktivitetskravStatus.UNNTAK.name
+                    aktivitetskravList[2].uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                    aktivitetskravList[1].status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT.name
+                    aktivitetskravList[1].uuid shouldNotBeEqualTo nyAktivitetskrav.uuid
+
+                    val latestAktivitetskrav = aktivitetskravList.first()
+                    latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY.name
+                    latestAktivitetskrav.uuid shouldNotBeEqualTo nyAktivitetskrav.uuid
+
+                    val kafkaRecordSlot1 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot2 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    verifyOrder {
+                        kafkaProducer.send(capture(kafkaRecordSlot1))
+                        kafkaProducer.send(capture(kafkaRecordSlot2))
+                    }
+
+                    val kafkaAktivitetskravVurdering = kafkaRecordSlot2.captured.value()
+                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
+                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                }
+            }
         }
     }
 })
