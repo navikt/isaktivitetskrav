@@ -40,6 +40,12 @@ spec:
       memory: 384Mi
   ingresses:
     - "https://isaktivitetskrav.intern.nav.no"
+  accessPolicy:
+    inbound:
+      rules:
+        - application: syfomodiaperson
+          namespace: teamsykefravr
+          cluster: prod-fss
   gcp:
     sqlInstances:
       - type: POSTGRES_14
