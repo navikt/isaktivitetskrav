@@ -1,6 +1,5 @@
 package no.nav.syfo.aktivitetskrav
 
-import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingRequestDTO
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -34,47 +33,47 @@ class AktivitetskravService(
             oppfolgingstilfelle = oppfolgingstilfelle,
         )
 
-        updateAktivitetskrav(
-            connection = connection,
-            aktivitetskrav = updatedAktivitetskrav,
-        )
-    }
-
-    private fun updateAktivitetskrav(
-        connection: Connection,
-        aktivitetskrav: Aktivitetskrav,
-    ) {
         connection.updateAktivitetskrav(
-            aktivitetskrav = aktivitetskrav
+            aktivitetskrav = updatedAktivitetskrav
         )
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
-            aktivitetskrav = aktivitetskrav
+            aktivitetskrav = updatedAktivitetskrav
         )
     }
-
-    internal fun getAktivitetskrav(personIdent: PersonIdent): List<Aktivitetskrav> =
-        database.getAktivitetskrav(personIdent = personIdent).toAktivitetskravList()
 
     internal fun vurderAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
-        aktivitetskravVurderingRequestDTO: AktivitetskravVurderingRequestDTO,
-        veilederIdent: String,
+        aktivitetskravVurdering: AktivitetskravVurdering,
     ) {
-        val updatedAktivitetskrav = aktivitetskrav.vurder(
-            status = aktivitetskravVurderingRequestDTO.status,
-            beskrivelse = aktivitetskravVurderingRequestDTO.beskrivelse,
-            vurdertAv = veilederIdent,
-        )
+        val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
         database.connection.use { connection ->
-            updateAktivitetskrav(
-                connection = connection,
-                aktivitetskrav = updatedAktivitetskrav,
+            val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav = updatedAktivitetskrav)
+            connection.createAktiviteskravVurdering(
+                aktivitetskravId = aktivitetskravId,
+                aktivitetskravVurdering = aktivitetskravVurdering
             )
             connection.commit()
         }
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
+            aktivitetskrav = updatedAktivitetskrav
+        )
     }
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
-        database.getAktivitetskrav(uuid = uuid)?.toAktivitetskrav()
+        database.getAktivitetskrav(uuid = uuid)?.let { pAktivitetskrav ->
+            withVurderinger(pAktivitetskrav = pAktivitetskrav)
+        }
+
+    internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
+        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
+            withVurderinger(pAktivitetskrav = pAktivitetskrav)
+        }
+
+    private fun withVurderinger(pAktivitetskrav: PAktivitetskrav, connection: Connection? = null): Aktivitetskrav {
+        val aktivitetskravVurderinger =
+            database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id, connection = connection)
+                .toAktivitetskravVurderingList()
+        return pAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
+    }
 }

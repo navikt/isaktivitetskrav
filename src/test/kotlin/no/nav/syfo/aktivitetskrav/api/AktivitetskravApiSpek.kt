@@ -5,10 +5,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.*
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
@@ -57,6 +56,10 @@ class AktivitetskravApiSpek : Spek({
                     kafkaProducerAktivitetskravVurdering = kafkaProducer,
                 ),
             )
+            val aktivitetskravService = AktivitetskravService(
+                aktivitetskravVurderingProducer = mockk(relaxed = true),
+                database = database,
+            )
 
             beforeEachTest {
                 clearMocks(kafkaProducer)
@@ -71,7 +74,7 @@ class AktivitetskravApiSpek : Spek({
             fun createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav) {
                 database.connection.use { connection ->
                     aktivitetskrav.forEach {
-                        connection.createAktivitetskrav(it)
+                        aktivitetskravService.createAktivitetskrav(connection, it)
                     }
                     connection.commit()
                 }
@@ -85,7 +88,7 @@ class AktivitetskravApiSpek : Spek({
 
             describe("Get aktivitetskrav for person") {
                 describe("Happy path") {
-                    it("Returns aktivitetskrav for person") {
+                    it("Returns aktivitetskrav (uten vurderinger) for person") {
                         createAktivitetskrav(
                             nyAktivitetskrav,
                             nyAktivitetskravAnnenPerson,
@@ -106,19 +109,70 @@ class AktivitetskravApiSpek : Spek({
 
                             val first = responseDTOList.first()
                             first.status shouldBeEqualTo AktivitetskravStatus.NY
-                            first.beskrivelse shouldBeEqualTo null
-                            first.updatedBy shouldBeEqualTo null
+                            first.vurderinger.size shouldBeEqualTo 0
                             first.createdAt shouldNotBeEqualTo null
                             first.sistEndret shouldNotBeEqualTo null
                             first.uuid shouldNotBeEqualTo null
 
                             val last = responseDTOList.last()
                             last.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                            last.beskrivelse shouldBeEqualTo "Gradert aktivitet"
-                            last.updatedBy shouldBeEqualTo null
+                            last.vurderinger.size shouldBeEqualTo 0
                             last.createdAt shouldNotBeEqualTo null
                             last.sistEndret shouldNotBeEqualTo null
                             last.uuid shouldNotBeEqualTo null
+                        }
+                    }
+                    it("Returns aktivitetskrav (med vurderinger) for person") {
+                        createAktivitetskrav(
+                            nyAktivitetskrav,
+                        )
+
+                        val avventVurdering = AktivitetskravVurdering.create(
+                            status = AktivitetskravStatus.AVVENT,
+                            createdBy = UserConstants.VEILEDER_IDENT,
+                            beskrivelse = "Avvent",
+                        )
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = nyAktivitetskrav,
+                            aktivitetskravVurdering = avventVurdering
+                        )
+                        val oppfyltVurdering = AktivitetskravVurdering.create(
+                            status = AktivitetskravStatus.OPPFYLT,
+                            createdBy = UserConstants.VEILEDER_IDENT,
+                            beskrivelse = "Oppfylt",
+                        )
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = nyAktivitetskrav,
+                            aktivitetskravVurdering = oppfyltVurdering
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val responseDTOList =
+                                objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
+                            responseDTOList.size shouldBeEqualTo 1
+
+                            val aktivitetskravResponseDTO = responseDTOList.first()
+                            aktivitetskravResponseDTO.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
+                            aktivitetskravResponseDTO.vurderinger.size shouldBeEqualTo 2
+
+                            val latestVurdering = aktivitetskravResponseDTO.vurderinger.first()
+                            val oldestVurdering = aktivitetskravResponseDTO.vurderinger.last()
+
+                            latestVurdering.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
+                            latestVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
+                            latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
+
+                            oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
+                            oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
+                            oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                         }
                     }
                 }
@@ -179,7 +233,7 @@ class AktivitetskravApiSpek : Spek({
                 val urlVurderAktivitetskrav =
                     "$aktivitetskravApiBasePath/${nyAktivitetskrav.uuid}$vurderAktivitetskravPath"
 
-                val requestDTO = AktivitetskravVurderingRequestDTO(
+                val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
                     status = AktivitetskravStatus.OPPFYLT,
                     beskrivelse = "Aktivitetskravet er oppfylt",
                 )
@@ -191,7 +245,7 @@ class AktivitetskravApiSpek : Spek({
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(requestDTO))
+                                setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -203,16 +257,55 @@ class AktivitetskravApiSpek : Spek({
                             val latestAktivitetskrav =
                                 database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
-                            latestAktivitetskrav.status shouldBeEqualTo requestDTO.status.name
-                            latestAktivitetskrav.beskrivelse shouldBeEqualTo requestDTO.beskrivelse
-                            latestAktivitetskrav.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
-                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo latestAktivitetskrav.beskrivelse
-                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo latestAktivitetskrav.updatedBy
+                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
+                                ChronoUnit.MILLIS
+                            )
+                        }
+                    }
+                    it("Updates Aktivitetskrav already vurdert with new vurdering and produces to Kafka if request is succesful") {
+                        val avventVurdering = AktivitetskravVurdering.create(
+                            status = AktivitetskravStatus.AVVENT,
+                            createdBy = UserConstants.VEILEDER_IDENT,
+                            beskrivelse = "Avvent",
+                        )
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = nyAktivitetskrav,
+                            aktivitetskravVurdering = avventVurdering
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val latestAktivitetskrav =
+                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                    .first()
+                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
+                            latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                            kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
+                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
                                 ChronoUnit.MILLIS
                             )
@@ -266,11 +359,14 @@ class AktivitetskravApiSpek : Spek({
                         val randomUuid = UUID.randomUUID().toString()
 
                         with(
-                            handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/${randomUuid}$vurderAktivitetskravPath") {
+                            handleRequest(
+                                HttpMethod.Post,
+                                "$aktivitetskravApiBasePath/${randomUuid}$vurderAktivitetskravPath"
+                            ) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(requestDTO))
+                                setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -282,7 +378,7 @@ class AktivitetskravApiSpek : Spek({
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(requestDTO))
+                                setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest

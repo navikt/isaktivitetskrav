@@ -11,7 +11,6 @@ import java.time.OffsetDateTime
 import java.util.*
 
 const val AKTIVITETSKRAV_STOPPUNKT_WEEKS = 8L
-const val AUTOMATISK_OPPFYLT_BESKRIVELSE = "Gradert aktivitet"
 
 enum class AktivitetskravStatus {
     NY,
@@ -29,19 +28,20 @@ data class Aktivitetskrav private constructor(
     val sistEndret: OffsetDateTime,
     val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
-    val beskrivelse: String?,
-    val updatedBy: String?,
+    val vurderinger: List<AktivitetskravVurdering>,
 ) {
     companion object {
-        fun createFromDatabase(pAktivitetskrav: PAktivitetskrav) = Aktivitetskrav(
+        fun createFromDatabase(
+            pAktivitetskrav: PAktivitetskrav,
+            aktivitetskravVurderinger: List<AktivitetskravVurdering>,
+        ) = Aktivitetskrav(
             uuid = pAktivitetskrav.uuid,
             personIdent = pAktivitetskrav.personIdent,
             createdAt = pAktivitetskrav.createdAt,
             sistEndret = pAktivitetskrav.updatedAt,
             status = AktivitetskravStatus.valueOf(pAktivitetskrav.status),
             stoppunktAt = pAktivitetskrav.stoppunktAt,
-            beskrivelse = pAktivitetskrav.beskrivelse,
-            updatedBy = pAktivitetskrav.updatedBy,
+            vurderinger = aktivitetskravVurderinger,
         )
 
         fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): Aktivitetskrav =
@@ -58,14 +58,12 @@ data class Aktivitetskrav private constructor(
             personIdent = personIdent,
             status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
             tilfelleStart = tilfelleStart,
-            beskrivelse = AUTOMATISK_OPPFYLT_BESKRIVELSE,
         )
 
         private fun create(
             personIdent: PersonIdent,
             status: AktivitetskravStatus,
             tilfelleStart: LocalDate,
-            beskrivelse: String? = null,
         ) = Aktivitetskrav(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
@@ -73,8 +71,7 @@ data class Aktivitetskrav private constructor(
             sistEndret = nowUTC(),
             status = status,
             stoppunktAt = stoppunktDato(tilfelleStart),
-            beskrivelse = beskrivelse,
-            updatedBy = null,
+            vurderinger = emptyList(),
         )
 
         fun stoppunktDato(tilfelleStart: LocalDate): LocalDate =
@@ -82,16 +79,19 @@ data class Aktivitetskrav private constructor(
     }
 }
 
-fun Aktivitetskrav.toKafkaAktivitetskravVurdering() = KafkaAktivitetskravVurdering(
-    uuid = this.uuid.toString(),
-    personIdent = this.personIdent.value,
-    createdAt = this.createdAt,
-    updatedAt = this.sistEndret,
-    status = this.status.name,
-    beskrivelse = this.beskrivelse,
-    stoppunktAt = this.stoppunktAt,
-    updatedBy = this.updatedBy,
-)
+fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurdering {
+    val latestVurdering = this.vurderinger.firstOrNull()
+    return KafkaAktivitetskravVurdering(
+        uuid = this.uuid.toString(),
+        personIdent = this.personIdent.value,
+        createdAt = this.createdAt,
+        updatedAt = this.sistEndret,
+        status = this.status.name,
+        beskrivelse = latestVurdering?.beskrivelse,
+        stoppunktAt = this.stoppunktAt,
+        updatedBy = latestVurdering?.createdBy,
+    )
+}
 
 infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
     this.personIdent == oppfolgingstilfelle.personIdent && this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfter(
@@ -107,8 +107,8 @@ fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
         createdAt = it.createdAt.toLocalDateTime(),
         sistEndret = it.sistEndret.toLocalDateTime(),
         status = it.status,
-        updatedBy = it.updatedBy,
-        beskrivelse = it.beskrivelse,
+        stoppunktAt = it.stoppunktAt,
+        vurderinger = it.vurderinger.toVurderingResponseDTOs()
     )
 }
 
@@ -121,12 +121,9 @@ internal fun Aktivitetskrav.updateFrom(oppfolgingstilfelle: Oppfolgingstilfelle)
 }
 
 internal fun Aktivitetskrav.vurder(
-    status: AktivitetskravStatus,
-    vurdertAv: String,
-    beskrivelse: String?,
+    aktivitetskravVurdering: AktivitetskravVurdering,
 ): Aktivitetskrav = this.copy(
-    status = status,
-    beskrivelse = beskrivelse,
+    status = aktivitetskravVurdering.status,
+    vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
     sistEndret = nowUTC(),
-    updatedBy = vurdertAv,
 )
