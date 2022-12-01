@@ -101,6 +101,9 @@ infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Bool
 fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
     this.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT
 
+fun Aktivitetskrav.isVurdert(): Boolean =
+    this.status != AktivitetskravStatus.AUTOMATISK_OPPFYLT && this.status != AktivitetskravStatus.NY
+
 fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
     AktivitetskravResponseDTO(
         uuid = it.uuid.toString(),
