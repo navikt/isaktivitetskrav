@@ -81,6 +81,12 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             tilfelleEnd = LocalDate.now(),
             gradert = true,
         )
+        val kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
+            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            tilfelleStart = LocalDate.now().plusDays(1),
+            tilfelleEnd = LocalDate.now().plusWeeks(9),
+            gradert = false,
+        )
 
         beforeEachTest {
             database.dropData()
@@ -608,6 +614,36 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot2.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                }
+            }
+            describe("Oppfolgingstilfelle start in future") {
+                it("creates no Aktivitetskrav for future oppfolgingstilfelle lasting 9 weeks, not gradert") {
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
+                        mapOf(
+                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
+                                createKafkaOppfolgingstilfellePersonConsumerRecord(
+                                    kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert
+                                )
+                            )
+                        )
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.shouldBeEmpty()
                 }
             }
         }

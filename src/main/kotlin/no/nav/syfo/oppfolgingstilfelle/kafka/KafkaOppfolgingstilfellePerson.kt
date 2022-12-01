@@ -3,6 +3,7 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import no.nav.syfo.util.nowUTC
+import no.nav.syfo.util.tomorrow
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -25,7 +26,7 @@ data class KafkaOppfolgingstilfelle(
 )
 
 fun KafkaOppfolgingstilfellePerson.toLatestOppfolgingstilfelle(): Oppfolgingstilfelle? =
-    oppfolgingstilfelleList.maxByOrNull {
+    this.oppfolgingstilfelleList.filter { it.start.isBefore(tomorrow()) }.maxByOrNull {
         it.start
     }?.let { this.toOppfolgingstilfelle(it) }
 
