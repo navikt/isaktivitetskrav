@@ -15,7 +15,7 @@ inline fun <reified Deserializer> kafkaAivenConsumerConfig(
     return Properties().apply {
         putAll(commonKafkaAivenConfig(kafkaEnvironment))
 
-        this[ConsumerConfig.GROUP_ID_CONFIG] = "isaktivitetskrav-v1"
+        this[ConsumerConfig.GROUP_ID_CONFIG] = "isaktivitetskrav-v4"
         this[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java.canonicalName
         this[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
         this[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false" // we commit manually if db persistence is successful
