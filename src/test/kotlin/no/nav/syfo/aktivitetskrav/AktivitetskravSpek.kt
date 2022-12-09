@@ -85,11 +85,13 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
+                arsaker = listOf(VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
+                arsaker = listOf(VurderingArsak.FRISKMELDT),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -110,7 +112,7 @@ class AktivitetskravSpek : Spek({
     }
 
     describe("toKafkaAktivitetskravVurdering") {
-        it("sets updatedBy and beskrivelse from latest vurdering") {
+        it("sets updatedBy, beskrivelse and arsaker from latest vurdering") {
             val aktivitetskrav =
                 Aktivitetskrav.ny(
                     personIdent = ARBEIDSTAKER_PERSONIDENT,
@@ -120,11 +122,13 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
+                arsaker = listOf(VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.OTHER_VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
+                arsaker = listOf(VurderingArsak.FRISKMELDT),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -137,6 +141,7 @@ class AktivitetskravSpek : Spek({
             kafkaAktivitetskravVurdering.updatedAt shouldBeEqualTo updatedAktivitetskrav.sistEndret
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
+            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
         }
         it("updatedBy and beskrivelse is null when not vurdert") {
             val aktivitetskrav =

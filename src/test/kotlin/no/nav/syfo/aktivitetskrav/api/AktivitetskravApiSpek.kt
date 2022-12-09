@@ -131,6 +131,10 @@ class AktivitetskravApiSpek : Spek({
                             status = AktivitetskravStatus.AVVENT,
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
+                            arsaker = listOf(
+                                VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+                                VurderingArsak.INFORMASJON_BEHANDLER
+                            ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
@@ -140,6 +144,7 @@ class AktivitetskravApiSpek : Spek({
                             status = AktivitetskravStatus.OPPFYLT,
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Oppfylt",
+                            arsaker = listOf(VurderingArsak.GRADERT),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
@@ -169,10 +174,15 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
                             latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
+                            latestVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.GRADERT)
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
                             oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            oldestVurdering.arsaker shouldBeEqualTo listOf(
+                                VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+                                VurderingArsak.INFORMASJON_BEHANDLER
+                            )
                         }
                     }
                 }
@@ -198,7 +208,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.Forbidden
                         }
                     }
-                    it("should return status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
+                    it("returns status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
@@ -207,7 +217,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
-                    it("should return status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
+                    it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
@@ -236,6 +246,7 @@ class AktivitetskravApiSpek : Spek({
                 val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
                     status = AktivitetskravStatus.OPPFYLT,
                     beskrivelse = "Aktivitetskravet er oppfylt",
+                    arsaker = listOf(VurderingArsak.FRISKMELDT),
                 )
 
                 describe("Happy path") {
@@ -264,6 +275,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
                                 ChronoUnit.MILLIS
@@ -275,6 +287,10 @@ class AktivitetskravApiSpek : Spek({
                             status = AktivitetskravStatus.AVVENT,
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
+                            arsaker = listOf(
+                                VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+                                VurderingArsak.INFORMASJON_BEHANDLER
+                            ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
@@ -305,6 +321,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
                                 ChronoUnit.MILLIS
@@ -333,7 +350,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.Forbidden
                         }
                     }
-                    it("should return status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
+                    it("returns status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
                         with(
                             handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
@@ -342,7 +359,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
-                    it("should return status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
+                    it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
                         with(
                             handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
@@ -355,7 +372,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
-                    it("should return status BadRequest if no vurdering exists for uuid-param") {
+                    it("returns status BadRequest if no vurdering exists for uuid-param") {
                         val randomUuid = UUID.randomUUID().toString()
 
                         with(
@@ -372,13 +389,49 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
-                    it("should return status BadRequest if $NAV_PERSONIDENT_HEADER differs from personIdent for vurdering") {
+                    it("returns status BadRequest if $NAV_PERSONIDENT_HEADER differs from personIdent for vurdering") {
                         with(
                             handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
                                 addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
                                 setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if vurdering missing arsak") {
+                        val vurderingMissingArsakRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.OPPFYLT,
+                            beskrivelse = "Aktivitetskravet er oppfylt",
+                            arsaker = emptyList(),
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(vurderingMissingArsakRequestDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if vurdering has invalid arsak") {
+                        val vurderingInvalidArsakRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Aktivitetskravet er oppfylt",
+                            arsaker = listOf(VurderingArsak.TILTAK),
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(vurderingInvalidArsakRequestDTO))
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest

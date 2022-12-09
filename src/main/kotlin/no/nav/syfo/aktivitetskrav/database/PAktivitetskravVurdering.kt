@@ -12,6 +12,7 @@ data class PAktivitetskravVurdering(
     val createdBy: String,
     val status: String,
     val beskrivelse: String?,
+    val arsaker: List<String>,
 )
 
 fun List<PAktivitetskravVurdering>.toAktivitetskravVurderingList() = map { it.toAktivitetskravVurdering() }

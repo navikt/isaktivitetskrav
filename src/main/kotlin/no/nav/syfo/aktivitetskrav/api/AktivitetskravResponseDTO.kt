@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.api
 
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -19,4 +20,5 @@ data class AktivitetskravVurderingResponseDTO(
     val createdBy: String,
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
+    val arsaker: List<VurderingArsak>,
 )
