@@ -412,6 +412,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     status = AktivitetskravStatus.UNNTAK,
                     createdBy = UserConstants.VEILEDER_IDENT,
                     beskrivelse = "Unntak",
+                    arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
                 )
                 val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
 
@@ -462,6 +463,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     status = AktivitetskravStatus.OPPFYLT,
                     createdBy = UserConstants.VEILEDER_IDENT,
                     beskrivelse = "Oppfylt",
+                    arsaker = listOf(VurderingArsak.FRISKMELDT),
                 )
                 val oppfyltAktivitetskrav = nyAktivitetskrav.vurder(oppfyltVurdering)
 
@@ -512,6 +514,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     status = AktivitetskravStatus.AVVENT,
                     createdBy = UserConstants.VEILEDER_IDENT,
                     beskrivelse = "Avvent",
+                    arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER, VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
                 )
                 val avventAktivitetskrav = nyAktivitetskrav.vurder(avventVurdering)
 
@@ -562,6 +565,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     status = AktivitetskravStatus.UNNTAK,
                     createdBy = UserConstants.VEILEDER_IDENT,
                     beskrivelse = "Unntak",
+                    arsaker = listOf(VurderingArsak.TILRETTELEGGING_IKKE_MULIG),
                 )
                 val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
 

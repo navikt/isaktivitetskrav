@@ -1,21 +1,18 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.util.nowUTC
-import java.util.*
+import no.nav.syfo.aktivitetskrav.domain.*
 
 data class AktivitetskravVurderingRequestDTO(
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
+    val arsaker: List<VurderingArsak>,
 )
 
 fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(
     createdByIdent: String,
-) = AktivitetskravVurdering(
-    uuid = UUID.randomUUID(),
-    createdAt = nowUTC(),
-    createdBy = createdByIdent,
+) = AktivitetskravVurdering.create(
     status = this.status,
+    createdBy = createdByIdent,
     beskrivelse = this.beskrivelse,
+    arsaker = this.arsaker,
 )

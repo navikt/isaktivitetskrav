@@ -90,6 +90,7 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
         beskrivelse = latestVurdering?.beskrivelse,
         stoppunktAt = this.stoppunktAt,
         updatedBy = latestVurdering?.createdBy,
+        arsaker = latestVurdering?.arsaker?.map { it.name } ?: emptyList()
     )
 }
 

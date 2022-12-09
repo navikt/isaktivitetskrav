@@ -1,7 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
 import java.sql.*
@@ -50,8 +49,9 @@ const val queryCreateAktivitetskravVurdering =
         created_at,
         created_by,
         status,
-        beskrivelse
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?)
+        beskrivelse,
+        arsaker
+    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?)
     RETURNING id
     """
 
@@ -66,6 +66,7 @@ fun Connection.createAktiviteskravVurdering(
         it.setString(4, aktivitetskravVurdering.createdBy)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
+        it.setString(7, aktivitetskravVurdering.arsakerToString())
         it.executeQuery().toList { getInt("id") }
     }
 
@@ -189,4 +190,5 @@ private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = P
     createdBy = getString("created_by"),
     status = getString("status"),
     beskrivelse = getString("beskrivelse"),
+    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty),
 )
