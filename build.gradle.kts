@@ -5,25 +5,25 @@ group = "no.nav.syfo"
 version = "0.0.1"
 
 object Versions {
-    const val flyway = "9.7.0"
+    const val flyway = "9.10.0"
     const val hikari = "5.0.1"
-    const val jackson = "2.14.0"
+    const val jacksonDataType = "2.14.1"
     const val kafka = "3.3.1"
     const val kluent = "1.72"
-    const val ktor = "2.1.3"
-    const val logback = "1.4.4"
+    const val ktor = "2.2.1"
+    const val logback = "1.4.5"
     const val logstashEncoder = "7.2"
-    const val micrometerRegistry = "1.10.0"
-    const val mockk = "1.13.2"
+    const val micrometerRegistry = "1.10.2"
+    const val mockk = "1.13.3"
     const val nimbusJoseJwt = "9.25.6"
-    const val postgres = "42.5.0"
+    const val postgres = "42.5.1"
     const val postgresEmbedded = "0.13.4"
     const val scala = "2.13.9"
     const val spek = "2.0.19"
 }
 
 plugins {
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.7.21"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
 }
@@ -68,7 +68,7 @@ dependencies {
     }
 
     // (De-)serialization
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jackson}")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jacksonDataType}")
 
     // Kafka
     val excludeLog4j = fun ExternalModuleDependency.() {
