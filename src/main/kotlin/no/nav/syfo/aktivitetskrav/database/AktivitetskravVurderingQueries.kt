@@ -146,14 +146,10 @@ fun DatabaseInterface.getAktivitetskrav(
 
 fun DatabaseInterface.getAktivitetskravVurderinger(
     aktivitetskravId: Int,
-    connection: Connection?,
-): List<PAktivitetskravVurdering> {
-    return connection?.getAktivitetskravVurderinger(
-        aktivitetskravId = aktivitetskravId
-    ) ?: this.connection.use {
-        it.getAktivitetskravVurderinger(
-            aktivitetskravId = aktivitetskravId
-        )
+): List<PAktivitetskravVurdering> = this.connection.use { connection ->
+    connection.prepareStatement(queryGetAktivitetskravVurderinger).use {
+        it.setInt(1, aktivitetskravId)
+        it.executeQuery().toList { toPAktivitetskravVurdering() }
     }
 }
 
@@ -164,13 +160,6 @@ const val queryGetAktivitetskravVurderinger =
         WHERE aktivitetskrav_id = ?
         ORDER BY created_at DESC
     """
-
-private fun Connection.getAktivitetskravVurderinger(
-    aktivitetskravId: Int,
-): List<PAktivitetskravVurdering> = prepareStatement(queryGetAktivitetskravVurderinger).use {
-    it.setInt(1, aktivitetskravId)
-    it.executeQuery().toList { toPAktivitetskravVurdering() }
-}
 
 private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     id = getInt("id"),

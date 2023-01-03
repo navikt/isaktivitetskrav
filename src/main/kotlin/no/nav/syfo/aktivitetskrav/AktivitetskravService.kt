@@ -70,9 +70,9 @@ class AktivitetskravService(
             withVurderinger(pAktivitetskrav = pAktivitetskrav)
         }
 
-    private fun withVurderinger(pAktivitetskrav: PAktivitetskrav, connection: Connection? = null): Aktivitetskrav {
+    private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
         val aktivitetskravVurderinger =
-            database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id, connection = connection)
+            database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id)
                 .toAktivitetskravVurderingList()
         return pAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
     }

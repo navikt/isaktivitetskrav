@@ -18,7 +18,7 @@ const val aktivitetskravApiPersonidentPath = "/personident"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
 
-private const val apiAction = "access aktivitetskrav for person"
+private const val API_ACTION = "access aktivitetskrav for person"
 
 fun Route.registerAktivitetskravApi(
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
@@ -26,7 +26,7 @@ fun Route.registerAktivitetskravApi(
 ) {
     route(aktivitetskravApiBasePath) {
         install(VeilederTilgangskontrollPlugin) {
-            this.action = apiAction
+            this.action = API_ACTION
             this.veilederTilgangskontrollClient = veilederTilgangskontrollClient
         }
         get(aktivitetskravApiPersonidentPath) {
@@ -64,4 +64,4 @@ fun Route.registerAktivitetskravApi(
 }
 
 private fun ApplicationCall.personIdent(): PersonIdent = this.getPersonIdent()
-    ?: throw IllegalArgumentException("Failed to $apiAction: No $NAV_PERSONIDENT_HEADER supplied in request header")
+    ?: throw IllegalArgumentException("Failed to $API_ACTION: No $NAV_PERSONIDENT_HEADER supplied in request header")
