@@ -1,13 +1,13 @@
 package no.nav.syfo.client.wellknown
 
 data class WellKnownDTO(
-    val authorizationEndpoint: String,
+    val authorization_endpoint: String,
     val issuer: String,
-    val jwksUri: String,
-    val tokenEndpoint: String,
+    val jwks_uri: String,
+    val token_endpoint: String,
 )
 
 fun WellKnownDTO.toWellKnown() = WellKnown(
     issuer = this.issuer,
-    jwksUri = this.jwksUri,
+    jwksUri = this.jwks_uri,
 )

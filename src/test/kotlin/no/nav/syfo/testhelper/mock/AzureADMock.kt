@@ -7,9 +7,9 @@ import no.nav.syfo.client.azuread.AzureAdTokenResponse
 
 class AzureADMock : MockServer() {
     private val azureAdTokenResponse = AzureAdTokenResponse(
-        accessToken = "token",
-        expiresIn = 3600,
-        tokenType = "type",
+        access_token = "token",
+        expires_in = 3600,
+        token_type = "type",
     )
 
     override val name = "azuread"
