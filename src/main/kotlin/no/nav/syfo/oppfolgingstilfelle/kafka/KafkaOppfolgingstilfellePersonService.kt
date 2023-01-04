@@ -1,7 +1,6 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.kafka.KafkaConsumerService

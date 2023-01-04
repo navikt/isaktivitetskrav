@@ -3,15 +3,15 @@ package no.nav.syfo.client.azuread
 import java.time.LocalDateTime
 
 data class AzureAdTokenResponse(
-    val access_token: String,
-    val expires_in: Long,
-    val token_type: String,
+    val accessToken: String,
+    val expiresIn: Long,
+    val tokenType: String,
 )
 
 fun AzureAdTokenResponse.toAzureAdToken(): AzureAdToken {
-    val expiresOn = LocalDateTime.now().plusSeconds(this.expires_in)
+    val expiresOn = LocalDateTime.now().plusSeconds(this.expiresIn)
     return AzureAdToken(
-        accessToken = this.access_token,
+        accessToken = this.accessToken,
         expires = expiresOn,
     )
 }
