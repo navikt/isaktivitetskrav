@@ -16,6 +16,7 @@ class AktivitetskravVurderingProducer(
         val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
         val key = UUID.nameUUIDFromBytes(kafkaAktivitetskravVurdering.personIdent.toByteArray()).toString()
         try {
+            log.trace("Send kafkaAktivitetskravVurdering to kafka topic")
             kafkaProducerAktivitetskravVurdering.send(
                 ProducerRecord(
                     AKTIVITETSKRAV_VURDERING_TOPIC,
