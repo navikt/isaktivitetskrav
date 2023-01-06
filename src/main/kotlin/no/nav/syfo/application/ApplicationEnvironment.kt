@@ -40,6 +40,10 @@ data class Environment(
             baseUrl = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
             clientId = getEnvVar("SYFOTILGANGSKONTROLL_CLIENT_ID"),
         ),
+        pdl = ClientEnvironment(
+            baseUrl = getEnvVar("PDL_URL"),
+            clientId = getEnvVar("PDL_CLIENT_ID"),
+        )
     ),
 )
 
