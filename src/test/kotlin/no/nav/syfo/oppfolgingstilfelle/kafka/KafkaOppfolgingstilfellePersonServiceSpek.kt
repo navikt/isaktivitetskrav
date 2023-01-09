@@ -97,13 +97,6 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
         }
 
-        fun createAktivitetskrav(aktivitetskrav: Aktivitetskrav) {
-            database.connection.use {
-                it.createAktivitetskrav(aktivitetskrav)
-                it.commit()
-            }
-        }
-
         describe("${KafkaOppfolgingstilfellePersonService::class.java.simpleName}: pollAndProcessRecords") {
             describe("no Aktivitetskrav exists for oppfolgingstilfelle") {
                 it("creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert") {
@@ -243,7 +236,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     tilfelleStart = nineWeeksAgo,
                 )
                 it("updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert") {
-                    createAktivitetskrav(nyAktivitetskrav)
+                    database.createAktivitetskrav(nyAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -282,7 +275,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                 }
                 it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
-                    createAktivitetskrav(nyAktivitetskrav)
+                    database.createAktivitetskrav(nyAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -327,7 +320,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     tilfelleStart = nineWeeksAgo,
                 )
                 it("creates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
-                    createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -364,7 +357,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                 }
                 it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert") {
-                    createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -417,7 +410,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
 
                 it("updates Aktivitetskrav(UNNTAK) stoppunkt_at") {
-                    createAktivitetskrav(unntakAktivitetskrav)
+                    database.createAktivitetskrav(unntakAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -468,7 +461,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val oppfyltAktivitetskrav = nyAktivitetskrav.vurder(oppfyltVurdering)
 
                 it("updates Aktivitetskrav(OPPFYLT) stoppunkt_at") {
-                    createAktivitetskrav(oppfyltAktivitetskrav)
+                    database.createAktivitetskrav(oppfyltAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -519,7 +512,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val avventAktivitetskrav = nyAktivitetskrav.vurder(avventVurdering)
 
                 it("updates Aktivitetskrav(AVVENT) stoppunkt_at") {
-                    createAktivitetskrav(avventAktivitetskrav)
+                    database.createAktivitetskrav(avventAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(
@@ -570,7 +563,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
 
                 it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) and then Aktivitetskrav(NY)") {
-                    createAktivitetskrav(unntakAktivitetskrav)
+                    database.createAktivitetskrav(unntakAktivitetskrav)
 
                     every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
                         mapOf(

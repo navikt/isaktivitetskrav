@@ -99,6 +99,34 @@ fun Connection.updateAktivitetskrav(
     return updatedIds.first()
 }
 
+const val queryUpdateAktivitetskravPersonIdent =
+    """
+        UPDATE AKTIVITETSKRAV
+        SET personident = ?
+        WHERE personident = ?
+    """
+
+fun DatabaseInterface.updateAktivitetskravPersonIdent(
+    nyPersonIdent: PersonIdent,
+    inactiveIdenter: List<PersonIdent>,
+): Int {
+    var updatedRows = 0
+
+    this.connection.use { connection ->
+        connection.prepareStatement(queryUpdateAktivitetskravPersonIdent).use {
+            inactiveIdenter.forEach { inactiveIdent ->
+                it.setString(1, nyPersonIdent.value)
+                it.setString(2, inactiveIdent.value)
+                it.executeUpdate()
+                updatedRows++
+            }
+        }
+        connection.commit()
+    }
+
+    return updatedRows
+}
+
 fun DatabaseInterface.getAktivitetskrav(
     personIdent: PersonIdent,
     connection: Connection? = null,

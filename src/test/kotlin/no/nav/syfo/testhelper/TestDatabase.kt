@@ -1,6 +1,8 @@
 package no.nav.syfo.testhelper
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
 import org.flywaydb.core.Flyway
 import java.sql.Connection
@@ -39,6 +41,15 @@ fun DatabaseInterface.dropData() {
     this.connection.use { connection ->
         queryList.forEach { query ->
             connection.prepareStatement(query).execute()
+        }
+        connection.commit()
+    }
+}
+
+fun DatabaseInterface.createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav) {
+    this.connection.use { connection ->
+        aktivitetskrav.forEach {
+            connection.createAktivitetskrav(it)
         }
         connection.commit()
     }
