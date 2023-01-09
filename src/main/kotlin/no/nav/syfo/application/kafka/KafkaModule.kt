@@ -4,6 +4,8 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.identhendelse.kafka.KafkaIdenthendelseService
+import no.nav.syfo.identhendelse.kafka.launchKafkaTaskIdenthendelse
 import no.nav.syfo.oppfolgingstilfelle.kafka.KafkaOppfolgingstilfellePersonService
 import no.nav.syfo.oppfolgingstilfelle.kafka.launchKafkaTaskOppfolgingstilfellePerson
 
@@ -22,6 +24,14 @@ fun launchKafkaModule(
             applicationState = applicationState,
             kafkaEnvironment = environment.kafka,
             kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
+        )
+    }
+    if (environment.toggleKafkaConsumerIdenthendelseEnabled) {
+        val kafkaIdenthendelseService = KafkaIdenthendelseService()
+        launchKafkaTaskIdenthendelse(
+            applicationState = applicationState,
+            kafkaEnvironment = environment.kafka,
+            kafkaIdenthendelseService = kafkaIdenthendelseService,
         )
     }
 }

@@ -5,6 +5,7 @@ group = "no.nav.syfo"
 version = "0.0.1"
 
 object Versions {
+    const val confluent = "7.3.1"
     const val flyway = "9.10.0"
     const val hikari = "5.0.1"
     const val jacksonDataType = "2.14.1"
@@ -30,6 +31,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven(url = "https://packages.confluent.io/maven/")
 }
 
 dependencies {
@@ -75,6 +77,7 @@ dependencies {
         exclude(group = "log4j")
     }
     implementation("org.apache.kafka:kafka_2.13:${Versions.kafka}", excludeLog4j)
+    implementation("io.confluent:kafka-avro-serializer:${Versions.confluent}", excludeLog4j)
     implementation("org.scala-lang:scala-library") {
         version {
             strictly(Versions.scala)
