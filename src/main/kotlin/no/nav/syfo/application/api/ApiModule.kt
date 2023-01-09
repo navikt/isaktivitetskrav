@@ -19,6 +19,7 @@ fun Application.apiModule(
     database: DatabaseInterface,
     environment: Environment,
     wellKnownInternalAzureAD: WellKnown,
+    azureAdClient: AzureAdClient,
     aktivitetskravService: AktivitetskravService,
 ) {
     installMetrics()
@@ -35,9 +36,6 @@ fun Application.apiModule(
         )
     )
 
-    val azureAdClient = AzureAdClient(
-        azureEnvironment = environment.azure
-    )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
         clientEnvironment = environment.clients.syfotilgangskontroll

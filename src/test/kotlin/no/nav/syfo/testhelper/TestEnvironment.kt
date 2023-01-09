@@ -10,6 +10,7 @@ import no.nav.syfo.client.azuread.AzureEnvironment
 fun testEnvironment(
     azureOpenIdTokenEndpoint: String,
     syfoTilgangskontrollUrl: String,
+    pdlUrl: String,
 ) = Environment(
     database = DatabaseEnvironment(
         host = "localhost",
@@ -38,6 +39,10 @@ fun testEnvironment(
         syfotilgangskontroll = ClientEnvironment(
             baseUrl = syfoTilgangskontrollUrl,
             clientId = "dev-fss.teamsykefravr.syfotilgangskontroll",
+        ),
+        pdl = ClientEnvironment(
+            baseUrl = pdlUrl,
+            clientId = "pdlClientId",
         ),
     ),
     kafkaOppfolgingstilfellePersonProcessingEnabled = true,
