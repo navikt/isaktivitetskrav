@@ -6,14 +6,23 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.client.pdl.domain.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.testhelper.UserConstants
 
 class PdlMock : MockServer() {
     override val name = "pdl"
     override val routingConfiguration: Routing.() -> Unit = {
         post {
             val pdlRequest = call.receive<PdlHentIdenterRequest>()
-            val personIdent = PersonIdent(pdlRequest.variables.ident)
-            call.respond(generatePdlIdenterResponse(personIdent))
+            when (val personIdent = PersonIdent(pdlRequest.variables.ident)) {
+                UserConstants.THIRD_ARBEIDSTAKER_PERSONIDENT -> {
+                    val otherPersonIdent = PersonIdent("11111111111")
+                    call.respond(generatePdlIdenterResponse(otherPersonIdent))
+                }
+
+                else -> {
+                    call.respond(generatePdlIdenterResponse(personIdent))
+                }
+            }
         }
     }
 

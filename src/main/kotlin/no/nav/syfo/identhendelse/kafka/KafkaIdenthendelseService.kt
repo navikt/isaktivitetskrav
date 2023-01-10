@@ -3,6 +3,7 @@ package no.nav.syfo.identhendelse.kafka
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.kafka.KafkaConsumerService
+import no.nav.syfo.identhendelse.IdenthendelseService
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -11,7 +12,9 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class KafkaIdenthendelseService() : KafkaConsumerService<GenericRecord> {
+class KafkaIdenthendelseService(
+    private val identhendelseService: IdenthendelseService,
+) : KafkaConsumerService<GenericRecord> {
     override val pollDurationInMillis: Long = 1000
 
     override fun pollAndProcessRecords(kafkaConsumer: KafkaConsumer<String, GenericRecord>) {
@@ -21,9 +24,7 @@ class KafkaIdenthendelseService() : KafkaConsumerService<GenericRecord> {
                 if (records.count() > 0) {
                     records.forEach { record ->
                         if (record.value() != null) {
-                            log.info("Received Identhendelse record - ready to process")
-                            record.value().toKafkaIdenthendelseDTO()
-                            // TODO: Handle hendelse
+                            identhendelseService.handle(record.value().toKafkaIdenthendelseDTO())
                         } else {
                             log.warn("Identhendelse: Value of ConsumerRecord from topic $PDL_AKTOR_TOPIC is null, probably due to a tombstone. Contact the owner of the topic if an error is suspected")
                             COUNT_KAFKA_CONSUMER_PDL_AKTOR_TOMBSTONE.increment()
