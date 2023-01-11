@@ -37,7 +37,7 @@ class AktivitetskravApiSpek : Spek({
     ).copy(
         createdAt = nowUTC().minusWeeks(2)
     )
-    val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfyltGradert(
+    val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfylt(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().minusYears(2),
     ).copy(

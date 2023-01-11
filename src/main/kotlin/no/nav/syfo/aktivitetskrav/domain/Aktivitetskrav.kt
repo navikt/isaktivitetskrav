@@ -51,7 +51,7 @@ data class Aktivitetskrav private constructor(
                 tilfelleStart = tilfelleStart,
             )
 
-        fun automatiskOppfyltGradert(
+        fun automatiskOppfylt(
             personIdent: PersonIdent,
             tilfelleStart: LocalDate,
         ): Aktivitetskrav = create(
@@ -102,6 +102,8 @@ infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Bool
 fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
     this.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT
 
+fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
+
 fun Aktivitetskrav.isVurdert(): Boolean =
     this.status != AktivitetskravStatus.AUTOMATISK_OPPFYLT && this.status != AktivitetskravStatus.NY
 
@@ -116,7 +118,7 @@ fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
     )
 }
 
-internal fun Aktivitetskrav.updateFrom(oppfolgingstilfelle: Oppfolgingstilfelle): Aktivitetskrav {
+internal fun Aktivitetskrav.updateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Aktivitetskrav {
     val stoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
     return this.copy(
         stoppunktAt = stoppunktDato,
@@ -129,5 +131,10 @@ internal fun Aktivitetskrav.vurder(
 ): Aktivitetskrav = this.copy(
     status = aktivitetskravVurdering.status,
     vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
+    sistEndret = nowUTC(),
+)
+
+internal fun Aktivitetskrav.oppfyllAutomatisk(): Aktivitetskrav = this.copy(
+    status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
     sistEndret = nowUTC(),
 )

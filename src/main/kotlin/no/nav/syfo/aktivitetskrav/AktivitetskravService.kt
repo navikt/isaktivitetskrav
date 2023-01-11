@@ -14,7 +14,7 @@ class AktivitetskravService(
     private val database: DatabaseInterface,
 ) {
 
-    fun createAktivitetskrav(
+    internal fun createAktivitetskrav(
         connection: Connection,
         aktivitetskrav: Aktivitetskrav,
     ) {
@@ -24,21 +24,16 @@ class AktivitetskravService(
         )
     }
 
-    fun updateAktivitetskrav(
+    internal fun updateAktivitetskravStoppunkt(
         connection: Connection,
         aktivitetskrav: Aktivitetskrav,
         oppfolgingstilfelle: Oppfolgingstilfelle,
     ) {
-        val updatedAktivitetskrav = aktivitetskrav.updateFrom(
+        val updatedAktivitetskrav = aktivitetskrav.updateStoppunkt(
             oppfolgingstilfelle = oppfolgingstilfelle,
         )
 
-        connection.updateAktivitetskrav(
-            aktivitetskrav = updatedAktivitetskrav
-        )
-        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
-            aktivitetskrav = updatedAktivitetskrav
-        )
+        updateAktivitetskrav(connection, updatedAktivitetskrav)
     }
 
     internal fun vurderAktivitetskrav(
@@ -49,7 +44,7 @@ class AktivitetskravService(
 
         database.connection.use { connection ->
             val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav = updatedAktivitetskrav)
-            connection.createAktiviteskravVurdering(
+            connection.createAktivitetskravVurdering(
                 aktivitetskravId = aktivitetskravId,
                 aktivitetskravVurdering = aktivitetskravVurdering
             )
@@ -58,6 +53,12 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )
+    }
+
+    internal fun oppfyllAutomatisk(connection: Connection, aktivitetskrav: Aktivitetskrav) {
+        val updatedAktivitetskrav = aktivitetskrav.oppfyllAutomatisk()
+
+        updateAktivitetskrav(connection, updatedAktivitetskrav)
     }
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
@@ -75,5 +76,17 @@ class AktivitetskravService(
             database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id)
                 .toAktivitetskravVurderingList()
         return pAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
+    }
+
+    private fun updateAktivitetskrav(
+        connection: Connection,
+        updatedAktivitetskrav: Aktivitetskrav,
+    ) {
+        connection.updateAktivitetskrav(
+            aktivitetskrav = updatedAktivitetskrav
+        )
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
+            aktivitetskrav = updatedAktivitetskrav
+        )
     }
 }

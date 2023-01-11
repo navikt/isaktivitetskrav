@@ -46,7 +46,7 @@ class IdenthendelseServiceSpek : Spek({
             describe("Aktivitetskrav eksisterer for person") {
                 val aktivitetskravNy = Aktivitetskrav.ny(inaktivIdent, LocalDate.now().minusDays(50))
                 val aktivitetskravAutomatiskOppfylt =
-                    Aktivitetskrav.automatiskOppfyltGradert(inaktivIdent, LocalDate.now().minusDays(400))
+                    Aktivitetskrav.automatiskOppfylt(inaktivIdent, LocalDate.now().minusDays(400))
                 beforeEachTest {
                     database.createAktivitetskrav(aktivitetskravNy, aktivitetskravAutomatiskOppfylt)
                 }

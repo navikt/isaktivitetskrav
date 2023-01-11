@@ -24,7 +24,7 @@ fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
 
 fun Oppfolgingstilfelle.toAktivitetskrav(): Aktivitetskrav {
     return if (isGradertAtTilfelleEnd()) {
-        Aktivitetskrav.automatiskOppfyltGradert(
+        Aktivitetskrav.automatiskOppfylt(
             personIdent = this.personIdent,
             tilfelleStart = this.tilfelleStart,
         )

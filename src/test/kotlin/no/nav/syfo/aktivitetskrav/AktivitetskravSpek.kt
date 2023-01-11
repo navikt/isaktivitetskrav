@@ -65,7 +65,7 @@ class AktivitetskravSpek : Spek({
                     sistEndret = OffsetDateTime.now().minusDays(1)
                 )
 
-            val updatedAktivitetskrav = aktivitetskrav.updateFrom(oppfolgingstilfelle = oppfolgingstilfelle)
+            val updatedAktivitetskrav = aktivitetskrav.updateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle)
 
             updatedAktivitetskrav.sistEndret shouldBeGreaterThan aktivitetskrav.sistEndret
             updatedAktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
