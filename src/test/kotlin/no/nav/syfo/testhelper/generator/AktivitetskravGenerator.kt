@@ -3,6 +3,17 @@ package no.nav.syfo.testhelper.generator
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.testhelper.UserConstants
+import java.time.LocalDate
+
+fun createAktivitetskravNy(tilfelleStart: LocalDate): Aktivitetskrav = Aktivitetskrav.ny(
+    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+    tilfelleStart = tilfelleStart,
+)
+
+fun createAktivitetskravAutomatiskOppfylt(tilfelleStart: LocalDate): Aktivitetskrav = Aktivitetskrav.automatiskOppfylt(
+    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+    tilfelleStart = tilfelleStart,
+)
 
 fun createAktivitetskravOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
     val oppfyltVurdering = AktivitetskravVurdering.create(
