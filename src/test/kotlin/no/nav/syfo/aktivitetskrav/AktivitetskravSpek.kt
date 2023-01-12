@@ -5,6 +5,7 @@ import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT
+import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createKafkaOppfolgingstilfellePerson
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
@@ -36,32 +37,21 @@ class AktivitetskravSpek : Spek({
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo false
         }
         it("returns true when equal arbeidstaker and stoppunkt between tilfelle start and end") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = nineWeeksAgo
-                )
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = nineWeeksAgo)
 
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo true
         }
         it("returns false when equal arbeidstaker and stoppunkt after tilfelle end") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = sevenWeeksAgo
-                )
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = sevenWeeksAgo)
 
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo false
         }
     }
 
-    describe("update from Oppfolgingstilfelle") {
+    describe("updateStoppunkt") {
         it("updates stoppunktAt and sistEndret") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = tenWeeksAgo
-                ).copy(
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+                .copy(
                     sistEndret = OffsetDateTime.now().minusDays(1)
                 )
 
@@ -74,11 +64,8 @@ class AktivitetskravSpek : Spek({
 
     describe("vurder aktivitetskrav") {
         it("updates vurderinger, status, sistEndret") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = tenWeeksAgo
-                ).copy(
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+                .copy(
                     sistEndret = OffsetDateTime.now().minusDays(1)
                 )
             val avventVurdering = AktivitetskravVurdering.create(
@@ -113,11 +100,7 @@ class AktivitetskravSpek : Spek({
 
     describe("toKafkaAktivitetskravVurdering") {
         it("sets updatedBy, beskrivelse and arsaker from latest vurdering") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = tenWeeksAgo
-                )
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
             val avventVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
@@ -144,11 +127,7 @@ class AktivitetskravSpek : Spek({
             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
         }
         it("updatedBy and beskrivelse is null when not vurdert") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = tenWeeksAgo
-                )
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
 
             val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
 
