@@ -22,6 +22,7 @@ import java.util.concurrent.Future
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
 private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
 private val tenWeeksAgo = LocalDate.now().minusWeeks(10)
+private val yearAgo = LocalDate.now().minusYears(1)
 
 class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
     with(TestApplicationEngine()) {
@@ -97,17 +98,21 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
         }
 
+        fun mockKafkaConsumerOppfolgingstilfellePerson(
+            vararg kafkaOppfolgingstilfellePerson: KafkaOppfolgingstilfellePerson,
+        ) {
+            val consumerRecords =
+                kafkaOppfolgingstilfellePerson.map { createKafkaOppfolgingstilfellePersonConsumerRecord(it) }
+            every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
+                mapOf(kafkaOppfolgingstilfellePersonTopicPartition to consumerRecords)
+            )
+        }
+
         describe("${KafkaOppfolgingstilfellePersonService::class.java.simpleName}: pollAndProcessRecords") {
             describe("no Aktivitetskrav exists for oppfolgingstilfelle") {
                 it("creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert") {
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleNineWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -137,14 +142,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                 }
                 it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert") {
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleNineWeeksGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -174,14 +173,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                 }
                 it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, not gradert") {
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -202,14 +195,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList.shouldBeEmpty()
                 }
                 it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, gradert") {
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfellePersonSevenWeeksGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -238,14 +225,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 it("updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert") {
                     database.createAktivitetskrav(nyAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -277,14 +258,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
                     database.createAktivitetskrav(nyAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -315,21 +290,15 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 }
             }
             describe("Aktivitetskrav(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle") {
-                val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfyltGradert(
+                val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfylt(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
                 it("creates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
                     database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleNineWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -359,14 +328,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert") {
                     database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -401,25 +364,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
-                val unntakVurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.UNNTAK,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = "Unntak",
-                    arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
-                )
-                val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
+                val unntakAktivitetskrav = createAktivitetskravUnntak(nyAktivitetskrav)
 
                 it("updates Aktivitetskrav(UNNTAK) stoppunkt_at") {
                     database.createAktivitetskrav(unntakAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -452,25 +403,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
-                val oppfyltVurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.OPPFYLT,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = "Oppfylt",
-                    arsaker = listOf(VurderingArsak.FRISKMELDT),
-                )
-                val oppfyltAktivitetskrav = nyAktivitetskrav.vurder(oppfyltVurdering)
+                val oppfyltAktivitetskrav = createAktivitetskravOppfylt(nyAktivitetskrav)
 
                 it("updates Aktivitetskrav(OPPFYLT) stoppunkt_at") {
                     database.createAktivitetskrav(oppfyltAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -503,25 +442,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
-                val avventVurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.AVVENT,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = "Avvent",
-                    arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER, VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
-                )
-                val avventAktivitetskrav = nyAktivitetskrav.vurder(avventVurdering)
+                val avventAktivitetskrav = createAktivitetskravAvvent(nyAktivitetskrav)
 
                 it("updates Aktivitetskrav(AVVENT) stoppunkt_at") {
                     database.createAktivitetskrav(avventAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -554,28 +481,14 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = nineWeeksAgo,
                 )
-                val unntakVurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.UNNTAK,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = "Unntak",
-                    arsaker = listOf(VurderingArsak.TILRETTELEGGING_IKKE_MULIG),
-                )
-                val unntakAktivitetskrav = nyAktivitetskrav.vurder(unntakVurdering)
+                val unntakAktivitetskrav = createAktivitetskravUnntak(nyAktivitetskrav)
 
                 it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) and then Aktivitetskrav(NY)") {
                     database.createAktivitetskrav(unntakAktivitetskrav)
 
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleTenWeeksGradert
-                                ),
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleNineWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleTenWeeksGradert,
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -615,14 +528,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             }
             describe("Oppfolgingstilfelle start in future") {
                 it("creates no Aktivitetskrav for future oppfolgingstilfelle lasting 9 weeks, not gradert") {
-                    every { mockKafkaConsumerOppfolgingstilfellePerson.poll(any<Duration>()) } returns ConsumerRecords(
-                        mapOf(
-                            kafkaOppfolgingstilfellePersonTopicPartition to listOf(
-                                createKafkaOppfolgingstilfellePersonConsumerRecord(
-                                    kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert
-                                )
-                            )
-                        )
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -641,6 +548,309 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     )
 
                     aktivitetskravList.shouldBeEmpty()
+                }
+            }
+            describe("Aktivitetskrav(NY) exists for earlier oppfølgingstilfelle") {
+                val nyAktivitetskrav = Aktivitetskrav.ny(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = yearAgo,
+                )
+
+                it("updates aktivitetskrav for earlier oppfølgingstilfelle to AUTOMATISK_OPPFYLT when latest oppfølgingstilfelle lasting 9 weeks (not gradert)") {
+                    database.createAktivitetskrav(nyAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 2
+
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+
+                    val kafkaRecordSlot1 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot2 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    verifyOrder {
+                        kafkaProducer.send(capture(kafkaRecordSlot1))
+                        kafkaProducer.send(capture(kafkaRecordSlot2))
+                    }
+
+                    kafkaRecordSlot1.captured.value().status shouldBeEqualTo aktivitetskravEarlierOppfolgingstilfelle.status
+                }
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 7 weeks") {
+                    database.createAktivitetskrav(nyAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.NY.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                }
+            }
+            describe("Aktivitetskrav(AUTOMATISK_OPPFYLT) exists for earlier oppfølgingstilfelle") {
+                val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfylt(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = yearAgo,
+                )
+
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 9 weeks (not gradert)") {
+                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 2
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo automatiskOppfyltAktivitetskrav.uuid
+                }
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 7 weeks") {
+                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo automatiskOppfyltAktivitetskrav.uuid
+                }
+            }
+            describe("Aktivitetskrav(UNNTAK) exists for earlier oppfølgingstilfelle") {
+                val nyAktivitetskrav = Aktivitetskrav.ny(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = yearAgo,
+                )
+                val unntakAktivitetskrav = createAktivitetskravUnntak(nyAktivitetskrav)
+
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 9 weeks (gradert)") {
+                    database.createAktivitetskrav(unntakAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 2
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.UNNTAK.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo unntakAktivitetskrav.uuid
+                }
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 7 weeks") {
+                    database.createAktivitetskrav(unntakAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.UNNTAK.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo unntakAktivitetskrav.uuid
+                }
+            }
+            describe("Aktivitetskrav(OPPFYLT) exists for earlier oppfølgingstilfelle") {
+                val nyAktivitetskrav = Aktivitetskrav.ny(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = yearAgo,
+                )
+                val oppfyltAktivitetskrav = createAktivitetskravOppfylt(nyAktivitetskrav)
+
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 9 weeks (gradert)") {
+                    database.createAktivitetskrav(oppfyltAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 2
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo oppfyltAktivitetskrav.uuid
+                }
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 7 weeks") {
+                    database.createAktivitetskrav(oppfyltAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo oppfyltAktivitetskrav.uuid
+                }
+            }
+            describe("Aktivitetskrav(AVVENT) exists for earlier oppfølgingstilfelle") {
+                val nyAktivitetskrav = Aktivitetskrav.ny(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = yearAgo,
+                )
+                val avventAktivitetskrav = createAktivitetskravAvvent(nyAktivitetskrav)
+
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 9 weeks (not gradert)") {
+                    database.createAktivitetskrav(avventAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 2
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AVVENT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo avventAktivitetskrav.uuid
+                }
+                it("do not update aktivitetskrav for earlier oppfølgingstilfelle when latest oppfølgingstilfelle lasting 7 weeks") {
+                    database.createAktivitetskrav(avventAktivitetskrav)
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonSevenWeeksGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
+                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AVVENT.name
+                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo avventAktivitetskrav.uuid
                 }
             }
         }

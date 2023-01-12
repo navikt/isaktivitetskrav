@@ -55,7 +55,7 @@ const val queryCreateAktivitetskravVurdering =
     RETURNING id
     """
 
-fun Connection.createAktiviteskravVurdering(
+fun Connection.createAktivitetskravVurdering(
     aktivitetskravId: Int,
     aktivitetskravVurdering: AktivitetskravVurdering,
 ) {

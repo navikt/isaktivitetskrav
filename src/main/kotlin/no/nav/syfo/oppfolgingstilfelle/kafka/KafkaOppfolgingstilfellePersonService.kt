@@ -75,6 +75,12 @@ class KafkaOppfolgingstilfellePersonService(
                 personIdent = latestOppfolgingstilfelle.personIdent,
             )
 
+        aktivitetskravForPerson.filter { it.isNy() && !(it gjelder latestOppfolgingstilfelle) }
+            .forEach { aktivitetskrav ->
+                log.info("Found aktivitetskrav NY for tidligere Oppfolgingstilfelle - oppfyll automatisk")
+                aktivitetskravService.oppfyllAutomatisk(connection = connection, aktivitetskrav = aktivitetskrav)
+            }
+
         val latestAktivitetskravForTilfelle =
             aktivitetskravForPerson.firstOrNull { it gjelder latestOppfolgingstilfelle }
 
@@ -102,7 +108,7 @@ class KafkaOppfolgingstilfellePersonService(
                 COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_CREATED.increment()
             } else {
                 log.info("Updating aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
-                aktivitetskravService.updateAktivitetskrav(
+                aktivitetskravService.updateAktivitetskravStoppunkt(
                     connection = connection,
                     aktivitetskrav = latestAktivitetskravForTilfelle,
                     oppfolgingstilfelle = latestOppfolgingstilfelle,
