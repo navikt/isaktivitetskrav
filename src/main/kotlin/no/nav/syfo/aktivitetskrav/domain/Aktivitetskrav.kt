@@ -18,7 +18,8 @@ enum class AktivitetskravStatus {
     UNNTAK,
     OPPFYLT,
     AUTOMATISK_OPPFYLT,
-    STANS
+    STANS,
+    IKKE_OPPFYLT,
 }
 
 data class Aktivitetskrav private constructor(
