@@ -5,14 +5,15 @@ import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT
-import no.nav.syfo.testhelper.generator.createAktivitetskravNy
-import no.nav.syfo.testhelper.generator.createKafkaOppfolgingstilfellePerson
+import no.nav.syfo.testhelper.generator.*
+import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.EnumSet
 
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
 private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
@@ -95,6 +96,34 @@ class AktivitetskravSpek : Spek({
             updatedAktivitetskrav.sistEndret shouldBeGreaterThan avventSistEndret
             updatedAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
             updatedAktivitetskrav.vurderinger shouldBeEqualTo listOf(oppfyltVurdering, avventVurdering)
+        }
+        it("kan vurdere IKKE_OPPFYLT uten arsak") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+            val ikkeOppfyltAktivitetskrav = createAktivitetskravIkkeOppfylt(nyAktivitetskrav = aktivitetskrav)
+
+            ikkeOppfyltAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_OPPFYLT
+        }
+        it("kan ikke vurdere IKKE_OPPFYLT med arsak") {
+            assertFailsWith(IllegalArgumentException::class) {
+                AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.IKKE_OPPFYLT,
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                    beskrivelse = null,
+                    arsaker = listOf(VurderingArsak.ANNET),
+                )
+            }
+        }
+        EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT, AktivitetskravStatus.STANS).forEach {
+            it("kan ikke lage vurdering med status $it") {
+                assertFailsWith(IllegalArgumentException::class) {
+                    AktivitetskravVurdering.create(
+                        status = it,
+                        createdBy = UserConstants.VEILEDER_IDENT,
+                        beskrivelse = null,
+                        arsaker = emptyList(),
+                    )
+                }
+            }
         }
     }
 

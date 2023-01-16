@@ -358,7 +358,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                 }
             }
-            describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT) exists for oppfolgingstilfelle") {
+            describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT) exists for oppfolgingstilfelle") {
                 val nyAktivitetskrav = createAktivitetskravNy(
                     tilfelleStart = nineWeeksAgo,
                 )
@@ -366,6 +366,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     createAktivitetskravUnntak(nyAktivitetskrav),
                     createAktivitetskravOppfylt(nyAktivitetskrav),
                     createAktivitetskravAvvent(nyAktivitetskrav),
+                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav)
                 )
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status
@@ -540,13 +541,14 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
                 }
             }
-            describe("Aktivitetskrav(AUTOMATISK_OPPFYLT/UNNTAK/OPPFYLT/AVVENT) exists for earlier oppfolgingstilfelle") {
+            describe("Aktivitetskrav(AUTOMATISK_OPPFYLT/UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT) exists for earlier oppfolgingstilfelle") {
                 val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
                 val testcases = listOf(
                     createAktivitetskravAutomatiskOppfylt(tilfelleStart = yearAgo),
                     createAktivitetskravUnntak(nyAktivitetskrav),
                     createAktivitetskravOppfylt(nyAktivitetskrav),
                     createAktivitetskravAvvent(nyAktivitetskrav),
+                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav)
                 )
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status

@@ -44,3 +44,14 @@ fun createAktivitetskravUnntak(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
     )
     return nyAktivitetskrav.vurder(unntakVurdering)
 }
+
+fun createAktivitetskravIkkeOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
+    val ikkeOppfyltVurdering = AktivitetskravVurdering.create(
+        status = AktivitetskravStatus.IKKE_OPPFYLT,
+        createdBy = UserConstants.VEILEDER_IDENT,
+        beskrivelse = null,
+        arsaker = emptyList(),
+    )
+
+    return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeOppfyltVurdering)
+}
