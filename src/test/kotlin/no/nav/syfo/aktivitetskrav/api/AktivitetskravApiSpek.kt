@@ -111,14 +111,14 @@ class AktivitetskravApiSpek : Spek({
                             first.status shouldBeEqualTo AktivitetskravStatus.NY
                             first.vurderinger.size shouldBeEqualTo 0
                             first.createdAt shouldNotBeEqualTo null
-                            first.sistEndret shouldNotBeEqualTo null
+                            first.updatedAt shouldNotBeEqualTo null
                             first.uuid shouldNotBeEqualTo null
 
                             val last = responseDTOList.last()
                             last.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
                             last.vurderinger.size shouldBeEqualTo 0
                             last.createdAt shouldNotBeEqualTo null
-                            last.sistEndret shouldNotBeEqualTo null
+                            last.updatedAt shouldNotBeEqualTo null
                             last.uuid shouldNotBeEqualTo null
                         }
                     }

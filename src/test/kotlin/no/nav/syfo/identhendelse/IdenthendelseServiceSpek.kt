@@ -10,6 +10,7 @@ import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.generateKafkaIdenthendelseDTO
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeGreaterThan
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.lang.IllegalStateException
@@ -64,6 +65,8 @@ class IdenthendelseServiceSpek : Spek({
 
                     val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdent)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 2
+                    val updatedAktivitetskravNy = aktivitetskravMedAktivIdent.first()
+                    updatedAktivitetskravNy.updatedAt shouldBeGreaterThan aktivitetskravNy.updatedAt
                 }
                 it("Oppdaterer ingenting når person har fått ny ident uten gamle identer") {
                     val kafkaIdenthendelseDTO =
