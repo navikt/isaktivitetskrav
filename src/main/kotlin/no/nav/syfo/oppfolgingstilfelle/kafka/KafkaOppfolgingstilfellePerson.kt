@@ -15,6 +15,7 @@ data class KafkaOppfolgingstilfellePerson(
     val oppfolgingstilfelleList: List<KafkaOppfolgingstilfelle>,
     val referanseTilfelleBitUuid: String,
     val referanseTilfelleBitInntruffet: OffsetDateTime,
+    val dodsdato: LocalDate? = null,
 )
 
 data class KafkaOppfolgingstilfelle(
@@ -42,4 +43,5 @@ fun KafkaOppfolgingstilfellePerson.toOppfolgingstilfelle(
     referanseTilfelleBitUuid = UUID.fromString(this.referanseTilfelleBitUuid),
     referanseTilfelleBitInntruffet = this.referanseTilfelleBitInntruffet,
     gradertAtTilfelleEnd = latestOppfolgingsTilfelle.gradertAtTilfelleEnd,
+    dodsdato = this.dodsdato,
 )

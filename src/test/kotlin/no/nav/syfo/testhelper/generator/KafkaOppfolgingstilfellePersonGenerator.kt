@@ -14,6 +14,7 @@ fun createKafkaOppfolgingstilfellePerson(
     tilfelleStart: LocalDate,
     tilfelleEnd: LocalDate,
     gradert: Boolean,
+    dodsdato: LocalDate? = null,
 ): KafkaOppfolgingstilfellePerson = KafkaOppfolgingstilfellePerson(
     uuid = UUID.randomUUID().toString(),
     createdAt = nowUTC(),
@@ -31,6 +32,7 @@ fun createKafkaOppfolgingstilfellePerson(
     ),
     referanseTilfelleBitUuid = UUID.randomUUID().toString(),
     referanseTilfelleBitInntruffet = nowUTC().minusDays(1),
+    dodsdato = dodsdato,
 )
 
 fun createKafkaOppfolgingstilfellePersonConsumerRecord(
