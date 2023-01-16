@@ -8,11 +8,9 @@ import no.nav.syfo.testhelper.UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.EnumSet
 
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
@@ -50,25 +48,17 @@ class AktivitetskravSpek : Spek({
     }
 
     describe("updateStoppunkt") {
-        it("updates stoppunktAt and sistEndret") {
+        it("updates stoppunktAt") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
-                .copy(
-                    sistEndret = OffsetDateTime.now().minusDays(1)
-                )
-
             val updatedAktivitetskrav = aktivitetskrav.updateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle)
 
-            updatedAktivitetskrav.sistEndret shouldBeGreaterThan aktivitetskrav.sistEndret
             updatedAktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
         }
     }
 
     describe("vurder aktivitetskrav") {
-        it("updates vurderinger, status, sistEndret") {
+        it("updates vurderinger and status") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
-                .copy(
-                    sistEndret = OffsetDateTime.now().minusDays(1)
-                )
             val avventVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
@@ -84,8 +74,6 @@ class AktivitetskravSpek : Spek({
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
 
-            val avventSistEndret = updatedAktivitetskrav.sistEndret
-            avventSistEndret shouldBeGreaterThan aktivitetskrav.sistEndret
             updatedAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AVVENT
             updatedAktivitetskrav.vurderinger shouldBeEqualTo listOf(avventVurdering)
 
@@ -93,7 +81,6 @@ class AktivitetskravSpek : Spek({
                 aktivitetskravVurdering = oppfyltVurdering
             )
 
-            updatedAktivitetskrav.sistEndret shouldBeGreaterThan avventSistEndret
             updatedAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
             updatedAktivitetskrav.vurderinger shouldBeEqualTo listOf(oppfyltVurdering, avventVurdering)
         }
@@ -150,7 +137,7 @@ class AktivitetskravSpek : Spek({
 
             val kafkaAktivitetskravVurdering = updatedAktivitetskrav.toKafkaAktivitetskravVurdering()
 
-            kafkaAktivitetskravVurdering.updatedAt shouldBeEqualTo updatedAktivitetskrav.sistEndret
+            kafkaAktivitetskravVurdering.updatedAt shouldBeEqualTo updatedAktivitetskrav.updatedAt
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)

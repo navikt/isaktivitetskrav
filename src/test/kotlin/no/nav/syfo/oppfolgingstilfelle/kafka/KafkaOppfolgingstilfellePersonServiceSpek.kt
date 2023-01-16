@@ -140,6 +140,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
                     kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                    kafkaAktivitetskravVurdering.updatedAt shouldNotBeEqualTo null
                 }
                 it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert") {
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -171,6 +172,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
                     kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                    kafkaAktivitetskravVurdering.updatedAt shouldNotBeEqualTo null
                 }
                 it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, not gradert") {
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -254,6 +256,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                    kafkaAktivitetskravVurdering.updatedAt shouldNotBeEqualTo null
                 }
                 it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
                     database.createAktivitetskrav(nyAktivitetskrav)
@@ -287,6 +290,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                    kafkaAktivitetskravVurdering.updatedAt shouldNotBeEqualTo null
                 }
             }
             describe("Aktivitetskrav(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle") {
@@ -323,6 +327,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.NY.name
                     kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                    kafkaAktivitetskravVurdering.updatedAt shouldNotBeEqualTo null
                 }
                 it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert") {
                     database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
@@ -356,6 +361,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
+                    kafkaAktivitetskravVurdering.updatedAt shouldNotBeEqualTo null
                 }
             }
             describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT) exists for oppfolgingstilfelle") {

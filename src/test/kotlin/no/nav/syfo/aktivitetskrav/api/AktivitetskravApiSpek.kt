@@ -17,7 +17,6 @@ import org.apache.kafka.clients.producer.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.concurrent.Future
 
@@ -111,14 +110,14 @@ class AktivitetskravApiSpek : Spek({
                             first.status shouldBeEqualTo AktivitetskravStatus.NY
                             first.vurderinger.size shouldBeEqualTo 0
                             first.createdAt shouldNotBeEqualTo null
-                            first.sistEndret shouldNotBeEqualTo null
+                            first.updatedAt shouldNotBeEqualTo null
                             first.uuid shouldNotBeEqualTo null
 
                             val last = responseDTOList.last()
                             last.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
                             last.vurderinger.size shouldBeEqualTo 0
                             last.createdAt shouldNotBeEqualTo null
-                            last.sistEndret shouldNotBeEqualTo null
+                            last.updatedAt shouldNotBeEqualTo null
                             last.uuid shouldNotBeEqualTo null
                         }
                     }
@@ -277,9 +276,8 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
-                                ChronoUnit.MILLIS
-                            )
+                            kafkaAktivitetskravVurdering.createdAt shouldNotBeEqualTo null
+                            kafkaAktivitetskravVurdering.updatedAt shouldBeGreaterThan kafkaAktivitetskravVurdering.createdAt
                         }
                     }
                     it("Updates Aktivitetskrav already vurdert with new vurdering and produces to Kafka if request is succesful") {
@@ -323,9 +321,8 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
-                                ChronoUnit.MILLIS
-                            )
+                            kafkaAktivitetskravVurdering.createdAt shouldNotBeEqualTo null
+                            kafkaAktivitetskravVurdering.updatedAt shouldBeGreaterThan kafkaAktivitetskravVurdering.createdAt
                         }
                     }
                 }
