@@ -271,6 +271,10 @@ class AktivitetskravApiSpek : Spek({
                             latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
+                            val latestAktivitetskravVurdering =
+                                database.getAktivitetskravVurderinger(aktivitetskravId = latestAktivitetskrav.id)
+                                    .first()
+
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
@@ -278,6 +282,9 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
+                                ChronoUnit.MILLIS
+                            )
+                            kafkaAktivitetskravVurdering.sistVurdert?.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskravVurdering.createdAt.truncatedTo(
                                 ChronoUnit.MILLIS
                             )
                         }
@@ -317,6 +324,10 @@ class AktivitetskravApiSpek : Spek({
                             latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
+                            val latestAktivitetskravVurdering =
+                                database.getAktivitetskravVurderinger(aktivitetskravId = latestAktivitetskrav.id)
+                                    .first()
+
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
@@ -324,6 +335,9 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
+                                ChronoUnit.MILLIS
+                            )
+                            kafkaAktivitetskravVurdering.sistVurdert?.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskravVurdering.createdAt.truncatedTo(
                                 ChronoUnit.MILLIS
                             )
                         }
