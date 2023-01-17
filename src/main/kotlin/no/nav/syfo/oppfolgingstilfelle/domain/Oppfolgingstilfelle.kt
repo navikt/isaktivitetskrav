@@ -17,6 +17,7 @@ data class Oppfolgingstilfelle(
     val referanseTilfelleBitUuid: UUID,
     val referanseTilfelleBitInntruffet: OffsetDateTime,
     val gradertAtTilfelleEnd: Boolean?,
+    val dodsdato: LocalDate?,
 )
 
 fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =

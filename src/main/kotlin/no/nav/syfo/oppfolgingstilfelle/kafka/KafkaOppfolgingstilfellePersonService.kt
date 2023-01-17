@@ -63,7 +63,7 @@ class KafkaOppfolgingstilfellePersonService(
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NO_TILFELLE.increment()
             return
         }
-        if (!latestOppfolgingstilfelle.passererAktivitetskravStoppunkt()) {
+        if (!latestOppfolgingstilfelle.passererAktivitetskravStoppunkt() || latestOppfolgingstilfelle.dodsdato != null) {
             log.info("Skipped processing of record: Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} not relevant for aktivitetskrav.")
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NOT_AKTIVITETSKRAV.increment()
             return

@@ -64,6 +64,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             tilfelleEnd = LocalDate.now(),
             gradert = false,
         )
+        val kafkaOppfolgingstilfellePersonWithDodsdato = createKafkaOppfolgingstilfellePerson(
+            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            tilfelleStart = tenWeeksAgo,
+            tilfelleEnd = LocalDate.now(),
+            gradert = false,
+            dodsdato = LocalDate.now(),
+        )
         val kafkaOppfolgingstilfellePersonSevenWeeksGradert = createKafkaOppfolgingstilfellePerson(
             personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
             tilfelleStart = sevenWeeksAgo,
@@ -175,6 +182,28 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, not gradert") {
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.shouldBeEmpty()
+                }
+                it("creates no Aktivitetskrav for oppfolgingstilfelle when dodsdato != null") {
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePersonWithDodsdato
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
