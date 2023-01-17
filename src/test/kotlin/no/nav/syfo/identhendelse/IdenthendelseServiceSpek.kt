@@ -53,6 +53,7 @@ class IdenthendelseServiceSpek : Spek({
                 }
 
                 it("Oppdaterer aktivitetskrav når person har fått ny ident") {
+                    val previousUpdatedAt = database.getAktivitetskrav(personIdent = inaktivIdent).first().updatedAt
                     val kafkaIdenthendelseDTO =
                         generateKafkaIdenthendelseDTO(
                             aktivIdent = aktivIdent,
@@ -66,7 +67,7 @@ class IdenthendelseServiceSpek : Spek({
                     val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdent)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 2
                     val updatedAktivitetskravNy = aktivitetskravMedAktivIdent.first()
-                    updatedAktivitetskravNy.updatedAt shouldBeGreaterThan aktivitetskravNy.updatedAt
+                    updatedAktivitetskravNy.updatedAt shouldBeGreaterThan previousUpdatedAt
                 }
                 it("Oppdaterer ingenting når person har fått ny ident uten gamle identer") {
                     val kafkaIdenthendelseDTO =
