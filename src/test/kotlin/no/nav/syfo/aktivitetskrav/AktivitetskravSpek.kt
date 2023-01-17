@@ -50,24 +50,24 @@ class AktivitetskravSpek : Spek({
     }
 
     describe("updateStoppunkt") {
-        it("updates stoppunktAt and sistEndret") {
+        it("updates stoppunktAt and updatedAt") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
                 .copy(
-                    sistEndret = OffsetDateTime.now().minusDays(1)
+                    updatedAt = OffsetDateTime.now().minusDays(1)
                 )
 
             val updatedAktivitetskrav = aktivitetskrav.updateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle)
 
-            updatedAktivitetskrav.sistEndret shouldBeGreaterThan aktivitetskrav.sistEndret
+            updatedAktivitetskrav.updatedAt shouldBeGreaterThan aktivitetskrav.updatedAt
             updatedAktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
         }
     }
 
     describe("vurder aktivitetskrav") {
-        it("updates vurderinger, status, sistEndret") {
+        it("updates vurderinger, status, updatedAt") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
                 .copy(
-                    sistEndret = OffsetDateTime.now().minusDays(1)
+                    updatedAt = OffsetDateTime.now().minusDays(1)
                 )
             val avventVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.AVVENT,
@@ -84,8 +84,8 @@ class AktivitetskravSpek : Spek({
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
 
-            val avventSistEndret = updatedAktivitetskrav.sistEndret
-            avventSistEndret shouldBeGreaterThan aktivitetskrav.sistEndret
+            val avventUpdatedAt = updatedAktivitetskrav.updatedAt
+            avventUpdatedAt shouldBeGreaterThan aktivitetskrav.updatedAt
             updatedAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AVVENT
             updatedAktivitetskrav.vurderinger shouldBeEqualTo listOf(avventVurdering)
 
@@ -93,7 +93,7 @@ class AktivitetskravSpek : Spek({
                 aktivitetskravVurdering = oppfyltVurdering
             )
 
-            updatedAktivitetskrav.sistEndret shouldBeGreaterThan avventSistEndret
+            updatedAktivitetskrav.updatedAt shouldBeGreaterThan avventUpdatedAt
             updatedAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
             updatedAktivitetskrav.vurderinger shouldBeEqualTo listOf(oppfyltVurdering, avventVurdering)
         }
@@ -150,7 +150,7 @@ class AktivitetskravSpek : Spek({
 
             val kafkaAktivitetskravVurdering = updatedAktivitetskrav.toKafkaAktivitetskravVurdering()
 
-            kafkaAktivitetskravVurdering.updatedAt shouldBeEqualTo updatedAktivitetskrav.sistEndret
+            kafkaAktivitetskravVurdering.updatedAt shouldBeEqualTo updatedAktivitetskrav.updatedAt
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)

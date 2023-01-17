@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 data class AktivitetskravResponseDTO(
     val uuid: String,
     val createdAt: LocalDateTime,
-    val sistEndret: LocalDateTime,
+    val updatedAt: LocalDateTime,
     val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
     val vurderinger: List<AktivitetskravVurderingResponseDTO>,

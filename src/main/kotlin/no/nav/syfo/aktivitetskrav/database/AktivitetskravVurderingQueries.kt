@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.database
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
 import java.time.OffsetDateTime
@@ -28,7 +29,7 @@ fun Connection.createAktivitetskrav(
     val idList = this.prepareStatement(queryCreateAktivitetskrav).use {
         it.setString(1, aktivitetskrav.uuid.toString())
         it.setObject(2, aktivitetskrav.createdAt)
-        it.setObject(3, aktivitetskrav.sistEndret)
+        it.setObject(3, aktivitetskrav.updatedAt)
         it.setString(4, aktivitetskrav.personIdent.value)
         it.setString(5, aktivitetskrav.status.name)
         it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
@@ -87,7 +88,7 @@ fun Connection.updateAktivitetskrav(
     val updatedIds = this.prepareStatement(queryUpdateAktivitetskrav).use { preparedStatement ->
         preparedStatement.setString(1, aktivitetskrav.status.name)
         preparedStatement.setDate(2, Date.valueOf(aktivitetskrav.stoppunktAt))
-        preparedStatement.setObject(3, aktivitetskrav.sistEndret)
+        preparedStatement.setObject(3, aktivitetskrav.updatedAt)
         preparedStatement.setString(4, aktivitetskravUuid.toString())
         preparedStatement.executeQuery().toList { getInt("id") }
     }
@@ -102,7 +103,7 @@ fun Connection.updateAktivitetskrav(
 const val queryUpdateAktivitetskravPersonIdent =
     """
         UPDATE AKTIVITETSKRAV
-        SET personident = ?
+        SET personident = ?, updated_at=?
         WHERE personident = ?
     """
 
@@ -116,7 +117,8 @@ fun DatabaseInterface.updateAktivitetskravPersonIdent(
         connection.prepareStatement(queryUpdateAktivitetskravPersonIdent).use {
             inactiveIdenter.forEach { inactiveIdent ->
                 it.setString(1, nyPersonIdent.value)
-                it.setString(2, inactiveIdent.value)
+                it.setObject(2, nowUTC())
+                it.setString(3, inactiveIdent.value)
                 it.executeUpdate()
                 updatedRows++
             }
