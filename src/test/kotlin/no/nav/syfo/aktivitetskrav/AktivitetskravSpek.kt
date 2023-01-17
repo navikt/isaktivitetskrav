@@ -128,7 +128,7 @@ class AktivitetskravSpek : Spek({
     }
 
     describe("toKafkaAktivitetskravVurdering") {
-        it("sets updatedBy, beskrivelse and arsaker from latest vurdering") {
+        it("sets updatedBy, sistVurdert, beskrivelse and arsaker from latest vurdering") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
             val avventVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.AVVENT,
@@ -154,14 +154,16 @@ class AktivitetskravSpek : Spek({
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
+            kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
         }
-        it("updatedBy and beskrivelse is null when not vurdert") {
+        it("updatedBy, sistVurdert and beskrivelse is null when not vurdert") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
 
             val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
 
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
+            kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
         }
     }
 })
