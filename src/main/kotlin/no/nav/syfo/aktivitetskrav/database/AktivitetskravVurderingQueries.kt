@@ -29,7 +29,7 @@ fun Connection.createAktivitetskrav(
     val idList = this.prepareStatement(queryCreateAktivitetskrav).use {
         it.setString(1, aktivitetskrav.uuid.toString())
         it.setObject(2, aktivitetskrav.createdAt)
-        it.setObject(3, aktivitetskrav.updatedAt)
+        it.setObject(3, nowUTC())
         it.setString(4, aktivitetskrav.personIdent.value)
         it.setString(5, aktivitetskrav.status.name)
         it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
@@ -88,7 +88,7 @@ fun Connection.updateAktivitetskrav(
     val updatedIds = this.prepareStatement(queryUpdateAktivitetskrav).use { preparedStatement ->
         preparedStatement.setString(1, aktivitetskrav.status.name)
         preparedStatement.setDate(2, Date.valueOf(aktivitetskrav.stoppunktAt))
-        preparedStatement.setObject(3, aktivitetskrav.updatedAt)
+        preparedStatement.setObject(3, nowUTC())
         preparedStatement.setString(4, aktivitetskravUuid.toString())
         preparedStatement.executeQuery().toList { getInt("id") }
     }

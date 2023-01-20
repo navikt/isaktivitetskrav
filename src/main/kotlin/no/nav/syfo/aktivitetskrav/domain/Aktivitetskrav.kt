@@ -26,7 +26,6 @@ data class Aktivitetskrav private constructor(
     val uuid: UUID,
     val personIdent: PersonIdent,
     val createdAt: OffsetDateTime,
-    val updatedAt: OffsetDateTime,
     val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
     val vurderinger: List<AktivitetskravVurdering>,
@@ -39,7 +38,6 @@ data class Aktivitetskrav private constructor(
             uuid = pAktivitetskrav.uuid,
             personIdent = pAktivitetskrav.personIdent,
             createdAt = pAktivitetskrav.createdAt,
-            updatedAt = pAktivitetskrav.updatedAt,
             status = AktivitetskravStatus.valueOf(pAktivitetskrav.status),
             stoppunktAt = pAktivitetskrav.stoppunktAt,
             vurderinger = aktivitetskravVurderinger,
@@ -69,7 +67,6 @@ data class Aktivitetskrav private constructor(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
             createdAt = nowUTC(),
-            updatedAt = nowUTC(),
             status = status,
             stoppunktAt = stoppunktDato(tilfelleStart),
             vurderinger = emptyList(),
@@ -86,7 +83,6 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
         uuid = this.uuid.toString(),
         personIdent = this.personIdent.value,
         createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
         status = this.status.name,
         beskrivelse = latestVurdering?.beskrivelse,
         stoppunktAt = this.stoppunktAt,
@@ -113,7 +109,6 @@ fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
     AktivitetskravResponseDTO(
         uuid = it.uuid.toString(),
         createdAt = it.createdAt.toLocalDateTime(),
-        updatedAt = it.updatedAt.toLocalDateTime(),
         status = it.status,
         stoppunktAt = it.stoppunktAt,
         vurderinger = it.vurderinger.toVurderingResponseDTOs()
@@ -124,7 +119,6 @@ internal fun Aktivitetskrav.updateStoppunkt(oppfolgingstilfelle: Oppfolgingstilf
     val stoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
     return this.copy(
         stoppunktAt = stoppunktDato,
-        updatedAt = nowUTC(),
     )
 }
 
@@ -133,10 +127,8 @@ internal fun Aktivitetskrav.vurder(
 ): Aktivitetskrav = this.copy(
     status = aktivitetskravVurdering.status,
     vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
-    updatedAt = nowUTC(),
 )
 
 internal fun Aktivitetskrav.oppfyllAutomatisk(): Aktivitetskrav = this.copy(
     status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
-    updatedAt = nowUTC(),
 )

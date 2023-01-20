@@ -111,14 +111,12 @@ class AktivitetskravApiSpek : Spek({
                             first.status shouldBeEqualTo AktivitetskravStatus.NY
                             first.vurderinger.size shouldBeEqualTo 0
                             first.createdAt shouldNotBeEqualTo null
-                            first.updatedAt shouldNotBeEqualTo null
                             first.uuid shouldNotBeEqualTo null
 
                             val last = responseDTOList.last()
                             last.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
                             last.vurderinger.size shouldBeEqualTo 0
                             last.createdAt shouldNotBeEqualTo null
-                            last.updatedAt shouldNotBeEqualTo null
                             last.uuid shouldNotBeEqualTo null
                         }
                     }
@@ -281,9 +279,6 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
-                                ChronoUnit.MILLIS
-                            )
                             kafkaAktivitetskravVurdering.sistVurdert?.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskravVurdering.createdAt.truncatedTo(
                                 ChronoUnit.MILLIS
                             )
@@ -334,9 +329,6 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.updatedAt.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskrav.updatedAt.truncatedTo(
-                                ChronoUnit.MILLIS
-                            )
                             kafkaAktivitetskravVurdering.sistVurdert?.truncatedTo(ChronoUnit.MILLIS) shouldBeEqualTo latestAktivitetskravVurdering.createdAt.truncatedTo(
                                 ChronoUnit.MILLIS
                             )

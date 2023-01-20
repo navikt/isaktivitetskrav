@@ -7,7 +7,6 @@ data class KafkaAktivitetskravVurdering(
     val uuid: String,
     val personIdent: String,
     val createdAt: OffsetDateTime,
-    val updatedAt: OffsetDateTime,
     val status: String,
     val beskrivelse: String?,
     val arsaker: List<String>,
