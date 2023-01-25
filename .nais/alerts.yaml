@@ -1,0 +1,19 @@
+apiVersion: "nais.io/v1"
+kind: "Alert"
+metadata:
+  name: isaktivitetskrav-alerts
+  namespace: teamsykefravr
+  labels:
+    team: teamsykefravr
+spec:
+  receivers:
+    slack:
+      channel: '#syfo-alarm'
+      prependText: '<!here> | '
+  alerts:
+    - alert: ISAKTIVITETSKRAV IS DOWN
+      expr: sum(up{app="isaktivitetskrav", job="kubernetes-pods"}) == 0
+      for: 30s
+      description: "Det er ingen pods for app kjørende i namespace og dermed er appen nede"
+      action: "Undersøk hvorfor pods er nede og få den kjørende igjen!"
+      severity: danger
