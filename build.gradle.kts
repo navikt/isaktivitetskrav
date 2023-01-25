@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
@@ -6,25 +7,25 @@ version = "0.0.1"
 
 object Versions {
     const val confluent = "7.3.1"
-    const val flyway = "9.10.0"
+    const val flyway = "9.12.0"
     const val hikari = "5.0.1"
     const val jacksonDataType = "2.14.1"
-    const val kafka = "3.3.1"
+    const val kafka = "3.3.2"
     const val kluent = "1.72"
-    const val ktor = "2.2.1"
+    const val ktor = "2.2.2"
     const val logback = "1.4.5"
     const val logstashEncoder = "7.2"
-    const val micrometerRegistry = "1.10.2"
+    const val micrometerRegistry = "1.10.3"
     const val mockk = "1.13.3"
-    const val nimbusJoseJwt = "9.25.6"
+    const val nimbusJoseJwt = "9.29"
     const val postgres = "42.5.1"
-    const val postgresEmbedded = "0.13.4"
+    val postgresEmbedded = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
     const val scala = "2.13.9"
     const val spek = "2.0.19"
 }
 
 plugins {
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.8.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
 }
