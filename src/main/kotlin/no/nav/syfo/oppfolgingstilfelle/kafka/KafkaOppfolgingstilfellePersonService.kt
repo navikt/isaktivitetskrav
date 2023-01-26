@@ -8,7 +8,10 @@ import no.nav.syfo.oppfolgingstilfelle.domain.*
 import org.apache.kafka.clients.consumer.*
 import org.slf4j.LoggerFactory
 import java.sql.Connection
-import java.time.Duration
+import java.time.*
+
+// Oppfølgingstilfeller som begynner før denne datoen antas å ha fullført eventuell aktivitetskrav-vurdering i Arena.
+val OLD_TILFELLE_CUTOFF: LocalDate = LocalDate.of(2022, Month.FEBRUARY, 1)
 
 class KafkaOppfolgingstilfellePersonService(
     private val database: DatabaseInterface,
@@ -63,17 +66,16 @@ class KafkaOppfolgingstilfellePersonService(
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NO_TILFELLE.increment()
             return
         }
-        if (!latestOppfolgingstilfelle.passererAktivitetskravStoppunkt() || latestOppfolgingstilfelle.dodsdato != null) {
+        if (notRelevantForAktivitetskrav(latestOppfolgingstilfelle)) {
             log.info("Skipped processing of record: Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} not relevant for aktivitetskrav.")
             COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_SKIPPED_NOT_AKTIVITETSKRAV.increment()
             return
         }
 
-        val aktivitetskravForPerson =
-            aktivitetskravService.getAktivitetskrav(
-                connection = connection,
-                personIdent = latestOppfolgingstilfelle.personIdent,
-            )
+        val aktivitetskravForPerson = aktivitetskravService.getAktivitetskrav(
+            connection = connection,
+            personIdent = latestOppfolgingstilfelle.personIdent,
+        )
 
         aktivitetskravForPerson.filter { it.isNy() && !(it gjelder latestOppfolgingstilfelle) }
             .forEach { aktivitetskrav ->
@@ -117,6 +119,11 @@ class KafkaOppfolgingstilfellePersonService(
             }
         }
     }
+
+    private fun notRelevantForAktivitetskrav(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
+        !oppfolgingstilfelle.passererAktivitetskravStoppunkt() || oppfolgingstilfelle.dodsdato != null || oppfolgingstilfelle.tilfelleStart.isBefore(
+            OLD_TILFELLE_CUTOFF
+        )
 
     companion object {
         private val log = LoggerFactory.getLogger(KafkaOppfolgingstilfellePersonService::class.java)
