@@ -225,6 +225,35 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
 
                     aktivitetskravList.shouldBeEmpty()
                 }
+                it("creates no Aktivitetskrav for oppfolgingstilfelle starting before OLD_TILFELLE_CUTOFF") {
+                    val oldKafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                        tilfelleStart = OLD_TILFELLE_CUTOFF.minusDays(1),
+                        tilfelleEnd = OLD_TILFELLE_CUTOFF.plusWeeks(9),
+                        gradert = false,
+                    )
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        oldKafkaOppfolgingstilfellePerson
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.shouldBeEmpty()
+                }
                 it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, gradert") {
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfellePersonSevenWeeksGradert
