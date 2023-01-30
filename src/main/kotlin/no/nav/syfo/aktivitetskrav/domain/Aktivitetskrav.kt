@@ -47,7 +47,7 @@ data class Aktivitetskrav private constructor(
             create(
                 personIdent = personIdent,
                 status = AktivitetskravStatus.NY,
-                tilfelleStart = tilfelleStart,
+                stoppunktAt = stoppunktDato(tilfelleStart),
             )
 
         fun automatiskOppfylt(
@@ -56,19 +56,32 @@ data class Aktivitetskrav private constructor(
         ): Aktivitetskrav = create(
             personIdent = personIdent,
             status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
-            tilfelleStart = tilfelleStart,
+            stoppunktAt = stoppunktDato(tilfelleStart),
         )
+
+        fun fromVurdering(
+            personIdent: PersonIdent,
+            vurdering: AktivitetskravVurdering,
+        ): Aktivitetskrav {
+            val aktivitetskravNy = create(
+                personIdent = personIdent,
+                status = AktivitetskravStatus.NY,
+                stoppunktAt = LocalDate.now(),
+            )
+
+            return aktivitetskravNy.vurder(vurdering)
+        }
 
         private fun create(
             personIdent: PersonIdent,
             status: AktivitetskravStatus,
-            tilfelleStart: LocalDate,
+            stoppunktAt: LocalDate,
         ) = Aktivitetskrav(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
             createdAt = nowUTC(),
             status = status,
-            stoppunktAt = stoppunktDato(tilfelleStart),
+            stoppunktAt = stoppunktAt,
             vurderinger = emptyList(),
         )
 

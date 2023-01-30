@@ -101,18 +101,19 @@ class AktivitetskravSpek : Spek({
                 )
             }
         }
-        EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT, AktivitetskravStatus.STANS).forEach {
-            it("kan ikke lage vurdering med status $it") {
-                assertFailsWith(IllegalArgumentException::class) {
-                    AktivitetskravVurdering.create(
-                        status = it,
-                        createdBy = UserConstants.VEILEDER_IDENT,
-                        beskrivelse = null,
-                        arsaker = emptyList(),
-                    )
+        EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT, AktivitetskravStatus.STANS)
+            .forEach {
+                it("kan ikke lage vurdering med status $it") {
+                    assertFailsWith(IllegalArgumentException::class) {
+                        AktivitetskravVurdering.create(
+                            status = it,
+                            createdBy = UserConstants.VEILEDER_IDENT,
+                            beskrivelse = null,
+                            arsaker = emptyList(),
+                        )
+                    }
                 }
             }
-        }
     }
 
     describe("toKafkaAktivitetskravVurdering") {
@@ -151,6 +152,26 @@ class AktivitetskravSpek : Spek({
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
             kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+        }
+    }
+
+    describe("created from vurdering") {
+        it("has vurdering, status and stoppunkt today") {
+            val oppfyltVurdering = AktivitetskravVurdering.create(
+                status = AktivitetskravStatus.OPPFYLT,
+                createdBy = UserConstants.VEILEDER_IDENT,
+                beskrivelse = "Oppfylt",
+                arsaker = listOf(VurderingArsak.FRISKMELDT),
+            )
+
+            val aktivitetskrav = Aktivitetskrav.fromVurdering(
+                personIdent = ARBEIDSTAKER_PERSONIDENT,
+                vurdering = oppfyltVurdering,
+            )
+
+            aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
+            aktivitetskrav.vurderinger shouldBeEqualTo listOf(oppfyltVurdering)
+            aktivitetskrav.stoppunktAt shouldBeEqualTo LocalDate.now()
         }
     }
 })
