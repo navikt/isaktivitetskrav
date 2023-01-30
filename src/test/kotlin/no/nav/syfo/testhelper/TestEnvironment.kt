@@ -6,6 +6,7 @@ import no.nav.syfo.application.kafka.KafkaEnvironment
 import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.ClientsEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
+import java.time.LocalDate
 
 fun testEnvironment(
     azureOpenIdTokenEndpoint: String,
@@ -47,6 +48,7 @@ fun testEnvironment(
     ),
     kafkaOppfolgingstilfellePersonProcessingEnabled = true,
     toggleKafkaConsumerIdenthendelseEnabled = true,
+    arenaCutoff = LocalDate.now().minusDays(365),
 )
 
 fun testAppState() = ApplicationState(

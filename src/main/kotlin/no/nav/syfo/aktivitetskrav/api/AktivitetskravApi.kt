@@ -31,7 +31,7 @@ fun Route.registerAktivitetskravApi(
         }
         get(aktivitetskravApiPersonidentPath) {
             val personIdent = call.personIdent()
-            val responseDTOList = aktivitetskravService.getAktivitetskrav(
+            val responseDTOList = aktivitetskravService.getAktivitetskravAfterCutoff(
                 personIdent = personIdent,
             ).toResponseDTOList()
 

@@ -56,6 +56,7 @@ fun main() {
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 database = applicationDatabase,
+                arenaCutoff = environment.arenaCutoff,
             )
             apiModule(
                 applicationState = applicationState,
