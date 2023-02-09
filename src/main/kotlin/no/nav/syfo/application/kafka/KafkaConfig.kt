@@ -35,6 +35,7 @@ inline fun <reified Serializer> kafkaAivenProducerConfig(
         this[ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION] = "1"
         this[ProducerConfig.MAX_BLOCK_MS_CONFIG] = "15000"
         this[ProducerConfig.RETRIES_CONFIG] = "100000"
+        this[ProducerConfig.LINGER_MS_CONFIG] = "1000"
         this[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java.canonicalName
         this[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = Serializer::class.java.canonicalName
     }
