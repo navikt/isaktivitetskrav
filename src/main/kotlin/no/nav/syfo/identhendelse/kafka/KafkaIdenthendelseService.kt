@@ -34,6 +34,7 @@ class KafkaIdenthendelseService(
                 }
             } catch (ex: Exception) {
                 log.error("Error running kafka consumer for pdl-aktor, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry")
+                kafkaConsumer.unsubscribe()
                 delay(DELAY_ON_ERROR_SECONDS.seconds)
             }
         }

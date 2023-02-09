@@ -1,5 +1,6 @@
 package no.nav.syfo.identhendelse
 
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.database.updateAktivitetskravPersonIdent
 import no.nav.syfo.application.database.DatabaseInterface
@@ -16,16 +17,16 @@ class IdenthendelseService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(IdenthendelseService::class.java)
 
-    suspend fun handle(identhendelse: KafkaIdenthendelseDTO) {
+    fun handle(identhendelse: KafkaIdenthendelseDTO) {
         if (identhendelse.folkeregisterIdenter.size > 1) {
             val activeIdent = identhendelse.getActivePersonident()
             if (activeIdent != null) {
                 val inactiveIdenter = identhendelse.getInactivePersonidenter()
-                val aktivitetskravWithInactiveIdent = inactiveIdenter.flatMap { database.getAktivitetskrav(it) }
+                val oldPersonIdentList = inactiveIdenter.filter { database.getAktivitetskrav(it).isNotEmpty() }
 
-                if (aktivitetskravWithInactiveIdent.isNotEmpty()) {
+                if (oldPersonIdentList.isNotEmpty()) {
                     checkThatPdlIsUpdated(activeIdent)
-                    val numberOfUpdatedIdenter = database.updateAktivitetskravPersonIdent(activeIdent, inactiveIdenter)
+                    val numberOfUpdatedIdenter = database.updateAktivitetskravPersonIdent(activeIdent, oldPersonIdentList)
                     log.info("Identhendelse: Updated $numberOfUpdatedIdenter aktivitetskrav based on Identhendelse from PDL")
                     COUNT_KAFKA_CONSUMER_PDL_AKTOR_UPDATES.increment(numberOfUpdatedIdenter.toDouble())
                 }
@@ -36,10 +37,12 @@ class IdenthendelseService(
     }
 
     // Erfaringer fra andre team tilsier at vi burde dobbeltsjekke at ting har blitt oppdatert i PDL før vi gjør endringer
-    private suspend fun checkThatPdlIsUpdated(ident: PersonIdent) {
-        val pdlIdenter = pdlClient.getPdlIdenter(ident)?.hentIdenter
-        if (ident.value != pdlIdenter?.aktivIdent || pdlIdenter.identer.any { it.ident == ident.value && it.historisk }) {
-            throw IllegalStateException("Ny ident er ikke aktiv ident i PDL")
+    private fun checkThatPdlIsUpdated(ident: PersonIdent) {
+        runBlocking {
+            val pdlIdenter = pdlClient.getPdlIdenter(ident)?.hentIdenter ?: throw RuntimeException("Fant ingen identer fra PDL")
+            if (ident.value != pdlIdenter.aktivIdent && pdlIdenter.identhendelseIsNotHistorisk(ident.value)) {
+                throw IllegalStateException("Ny ident er ikke aktiv ident i PDL")
+            }
         }
     }
 }
