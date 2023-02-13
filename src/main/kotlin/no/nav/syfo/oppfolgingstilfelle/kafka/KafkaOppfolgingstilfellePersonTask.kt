@@ -3,6 +3,7 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.kafka.*
 import no.nav.syfo.util.configuredJacksonMapper
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.Deserializer
 
 const val OPPFOLGINGSTILFELLE_PERSON_TOPIC =
@@ -16,6 +17,9 @@ fun launchKafkaTaskOppfolgingstilfellePerson(
     val consumerProperties = kafkaAivenConsumerConfig<KafkaOppfolgingstilfellePersonDeserializer>(
         kafkaEnvironment = kafkaEnvironment,
     )
+    consumerProperties.apply {
+        this[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "100"
+    }
 
     launchKafkaTask(
         applicationState = applicationState,
