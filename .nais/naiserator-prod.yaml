@@ -69,8 +69,6 @@ spec:
       value: "prod-fss.teamsykefravr.syfo-tilgangskontroll"
     - name: SYFOTILGANGSKONTROLL_URL
       value: "https://syfo-tilgangskontroll.prod-fss-pub.nais.io"
-    - name: TOGGLE_KAFKA_IDENTHENDELSE_CONSUMER_ENABLED
-      value: "false"
     - name: PDL_CLIENT_ID
       value: "prod-fss.pdl.pdl-api"
     - name: PDL_URL

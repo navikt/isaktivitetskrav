@@ -47,7 +47,6 @@ fun testEnvironment(
         ),
     ),
     kafkaOppfolgingstilfellePersonProcessingEnabled = true,
-    toggleKafkaConsumerIdenthendelseEnabled = true,
     arenaCutoff = LocalDate.now().minusDays(365),
 )
 

@@ -30,17 +30,16 @@ fun launchKafkaModule(
             kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
         )
     }
-    if (environment.toggleKafkaConsumerIdenthendelseEnabled) {
-        val pdlClient = PdlClient(
-            azureAdClient = azureAdClient,
-            pdlEnvironment = environment.clients.pdl,
-        )
-        val identhendelseService = IdenthendelseService(database = database, pdlClient = pdlClient)
-        val kafkaIdenthendelseService = KafkaIdenthendelseService(identhendelseService = identhendelseService)
-        launchKafkaTaskIdenthendelse(
-            applicationState = applicationState,
-            kafkaEnvironment = environment.kafka,
-            kafkaIdenthendelseService = kafkaIdenthendelseService,
-        )
-    }
+
+    val pdlClient = PdlClient(
+        azureAdClient = azureAdClient,
+        pdlEnvironment = environment.clients.pdl,
+    )
+    val identhendelseService = IdenthendelseService(database = database, pdlClient = pdlClient)
+    val kafkaIdenthendelseService = KafkaIdenthendelseService(identhendelseService = identhendelseService)
+    launchKafkaTaskIdenthendelse(
+        applicationState = applicationState,
+        kafkaEnvironment = environment.kafka,
+        kafkaIdenthendelseService = kafkaIdenthendelseService,
+    )
 }
