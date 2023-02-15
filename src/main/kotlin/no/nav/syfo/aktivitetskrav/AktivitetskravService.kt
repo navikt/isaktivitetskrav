@@ -7,11 +7,13 @@ import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
+import java.time.LocalDate
 import java.util.*
 
 class AktivitetskravService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val database: DatabaseInterface,
+    private val arenaCutoff: LocalDate,
 ) {
 
     internal fun createAktivitetskrav(
@@ -65,6 +67,14 @@ class AktivitetskravService(
         database.getAktivitetskrav(uuid = uuid)?.let { pAktivitetskrav ->
             withVurderinger(pAktivitetskrav = pAktivitetskrav)
         }
+
+    internal fun getAktivitetskravAfterCutoff(
+        personIdent: PersonIdent,
+        connection: Connection? = null,
+    ): List<Aktivitetskrav> =
+        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
+            withVurderinger(pAktivitetskrav = pAktivitetskrav)
+        }.filter { it.stoppunktAt.isAfter(arenaCutoff) }
 
     internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
         database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->

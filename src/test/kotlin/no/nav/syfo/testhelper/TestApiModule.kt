@@ -16,6 +16,7 @@ fun Application.testApiModule(
     val aktivitetskravService = AktivitetskravService(
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         database = externalMockEnvironment.database,
+        arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
     )
     this.apiModule(
         applicationState = externalMockEnvironment.applicationState,

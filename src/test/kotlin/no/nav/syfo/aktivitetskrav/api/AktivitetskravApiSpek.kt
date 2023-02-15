@@ -38,7 +38,7 @@ class AktivitetskravApiSpek : Spek({
     )
     val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfylt(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-        tilfelleStart = LocalDate.now().minusYears(2),
+        tilfelleStart = LocalDate.now().minusYears(1),
     ).copy(
         createdAt = nowUTC().minusWeeks(80)
     )
@@ -58,6 +58,7 @@ class AktivitetskravApiSpek : Spek({
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 database = database,
+                arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
             )
 
             beforeEachTest {
@@ -180,6 +181,47 @@ class AktivitetskravApiSpek : Spek({
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
                                 VurderingArsak.INFORMASJON_BEHANDLER
                             )
+                        }
+                    }
+
+                    it("Returns aktivitetskrav with stoppunkt after cutoff") {
+                        val cutoffDate = externalMockEnvironment.environment.arenaCutoff
+                        val aktivitetskravAtCutoffDate = Aktivitetskrav.ny(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            tilfelleStart = LocalDate.now().minusYears(1),
+                        ).copy(
+                            stoppunktAt = cutoffDate
+                        )
+                        val automatiskOppfyltAktivitetskravBeforeCutoff = Aktivitetskrav.automatiskOppfylt(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            tilfelleStart = LocalDate.now().minusYears(1),
+                        ).copy(
+                            stoppunktAt = cutoffDate.minusDays(1)
+                        )
+                        createAktivitetskrav(
+                            aktivitetskravAtCutoffDate,
+                            nyAktivitetskrav,
+                            automatiskOppfyltAktivitetskravBeforeCutoff,
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val responseDTOList =
+                                objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
+                            responseDTOList.size shouldBeEqualTo 1
+
+                            val aktivitetskrav = responseDTOList.first()
+                            aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                            aktivitetskrav.vurderinger.size shouldBeEqualTo 0
+                            aktivitetskrav.createdAt shouldNotBeEqualTo null
+                            aktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid.toString()
+                            aktivitetskrav.stoppunktAt shouldBeEqualTo nyAktivitetskrav.stoppunktAt
                         }
                     }
                 }

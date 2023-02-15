@@ -136,11 +136,11 @@ fun DatabaseInterface.getAktivitetskrav(
     connection: Connection? = null,
 ): List<PAktivitetskrav> {
     return connection?.getAktivitetskrav(
-        personIdent = personIdent
+        personIdent = personIdent,
     )
         ?: this.connection.use {
             it.getAktivitetskrav(
-                personIdent = personIdent
+                personIdent = personIdent,
             )
         }
 }

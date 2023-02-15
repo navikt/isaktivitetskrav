@@ -75,3 +75,5 @@ spec:
       value: "dev-fss.pdl.pdl-api"
     - name: PDL_URL
       value: "https://pdl-api.dev-fss-pub.nais.io/graphql"
+    - name: ARENA_CUTOFF
+      value: "2020-01-01"

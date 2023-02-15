@@ -37,6 +37,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
+            arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,
