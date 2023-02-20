@@ -15,11 +15,11 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
-import java.time.LocalDate
+import java.time.*
 import java.util.concurrent.Future
 
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
+private val eightWeeksAgo = LocalDate.now().minusWeeks(8)
 private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
 private val tenWeeksAgo = LocalDate.now().minusWeeks(10)
 private val yearAgo = LocalDate.now().minusYears(1)
@@ -276,6 +276,33 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     )
 
                     aktivitetskravList.shouldBeEmpty()
+                }
+                it("creates Aktivitetskrav(NY) once for oppfolgingstilfelle polled twice lasting 8 weeks, not gradert") {
+                    val kafkaOppfolgingstilfelleEightWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                        tilfelleStart = eightWeeksAgo,
+                        tilfelleEnd = LocalDate.now(),
+                        gradert = false,
+                    )
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleEightWeeksNotGradert,
+                        kafkaOppfolgingstilfelleEightWeeksNotGradert,
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.size shouldBeEqualTo 1
                 }
             }
             describe("Aktivitetskrav(NY) exists for oppfolgingstilfelle") {

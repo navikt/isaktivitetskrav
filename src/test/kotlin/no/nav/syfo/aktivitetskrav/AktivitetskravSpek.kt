@@ -35,7 +35,7 @@ class AktivitetskravSpek : Spek({
 
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo false
         }
-        it("returns true when equal arbeidstaker and stoppunkt between tilfelle start and end") {
+        it("returns true when equal arbeidstaker and stoppunkt after tilfelle start and before tilfelle end") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = nineWeeksAgo)
 
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo true
@@ -44,6 +44,11 @@ class AktivitetskravSpek : Spek({
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = sevenWeeksAgo)
 
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo false
+        }
+        it("returns true when equal arbeidstaker and stoppunkt after tilfelle start and equal to tilfelle end") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(8))
+
+            aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo true
         }
     }
 
