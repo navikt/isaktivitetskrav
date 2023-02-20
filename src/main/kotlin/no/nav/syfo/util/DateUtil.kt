@@ -10,3 +10,5 @@ fun nowUTC(): OffsetDateTime = OffsetDateTime.now(defaultZoneOffset)
 fun tomorrow(): LocalDate = LocalDate.now().plusDays(1)
 
 fun OffsetDateTime.millisekundOpplosning(): OffsetDateTime = this.truncatedTo(ChronoUnit.MILLIS)
+
+fun LocalDate.isAfterOrEqual(date: LocalDate) = !this.isBefore(date)

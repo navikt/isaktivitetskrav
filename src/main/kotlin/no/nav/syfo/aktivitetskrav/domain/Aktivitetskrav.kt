@@ -5,6 +5,7 @@ import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
+import no.nav.syfo.util.isAfterOrEqual
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -106,7 +107,7 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
 }
 
 infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
-    this.personIdent == oppfolgingstilfelle.personIdent && this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfter(
+    this.personIdent == oppfolgingstilfelle.personIdent && this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfterOrEqual(
         stoppunktAt
     )
 
