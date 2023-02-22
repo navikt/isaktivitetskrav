@@ -16,6 +16,7 @@ val OLD_TILFELLE_CUTOFF: LocalDate = LocalDate.of(2022, Month.FEBRUARY, 1)
 class KafkaOppfolgingstilfellePersonService(
     private val database: DatabaseInterface,
     private val aktivitetskravService: AktivitetskravService,
+    private val arenaCutoff: LocalDate,
 ) : KafkaConsumerService<KafkaOppfolgingstilfellePerson> {
 
     override val pollDurationInMillis: Long = 1000
@@ -123,7 +124,7 @@ class KafkaOppfolgingstilfellePersonService(
     private fun notRelevantForAktivitetskrav(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
         !oppfolgingstilfelle.passererAktivitetskravStoppunkt() || oppfolgingstilfelle.dodsdato != null || oppfolgingstilfelle.tilfelleStart.isBefore(
             OLD_TILFELLE_CUTOFF
-        )
+        ) || oppfolgingstilfelle.tilfelleEnd.isBefore(arenaCutoff)
 
     companion object {
         private val log = LoggerFactory.getLogger(KafkaOppfolgingstilfellePersonService::class.java)
