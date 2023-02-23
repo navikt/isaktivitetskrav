@@ -30,6 +30,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
 
         val externalMockEnvironment = ExternalMockEnvironment.instance
         val database = externalMockEnvironment.database
+        val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
         val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
             kafkaProducerAktivitetskravVurdering = kafkaProducer,
@@ -37,11 +38,12 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
-            arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+            arenaCutoff = arenaCutoff,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,
             aktivitetskravService = aktivitetskravService,
+            arenaCutoff = arenaCutoff,
         )
 
         val kafkaOppfolgingstilfellePersonTopicPartition = createKafkaOppfolgingstilfellePersonTopicPartition()
@@ -236,6 +238,35 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         oldKafkaOppfolgingstilfellePerson
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    val aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+
+                    aktivitetskravList.shouldBeEmpty()
+                }
+                it("creates no Aktivitetskrav for oppfolgingstilfelle ending before arenaCutoff date") {
+                    val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                        tilfelleStart = arenaCutoff.minusWeeks(12),
+                        tilfelleEnd = arenaCutoff.minusDays(1),
+                        gradert = false,
+                    )
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfellePerson
                     )
 
                     kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(

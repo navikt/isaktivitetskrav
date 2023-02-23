@@ -34,7 +34,6 @@ data class Environment(
         aivenRegistryUser = getEnvVar("KAFKA_SCHEMA_REGISTRY_USER"),
         aivenRegistryPassword = getEnvVar("KAFKA_SCHEMA_REGISTRY_PASSWORD"),
     ),
-    val kafkaOppfolgingstilfellePersonProcessingEnabled: Boolean = getEnvVar("TOGGLE_KAFKA_OPPFOLGINGSTILFELLE_PERSON_PROCESSING_ENABLED").toBoolean(),
     val arenaCutoff: LocalDate = LocalDate.parse(getEnvVar("ARENA_CUTOFF")),
     val clients: ClientsEnvironment = ClientsEnvironment(
         syfotilgangskontroll = ClientEnvironment(

@@ -46,7 +46,6 @@ fun testEnvironment(
             clientId = "pdlClientId",
         ),
     ),
-    kafkaOppfolgingstilfellePersonProcessingEnabled = true,
     arenaCutoff = LocalDate.now().minusDays(365),
 )
 

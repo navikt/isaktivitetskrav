@@ -19,17 +19,16 @@ fun launchKafkaModule(
     azureAdClient: AzureAdClient,
     aktivitetskravService: AktivitetskravService,
 ) {
-    if (environment.kafkaOppfolgingstilfellePersonProcessingEnabled) {
-        val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
-            database = database,
-            aktivitetskravService = aktivitetskravService,
-        )
-        launchKafkaTaskOppfolgingstilfellePerson(
-            applicationState = applicationState,
-            kafkaEnvironment = environment.kafka,
-            kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
-        )
-    }
+    val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
+        database = database,
+        aktivitetskravService = aktivitetskravService,
+        arenaCutoff = environment.arenaCutoff,
+    )
+    launchKafkaTaskOppfolgingstilfellePerson(
+        applicationState = applicationState,
+        kafkaEnvironment = environment.kafka,
+        kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
+    )
 
     val pdlClient = PdlClient(
         azureAdClient = azureAdClient,
