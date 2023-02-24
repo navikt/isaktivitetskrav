@@ -87,6 +87,7 @@ class KafkaOppfolgingstilfellePersonService(
         val latestAktivitetskravForTilfelle =
             aktivitetskravForPerson.firstOrNull { it gjelder latestOppfolgingstilfelle }
 
+        log.info("TRACE Oppfolgingstilfelle with UUID ${latestOppfolgingstilfelle.uuid} gradertAtTilfelleEnd: ${latestOppfolgingstilfelle.gradertAtTilfelleEnd}")
         if (latestAktivitetskravForTilfelle == null) {
             log.info("Found no aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} - creating aktivitetskrav")
             aktivitetskravService.createAktivitetskrav(
