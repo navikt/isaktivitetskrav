@@ -74,3 +74,5 @@ spec:
       value: "https://pdl-api.dev-fss-pub.nais.io/graphql"
     - name: ARENA_CUTOFF
       value: "2023-02-01"
+    - name: AUTOMATISK_OPPFYLT_CRONJOB_ENABLED
+      value: "true"

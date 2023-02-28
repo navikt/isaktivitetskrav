@@ -11,6 +11,7 @@ import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurderingSerializer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.api.apiModule
+import no.nav.syfo.application.cronjob.launchCronjobModule
 import no.nav.syfo.application.database.applicationDatabase
 import no.nav.syfo.application.database.databaseModule
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
@@ -77,6 +78,12 @@ fun main() {
             environment = environment,
             database = applicationDatabase,
             azureAdClient = azureAdClient,
+            aktivitetskravService = aktivitetskravService,
+        )
+        launchCronjobModule(
+            applicationState = applicationState,
+            environment = environment,
+            database = applicationDatabase,
             aktivitetskravService = aktivitetskravService,
         )
     }
