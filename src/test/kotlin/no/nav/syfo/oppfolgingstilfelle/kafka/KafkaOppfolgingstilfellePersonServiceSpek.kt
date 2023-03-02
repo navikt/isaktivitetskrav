@@ -141,6 +141,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val aktivitetskrav = aktivitetskravList.first()
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY.name
                     aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksNotGradert.referanseTilfelleBitUuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
@@ -173,6 +174,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val aktivitetskrav = aktivitetskravList.first()
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT.name
                     aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksGradert.referanseTilfelleBitUuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }

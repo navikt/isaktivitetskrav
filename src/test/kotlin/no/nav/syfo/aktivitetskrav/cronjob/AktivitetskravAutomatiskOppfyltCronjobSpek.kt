@@ -6,16 +6,18 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
+import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
+import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.util.*
 import java.util.concurrent.Future
 
 class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
@@ -51,25 +53,18 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
         }
 
         describe(AktivitetskravAutomatiskOppfyltCronjob::class.java.simpleName) {
-            val aktivitetskrav1 = Aktivitetskrav.ny(
-                personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            val aktivitetskrav1 = createAktivitetskravNy(
                 tilfelleStart = LocalDate.now().minusWeeks(10),
             )
-            val aktivitetskrav2 = Aktivitetskrav.ny(
-                personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            val aktivitetskrav2 = createAktivitetskravNy(
                 tilfelleStart = LocalDate.now().minusWeeks(50),
             )
-            val automatiskOppfylt = Aktivitetskrav.automatiskOppfylt(
-                personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            val automatiskOppfylt = createAktivitetskravAutomatiskOppfylt(
                 tilfelleStart = LocalDate.now().minusWeeks(50),
             )
 
             it("Setter aktivitetskrav med uuid til AUTOMATISK_OPPFYLT") {
-                database.connection.use { connection ->
-                    connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav1)
-                    connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav2)
-                    connection.commit()
-                }
+                database.createAktivitetskrav(aktivitetskrav1, aktivitetskrav2)
 
                 runBlocking {
                     val aktivitetskravUuids = listOf(aktivitetskrav1.uuid)
@@ -97,10 +92,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 kafkaAktivitetskravVurdering.status shouldBeEqualTo automatiskOppfyltAktivitetskrav.status
             }
             it("Setter bare aktivitetskrav NY til AUTOMATISK_OPPFYLT") {
-                database.connection.use { connection ->
-                    connection.createAktivitetskrav(aktivitetskrav = automatiskOppfylt)
-                    connection.commit()
-                }
+                database.createAktivitetskrav(automatiskOppfylt)
 
                 runBlocking {
                     val aktivitetskravUuids = listOf(automatiskOppfylt.uuid)
@@ -116,11 +108,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 }
             }
             it("Setter ingen aktivitetskrav til AUTOMATISK_OPPFYLT når tom liste med uuider") {
-                database.connection.use { connection ->
-                    connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav1)
-                    connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav2)
-                    connection.commit()
-                }
+                database.createAktivitetskrav(aktivitetskrav1, aktivitetskrav2)
 
                 runBlocking {
                     val result =

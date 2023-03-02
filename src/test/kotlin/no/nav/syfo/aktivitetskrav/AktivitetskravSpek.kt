@@ -11,7 +11,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.util.EnumSet
+import java.util.*
 
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
 private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
@@ -27,11 +27,10 @@ class AktivitetskravSpek : Spek({
 
     describe("gjelder Oppfolgingstilfelle") {
         it("returns false when different arbeidstakere") {
-            val aktivitetskrav =
-                Aktivitetskrav.ny(
-                    personIdent = OTHER_ARBEIDSTAKER_PERSONIDENT,
-                    tilfelleStart = nineWeeksAgo
-                )
+            val aktivitetskrav = createAktivitetskravNy(
+                personIdent = OTHER_ARBEIDSTAKER_PERSONIDENT,
+                tilfelleStart = nineWeeksAgo,
+            )
 
             aktivitetskrav gjelder oppfolgingstilfelle shouldBeEqualTo false
         }

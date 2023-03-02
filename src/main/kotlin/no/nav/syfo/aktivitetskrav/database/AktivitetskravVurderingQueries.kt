@@ -18,13 +18,15 @@ const val queryCreateAktivitetskrav =
         updated_at,
         personident,
         status,
-        stoppunkt_at
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?)
+        stoppunkt_at,
+        referanse_tilfelle_bit_uuid
+    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?)
     RETURNING id
     """
 
 fun Connection.createAktivitetskrav(
     aktivitetskrav: Aktivitetskrav,
+    referanseTilfelleBitUUID: UUID?,
 ): Int {
     val idList = this.prepareStatement(queryCreateAktivitetskrav).use {
         it.setString(1, aktivitetskrav.uuid.toString())
@@ -33,6 +35,7 @@ fun Connection.createAktivitetskrav(
         it.setString(4, aktivitetskrav.personIdent.value)
         it.setString(5, aktivitetskrav.status.name)
         it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
+        it.setString(7, referanseTilfelleBitUUID?.toString())
         it.executeQuery().toList { getInt("id") }
     }
 
@@ -201,6 +204,7 @@ private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     updatedAt = getObject("updated_at", OffsetDateTime::class.java),
     status = getString("status"),
     stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
+    referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
 )
 
 private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
