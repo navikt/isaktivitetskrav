@@ -49,6 +49,7 @@ fun testEnvironment(
     arenaCutoff = LocalDate.now().minusDays(365),
     electorPath = "electorPath",
     automatiskOppfyltCronJobEnabled = true,
+    nyCronjobEnabled = true,
 )
 
 fun testAppState() = ApplicationState(

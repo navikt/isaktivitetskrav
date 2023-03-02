@@ -76,3 +76,5 @@ spec:
       value: "2023-02-01"
     - name: AUTOMATISK_OPPFYLT_CRONJOB_ENABLED
       value: "true"
+    - name: NY_CRONJOB_ENABLED
+      value: "true"

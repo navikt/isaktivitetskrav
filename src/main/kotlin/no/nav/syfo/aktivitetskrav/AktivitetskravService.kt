@@ -115,7 +115,7 @@ class AktivitetskravService(
         return pAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
     }
 
-    private fun updateAktivitetskrav(
+    internal fun updateAktivitetskrav(
         connection: Connection,
         updatedAktivitetskrav: Aktivitetskrav,
     ) {
