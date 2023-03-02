@@ -11,6 +11,8 @@ import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
+import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
+import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.*
@@ -24,20 +26,18 @@ class AktivitetskravApiSpek : Spek({
     val objectMapper: ObjectMapper = configuredJacksonMapper()
     val urlAktivitetskravPerson = "$aktivitetskravApiBasePath/$aktivitetskravApiPersonidentPath"
 
-    val nyAktivitetskrav = Aktivitetskrav.ny(
-        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+    val nyAktivitetskrav = createAktivitetskravNy(
         tilfelleStart = LocalDate.now().minusWeeks(10),
     ).copy(
         createdAt = nowUTC().minusWeeks(2)
     )
-    val nyAktivitetskravAnnenPerson = Aktivitetskrav.ny(
+    val nyAktivitetskravAnnenPerson = createAktivitetskravNy(
         personIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().minusWeeks(10),
     ).copy(
         createdAt = nowUTC().minusWeeks(2)
     )
-    val automatiskOppfyltAktivitetskrav = Aktivitetskrav.automatiskOppfylt(
-        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+    val automatiskOppfyltAktivitetskrav = createAktivitetskravAutomatiskOppfylt(
         tilfelleStart = LocalDate.now().minusYears(1),
     ).copy(
         createdAt = nowUTC().minusWeeks(80)
@@ -74,7 +74,11 @@ class AktivitetskravApiSpek : Spek({
             fun createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav) {
                 database.connection.use { connection ->
                     aktivitetskrav.forEach {
-                        aktivitetskravService.createAktivitetskrav(connection, it)
+                        aktivitetskravService.createAktivitetskrav(
+                            connection = connection,
+                            aktivitetskrav = it,
+                            referanseTilfelleBitUUID = UUID.randomUUID()
+                        )
                     }
                     connection.commit()
                 }
@@ -186,14 +190,12 @@ class AktivitetskravApiSpek : Spek({
 
                     it("Returns aktivitetskrav with stoppunkt after cutoff") {
                         val cutoffDate = externalMockEnvironment.environment.arenaCutoff
-                        val aktivitetskravAtCutoffDate = Aktivitetskrav.ny(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                        val aktivitetskravAtCutoffDate = createAktivitetskravNy(
                             tilfelleStart = LocalDate.now().minusYears(1),
                         ).copy(
                             stoppunktAt = cutoffDate
                         )
-                        val automatiskOppfyltAktivitetskravBeforeCutoff = Aktivitetskrav.automatiskOppfylt(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                        val automatiskOppfyltAktivitetskravBeforeCutoff = createAktivitetskravAutomatiskOppfylt(
                             tilfelleStart = LocalDate.now().minusYears(1),
                         ).copy(
                             stoppunktAt = cutoffDate.minusDays(1)
@@ -274,6 +276,7 @@ class AktivitetskravApiSpek : Spek({
                             val aktivitetskrav = pAktivitetskravList.first()
                             aktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             aktivitetskrav.stoppunktAt shouldBeEqualTo LocalDate.now()
+                            aktivitetskrav.referanseTilfelleBitUuid shouldBeEqualTo null
 
                             val pAktivitetskravVurderingList =
                                 database.getAktivitetskravVurderinger(aktivitetskravId = aktivitetskrav.id)

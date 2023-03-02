@@ -3,17 +3,15 @@ package no.nav.syfo.identhendelse
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.testhelper.*
-import no.nav.syfo.testhelper.generator.generateKafkaIdenthendelseDTO
+import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.lang.IllegalStateException
 import java.time.LocalDate
 
 private val aktivIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -45,9 +43,15 @@ class IdenthendelseServiceSpek : Spek({
             }
 
             describe("Aktivitetskrav eksisterer for person") {
-                val aktivitetskravNy = Aktivitetskrav.ny(inaktivIdent, LocalDate.now().minusDays(50))
+                val aktivitetskravNy = createAktivitetskravNy(
+                    personIdent = inaktivIdent,
+                    tilfelleStart = LocalDate.now().minusDays(50),
+                )
                 val aktivitetskravAutomatiskOppfylt =
-                    Aktivitetskrav.automatiskOppfylt(inaktivIdent, LocalDate.now().minusDays(400))
+                    createAktivitetskravAutomatiskOppfylt(
+                        personIdent = inaktivIdent,
+                        tilfelleStart = LocalDate.now().minusDays(400),
+                    )
                 beforeEachTest {
                     database.createAktivitetskrav(aktivitetskravNy, aktivitetskravAutomatiskOppfylt)
                 }

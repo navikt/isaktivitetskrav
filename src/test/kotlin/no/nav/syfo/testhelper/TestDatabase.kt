@@ -6,6 +6,7 @@ import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
 import org.flywaydb.core.Flyway
 import java.sql.Connection
+import java.util.*
 
 class TestDatabase : DatabaseInterface {
     private val pg: EmbeddedPostgres = try {
@@ -49,7 +50,7 @@ fun DatabaseInterface.dropData() {
 fun DatabaseInterface.createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav) {
     this.connection.use { connection ->
         aktivitetskrav.forEach {
-            connection.createAktivitetskrav(it)
+            connection.createAktivitetskrav(aktivitetskrav = it, referanseTilfelleBitUUID = UUID.randomUUID())
         }
         connection.commit()
     }

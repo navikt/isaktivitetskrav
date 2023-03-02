@@ -19,8 +19,12 @@ class AktivitetskravService(
     internal fun createAktivitetskrav(
         connection: Connection,
         aktivitetskrav: Aktivitetskrav,
+        referanseTilfelleBitUUID: UUID,
     ) {
-        connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav)
+        connection.createAktivitetskrav(
+            aktivitetskrav = aktivitetskrav,
+            referanseTilfelleBitUUID = referanseTilfelleBitUUID
+        )
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = aktivitetskrav
         )
@@ -89,7 +93,10 @@ class AktivitetskravService(
             Aktivitetskrav.fromVurdering(personIdent = personIdent, vurdering = aktivitetskravVurdering)
 
         database.connection.use { connection ->
-            val aktivitetskravId = connection.createAktivitetskrav(aktivitetskrav = aktivitetskrav)
+            val aktivitetskravId = connection.createAktivitetskrav(
+                aktivitetskrav = aktivitetskrav,
+                referanseTilfelleBitUUID = null
+            )
             connection.createAktivitetskravVurdering(
                 aktivitetskravId = aktivitetskravId,
                 aktivitetskravVurdering = aktivitetskravVurdering

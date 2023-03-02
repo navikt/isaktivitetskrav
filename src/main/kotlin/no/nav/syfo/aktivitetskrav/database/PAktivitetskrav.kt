@@ -15,6 +15,7 @@ data class PAktivitetskrav(
     val updatedAt: OffsetDateTime,
     val status: String,
     val stoppunktAt: LocalDate,
+    val referanseTilfelleBitUuid: UUID?,
 )
 
 fun PAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger: List<AktivitetskravVurdering>) =
