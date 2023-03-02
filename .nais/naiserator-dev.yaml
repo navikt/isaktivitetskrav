@@ -77,4 +77,4 @@ spec:
     - name: AUTOMATISK_OPPFYLT_CRONJOB_ENABLED
       value: "true"
     - name: NY_CRONJOB_ENABLED
-      value: "true"
+      value: "false"
