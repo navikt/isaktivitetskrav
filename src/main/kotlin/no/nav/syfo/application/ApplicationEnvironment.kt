@@ -36,6 +36,7 @@ data class Environment(
     ),
     val arenaCutoff: LocalDate = LocalDate.parse(getEnvVar("ARENA_CUTOFF")),
     val automatiskOppfyltCronJobEnabled: Boolean = getEnvVar("AUTOMATISK_OPPFYLT_CRONJOB_ENABLED").toBoolean(),
+    val nyCronjobEnabled: Boolean = getEnvVar("NY_CRONJOB_ENABLED").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
     val clients: ClientsEnvironment = ClientsEnvironment(
         syfotilgangskontroll = ClientEnvironment(

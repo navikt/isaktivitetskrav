@@ -2,25 +2,25 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.domain.isNy
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.cronjob.Cronjob
 import no.nav.syfo.application.cronjob.CronjobResult
 import no.nav.syfo.application.database.DatabaseInterface
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 
-class AktivitetskravAutomatiskOppfyltCronjob(
+class AktivitetskravNyCronjob(
     private val database: DatabaseInterface,
     private val aktivitetskravService: AktivitetskravService,
 ) : Cronjob {
-    override val initialDelayMinutes: Long = 5
+    override val initialDelayMinutes: Long = 10
     override val intervalDelayMinutes: Long = 240
-    private val uuids = getUuids("uuids_automatisk_oppfylt.json")
+    private val uuids = getUuids("uuids_ny.json")
 
     override suspend fun run() {
         val result = runJob(uuids)
         log.info(
-            "Completed aktivitetskrav automatisk oppfylt processing job with result: {}, {}",
+            "Completed aktivitetskrav ny processing job with result: {}, {}",
             StructuredArguments.keyValue("failed", result.failed),
             StructuredArguments.keyValue("updated", result.updated),
         )
@@ -30,20 +30,24 @@ class AktivitetskravAutomatiskOppfyltCronjob(
         val result = CronjobResult()
 
         val aktivitetskravList =
-            aktivitetskravUuids.mapNotNull { aktivitetskravService.getAktivitetskrav(it) }.filter { it.isNy() }
+            aktivitetskravUuids.mapNotNull { aktivitetskravService.getAktivitetskrav(it) }
+                .filter { it.isAutomatiskOppfylt() }
         try {
             database.connection.use { connection ->
                 aktivitetskravList.forEach {
-                    aktivitetskravService.oppfyllAutomatisk(
+                    val updatedAktivitetskrav = it.copy(
+                        status = AktivitetskravStatus.NY
+                    )
+                    aktivitetskravService.updateAktivitetskrav(
                         connection = connection,
-                        aktivitetskrav = it
+                        updatedAktivitetskrav = updatedAktivitetskrav,
                     )
                     result.updated++
                 }
                 connection.commit()
             }
         } catch (e: Exception) {
-            log.error("Caught exception in aktivitetskrav automatisk oppfylt job")
+            log.error("Caught exception in aktivitetskrav ny job")
             result.failed++
         }
 
@@ -51,6 +55,6 @@ class AktivitetskravAutomatiskOppfyltCronjob(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(AktivitetskravAutomatiskOppfyltCronjob::class.java)
+        private val log = LoggerFactory.getLogger(AktivitetskravNyCronjob::class.java)
     }
 }
