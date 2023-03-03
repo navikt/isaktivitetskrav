@@ -528,7 +528,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     }
                 }
             }
-            describe("Aktivitetskrav vurdert(UNNTAK/OPPFYLT/IKKE_OPPFYLT), then oppfolgingstilfelle gradert, then not gradert") {
+            describe("Aktivitetskrav vurdert(UNNTAK/OPPFYLT/IKKE_OPPFYLT), then oppfolgingstilfelle gradert") {
                 val nyAktivitetskrav = createAktivitetskravNy(
                     tilfelleStart = nineWeeksAgo,
                 )
@@ -540,12 +540,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
 
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status
-                    it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) and then Aktivitetskrav(NY)") {
+                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at from oppfolgingstilfelle") {
                         database.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
                             kafkaOppfolgingstilfelleTenWeeksGradert,
-                            kafkaOppfolgingstilfelleNineWeeksNotGradert
                         )
 
                         kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
@@ -560,25 +559,15 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                             personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                         )
 
-                        aktivitetskravList.size shouldBeEqualTo 3
-
-                        aktivitetskravList[2].status shouldBeEqualTo aktivitetskravStatus.name
-                        aktivitetskravList[2].uuid shouldBeEqualTo nyAktivitetskrav.uuid
-                        aktivitetskravList[1].status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT.name
-                        aktivitetskravList[1].uuid shouldNotBeEqualTo nyAktivitetskrav.uuid
-
+                        aktivitetskravList.size shouldBeEqualTo 1
                         val latestAktivitetskrav = aktivitetskravList.first()
-                        latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY.name
-                        latestAktivitetskrav.uuid shouldNotBeEqualTo nyAktivitetskrav.uuid
+                        latestAktivitetskrav.status shouldBeEqualTo aktivitetskravStatus.name
+                        latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                        latestAktivitetskrav.stoppunktAt shouldNotBeEqualTo nyAktivitetskrav.stoppunktAt
 
-                        val kafkaRecordSlot1 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
-                        val kafkaRecordSlot2 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
-                        verifyOrder {
-                            kafkaProducer.send(capture(kafkaRecordSlot1))
-                            kafkaProducer.send(capture(kafkaRecordSlot2))
-                        }
-
-                        val kafkaAktivitetskravVurdering = kafkaRecordSlot2.captured.value()
+                        val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                        verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
+                        val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     }
