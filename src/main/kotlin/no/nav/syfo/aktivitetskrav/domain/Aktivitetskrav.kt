@@ -116,13 +116,6 @@ fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
 
 fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 
-fun Aktivitetskrav.isVurdert(): Boolean =
-    this.status in EnumSet.of(
-        AktivitetskravStatus.UNNTAK,
-        AktivitetskravStatus.OPPFYLT,
-        AktivitetskravStatus.IKKE_OPPFYLT,
-    )
-
 fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
     AktivitetskravResponseDTO(
         uuid = it.uuid.toString(),
