@@ -36,7 +36,7 @@ Run formatting: `./gradlew ktlintFormat`
 
 This application produces the following topic(s):
 
-* teamsykefravr.aktivitetskrav-vurdering
+* teamsykefravr.aktivitetskrav-vurdering (documented [here](documentation/kafka/aktivitetskrav-vurdering.md))
 
 This application consumes the following topic(s):
 
