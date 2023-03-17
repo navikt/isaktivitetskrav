@@ -40,6 +40,7 @@ spec:
       memory: 384Mi
   ingresses:
     - "https://isaktivitetskrav.dev.intern.nav.no"
+    - "https://isaktivitetskrav.intern.dev.nav.no"
   accessPolicy:
     inbound:
       rules:
