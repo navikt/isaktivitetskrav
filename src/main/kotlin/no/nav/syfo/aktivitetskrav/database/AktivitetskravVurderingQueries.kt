@@ -56,8 +56,9 @@ const val queryCreateAktivitetskravVurdering =
         created_by,
         status,
         beskrivelse,
-        arsaker
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?)
+        arsaker,
+        frist
+    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING id
     """
 
@@ -73,6 +74,7 @@ fun Connection.createAktivitetskravVurdering(
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
         it.setString(7, aktivitetskravVurdering.arsakerToString())
+        it.setDate(8, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
         it.executeQuery().toList { getInt("id") }
     }
 
@@ -216,4 +218,5 @@ private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = P
     status = getString("status"),
     beskrivelse = getString("beskrivelse"),
     arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty),
+    frist = getDate("frist")?.toLocalDate(),
 )

@@ -13,4 +13,5 @@ data class KafkaAktivitetskravVurdering(
     val stoppunktAt: LocalDate,
     val updatedBy: String?,
     val sistVurdert: OffsetDateTime?,
+    val frist: LocalDate?,
 )
