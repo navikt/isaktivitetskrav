@@ -16,3 +16,4 @@ Beskrivelse av feltene i en record ([KafkaAktivitetskravVurdering](../../src/mai
 * `arsaker` Årsakskoder valgt i vurdering. Mulige verdier: `OPPFOLGINGSPLAN_ARBEIDSGIVER, INFORMASJON_BEHANDLER, ANNET, MEDISINSKE_GRUNNER, TILRETTELEGGING_IKKE_MULIG, SJOMENN_UTENRIKS, FRISKMELDT, GRADERT, TILTAK`.
 * `updatedBy` Veileder-ident som vurderte aktivitetskravet.
 * `sistVurdert` Dato-tid aktivitetskravet ble vurdert av veileder.
+* `frist`: Valgfri frist-dato knyttet til vurderingen.

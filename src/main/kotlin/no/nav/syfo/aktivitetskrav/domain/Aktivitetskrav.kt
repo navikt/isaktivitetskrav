@@ -103,6 +103,7 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
         updatedBy = latestVurdering?.createdBy,
         arsaker = latestVurdering?.arsaker?.map { it.name } ?: emptyList(),
         sistVurdert = latestVurdering?.createdAt,
+        frist = latestVurdering?.frist,
     )
 }
 

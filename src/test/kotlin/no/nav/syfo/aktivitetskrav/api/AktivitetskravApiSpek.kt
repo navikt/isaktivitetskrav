@@ -445,6 +445,40 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                         }
                     }
+                    it("Updates Aktivitetskrav with Avvent-vurdering and frist and produces to Kafka if request is succesful") {
+                        val oneWeekFromNow = LocalDate.now().plusWeeks(1)
+                        val vurderingAvventRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.AVVENT,
+                            beskrivelse = "Avventer mer informasjon",
+                            arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER),
+                            frist = oneWeekFromNow,
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Post, urlVurderExistingAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(vurderingAvventRequestDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val latestAktivitetskrav =
+                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT).first()
+                            val latestAktivitetskravVurdering =
+                                database.getAktivitetskravVurderinger(aktivitetskravId = latestAktivitetskrav.id)
+                                    .first()
+                            latestAktivitetskravVurdering.frist shouldBeEqualTo oneWeekFromNow
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                            kafkaAktivitetskravVurdering.frist shouldBeEqualTo latestAktivitetskravVurdering.frist
+                        }
+                    }
                 }
                 describe("Unhappy path") {
                     it("Returns status Unauthorized if no token is supplied") {

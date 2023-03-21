@@ -20,4 +20,5 @@ data class AktivitetskravVurderingResponseDTO(
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
     val arsaker: List<VurderingArsak>,
+    val frist: LocalDate?,
 )

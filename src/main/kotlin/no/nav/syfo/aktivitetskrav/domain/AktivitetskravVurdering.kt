@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.domain
 import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
 import no.nav.syfo.util.nowUTC
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -35,6 +36,7 @@ data class AktivitetskravVurdering private constructor(
     val status: AktivitetskravStatus,
     val arsaker: List<VurderingArsak>,
     val beskrivelse: String?,
+    val frist: LocalDate?,
 ) {
     companion object {
         fun createFromDatabase(pAktivitetskravVurdering: PAktivitetskravVurdering) = AktivitetskravVurdering(
@@ -44,6 +46,7 @@ data class AktivitetskravVurdering private constructor(
             status = AktivitetskravStatus.valueOf(pAktivitetskravVurdering.status),
             arsaker = pAktivitetskravVurdering.arsaker.map { VurderingArsak.valueOf(it) },
             beskrivelse = pAktivitetskravVurdering.beskrivelse,
+            frist = pAktivitetskravVurdering.frist,
         )
 
         fun create(
@@ -51,6 +54,7 @@ data class AktivitetskravVurdering private constructor(
             createdBy: String,
             beskrivelse: String?,
             arsaker: List<VurderingArsak>,
+            frist: LocalDate? = null,
         ): AktivitetskravVurdering {
             validate(status, arsaker)
 
@@ -61,6 +65,7 @@ data class AktivitetskravVurdering private constructor(
                 status = status,
                 beskrivelse = beskrivelse,
                 arsaker = arsaker,
+                frist = frist,
             )
         }
 
@@ -96,5 +101,6 @@ fun AktivitetskravVurdering.toVurderingResponseDto(): AktivitetskravVurderingRes
         createdBy = this.createdBy,
         status = this.status,
         beskrivelse = this.beskrivelse,
-        arsaker = this.arsaker
+        arsaker = this.arsaker,
+        frist = this.frist,
     )

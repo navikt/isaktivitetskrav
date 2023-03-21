@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -13,6 +14,7 @@ data class PAktivitetskravVurdering(
     val status: String,
     val beskrivelse: String?,
     val arsaker: List<String>,
+    val frist: LocalDate?,
 )
 
 fun List<PAktivitetskravVurdering>.toAktivitetskravVurderingList() = map { it.toAktivitetskravVurdering() }
