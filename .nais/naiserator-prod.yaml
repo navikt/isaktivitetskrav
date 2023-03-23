@@ -46,6 +46,11 @@ spec:
         - application: syfomodiaperson
           namespace: teamsykefravr
           cluster: prod-fss
+    outbound:
+      external:
+        - host: "login.microsoftonline.com"
+        - host: "syfo-tilgangskontroll.prod-fss-pub.nais.io"
+        - host: "pdl-api.prod-fss-pub.nais.io"
   gcp:
     sqlInstances:
       - type: POSTGRES_14
