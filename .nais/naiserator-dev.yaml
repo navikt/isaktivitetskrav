@@ -46,6 +46,9 @@ spec:
         - application: syfomodiaperson
           namespace: teamsykefravr
           cluster: dev-fss
+        - application: syfomodiaperson
+          namespace: teamsykefravr
+          cluster: dev-gcp
     outbound:
       external:
         - host: "login.microsoftonline.com"
