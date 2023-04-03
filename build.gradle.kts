@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
 version = "0.0.1"
@@ -94,6 +93,10 @@ dependencies {
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:${Versions.spek}")
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 tasks {
     withType<Jar> {
         manifest.attributes["Main-Class"] = "no.nav.syfo.AppKt"
@@ -103,10 +106,6 @@ tasks {
         doLast {
             println(project.version)
         }
-    }
-
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
     }
 
     withType<ShadowJar> {

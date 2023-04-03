@@ -1,0 +1,15 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+  monitor:
+    uses: navikt/isworkflows/.github/workflows/codeql.yml@master
+    with:
+      languages: "[ 'java' ]"
+    secrets: inherit
