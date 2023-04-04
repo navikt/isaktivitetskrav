@@ -45,9 +45,6 @@ spec:
       rules:
         - application: syfomodiaperson
           namespace: teamsykefravr
-          cluster: dev-fss
-        - application: syfomodiaperson
-          namespace: teamsykefravr
           cluster: dev-gcp
     outbound:
       external:
