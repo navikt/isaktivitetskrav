@@ -483,7 +483,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
             }
-            describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT) exists for oppfolgingstilfelle") {
+            describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for oppfolgingstilfelle") {
                 val nyAktivitetskrav = createAktivitetskravNy(
                     tilfelleStart = nineWeeksAgo,
                 )
@@ -491,11 +491,12 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     createAktivitetskravUnntak(nyAktivitetskrav),
                     createAktivitetskravOppfylt(nyAktivitetskrav),
                     createAktivitetskravAvvent(nyAktivitetskrav),
-                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav)
+                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav),
+                    createAktivitetskravIkkeAktuell(nyAktivitetskrav),
                 )
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status
-                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at from oppfolgingstilfelle") {
+                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle not gradert") {
                         database.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
@@ -526,21 +527,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     }
-                }
-            }
-            describe("Aktivitetskrav vurdert(UNNTAK/OPPFYLT/IKKE_OPPFYLT), then oppfolgingstilfelle gradert") {
-                val nyAktivitetskrav = createAktivitetskravNy(
-                    tilfelleStart = nineWeeksAgo,
-                )
-                val testcases = listOf(
-                    createAktivitetskravUnntak(nyAktivitetskrav),
-                    createAktivitetskravOppfylt(nyAktivitetskrav),
-                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav)
-                )
-
-                testcases.forEach { aktivitetskrav ->
-                    val aktivitetskravStatus = aktivitetskrav.status
-                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at from oppfolgingstilfelle") {
+                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle gradert") {
                         database.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
@@ -571,44 +558,6 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     }
-                }
-            }
-            describe("Aktivitetskrav(AVVENT) exists for oppfolgingstilfelle, then oppfolgingstilfelle gradert") {
-                val nyAktivitetskrav = createAktivitetskravNy(
-                    tilfelleStart = nineWeeksAgo,
-                )
-                val avventAktivitetskrav = createAktivitetskravAvvent(nyAktivitetskrav)
-
-                it("updates Aktivitetskrav(AVVENT) stoppunkt_at from oppfolgingstilfelle") {
-                    database.createAktivitetskrav(avventAktivitetskrav)
-
-                    mockKafkaConsumerOppfolgingstilfellePerson(
-                        kafkaOppfolgingstilfelleTenWeeksGradert,
-                    )
-
-                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
-                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
-                    )
-
-                    verify(exactly = 1) {
-                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
-                    }
-
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
-
-                    aktivitetskravList.size shouldBeEqualTo 1
-                    val latestAktivitetskrav = aktivitetskravList.first()
-                    latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AVVENT.name
-                    latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
-                    latestAktivitetskrav.stoppunktAt shouldNotBeEqualTo nyAktivitetskrav.stoppunktAt
-
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
-                    verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
-                    val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                 }
             }
             describe("Oppfolgingstilfelle start in future") {
@@ -700,14 +649,15 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
                 }
             }
-            describe("Aktivitetskrav(AUTOMATISK_OPPFYLT/UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT) exists for earlier oppfolgingstilfelle") {
+            describe("Aktivitetskrav(AUTOMATISK_OPPFYLT/UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for earlier oppfolgingstilfelle") {
                 val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
                 val testcases = listOf(
                     createAktivitetskravAutomatiskOppfylt(tilfelleStart = yearAgo),
                     createAktivitetskravUnntak(nyAktivitetskrav),
                     createAktivitetskravOppfylt(nyAktivitetskrav),
                     createAktivitetskravAvvent(nyAktivitetskrav),
-                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav)
+                    createAktivitetskravIkkeOppfylt(nyAktivitetskrav),
+                    createAktivitetskravIkkeAktuell(nyAktivitetskrav)
                 )
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status

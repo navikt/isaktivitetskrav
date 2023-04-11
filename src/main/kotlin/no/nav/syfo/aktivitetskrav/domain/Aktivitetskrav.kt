@@ -21,6 +21,7 @@ enum class AktivitetskravStatus {
     AUTOMATISK_OPPFYLT,
     STANS,
     IKKE_OPPFYLT,
+    IKKE_AKTUELL,
 }
 
 data class Aktivitetskrav private constructor(

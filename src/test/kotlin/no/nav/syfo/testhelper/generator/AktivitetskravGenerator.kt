@@ -62,3 +62,14 @@ fun createAktivitetskravIkkeOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitet
 
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeOppfyltVurdering)
 }
+
+fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
+    val ikkeAktuellVurdering = AktivitetskravVurdering.create(
+        status = AktivitetskravStatus.IKKE_AKTUELL,
+        createdBy = UserConstants.VEILEDER_IDENT,
+        beskrivelse = null,
+        arsaker = emptyList(),
+    )
+
+    return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
+}
