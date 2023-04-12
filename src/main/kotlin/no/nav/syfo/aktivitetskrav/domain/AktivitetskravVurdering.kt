@@ -27,6 +27,7 @@ private val allowedVurderingStatus = EnumSet.of(
     AktivitetskravStatus.UNNTAK,
     AktivitetskravStatus.OPPFYLT,
     AktivitetskravStatus.IKKE_OPPFYLT,
+    AktivitetskravStatus.IKKE_AKTUELL,
 )
 
 data class AktivitetskravVurdering private constructor(
@@ -76,7 +77,7 @@ data class AktivitetskravVurdering private constructor(
             if (status !in allowedVurderingStatus) {
                 throw IllegalArgumentException("Can't create vurdering with status $status")
             }
-            if (status == AktivitetskravStatus.IKKE_OPPFYLT && arsaker.isNotEmpty()) {
+            if (!status.requiresVurderingArsak() && arsaker.isNotEmpty()) {
                 throw IllegalArgumentException("$status should not have arsak")
             }
             if (status.requiresVurderingArsak() && arsaker.isEmpty()) {

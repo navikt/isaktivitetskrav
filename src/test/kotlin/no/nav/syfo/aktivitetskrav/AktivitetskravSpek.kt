@@ -106,6 +106,22 @@ class AktivitetskravSpek : Spek({
                 )
             }
         }
+        it("kan vurdere IKKE_AKTUELL uten arsak") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+            val ikkeOppfyltAktivitetskrav = createAktivitetskravIkkeAktuell(nyAktivitetskrav = aktivitetskrav)
+
+            ikkeOppfyltAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_AKTUELL
+        }
+        it("kan ikke vurdere IKKE_AKTUELL med arsak") {
+            assertFailsWith(IllegalArgumentException::class) {
+                AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.IKKE_AKTUELL,
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                    beskrivelse = null,
+                    arsaker = listOf(VurderingArsak.ANNET),
+                )
+            }
+        }
         EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT, AktivitetskravStatus.STANS)
             .forEach {
                 it("kan ikke lage vurdering med status $it") {
