@@ -49,8 +49,9 @@ spec:
     outbound:
       external:
         - host: "login.microsoftonline.com"
-        - host: "syfo-tilgangskontroll.prod-fss-pub.nais.io"
         - host: "pdl-api.prod-fss-pub.nais.io"
+      rules:
+        - application: syfo-tilgangskontroll
   gcp:
     sqlInstances:
       - type: POSTGRES_14
@@ -70,9 +71,9 @@ spec:
     - name: KTOR_ENV
       value: "production"
     - name: SYFOTILGANGSKONTROLL_CLIENT_ID
-      value: "prod-fss.teamsykefravr.syfo-tilgangskontroll"
+      value: "prod-gcp.teamsykefravr.syfo-tilgangskontroll"
     - name: SYFOTILGANGSKONTROLL_URL
-      value: "https://syfo-tilgangskontroll.prod-fss-pub.nais.io"
+      value: "http://syfo-tilgangskontroll"
     - name: PDL_CLIENT_ID
       value: "prod-fss.pdl.pdl-api"
     - name: PDL_URL
