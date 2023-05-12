@@ -96,14 +96,17 @@ class KafkaOppfolgingstilfellePersonService(
                 log.info("Found aktivitetskrav AUTOMATISK_OPPFYLT but Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} not gradert - creating aktivitetskrav")
                 createAktivitetskrav(connection = connection, oppfolgingstilfelle = latestOppfolgingstilfelle)
                 COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_CREATED.increment()
-            } else {
-                log.info("Updating aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
+            } else if (latestAktivitetskravForTilfelle.shouldUpdateStoppunkt(latestOppfolgingstilfelle)) {
+                log.info("Updating stoppunkt for aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
                 aktivitetskravService.updateAktivitetskravStoppunkt(
                     connection = connection,
                     aktivitetskrav = latestAktivitetskravForTilfelle,
                     oppfolgingstilfelle = latestOppfolgingstilfelle,
                 )
                 COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_UPDATED.increment()
+            } else {
+                log.info("Found aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} - skipping update")
+                COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_SKIPPED_UPDATE.increment()
             }
         }
     }
