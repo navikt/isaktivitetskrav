@@ -128,6 +128,11 @@ fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
     )
 }
 
+internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean {
+    val updatedStoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
+    return this.stoppunktAt != updatedStoppunktDato
+}
+
 internal fun Aktivitetskrav.updateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Aktivitetskrav {
     val stoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
     return this.copy(

@@ -342,8 +342,39 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val nyAktivitetskrav = createAktivitetskravNy(
                     tilfelleStart = nineWeeksAgo,
                 )
+                it("does not update Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
+                    database.createAktivitetskrav(nyAktivitetskrav)
 
-                it("updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert") {
+                    var aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+                    var aktivitetskrav = aktivitetskravList.first()
+                    val updatedAt = aktivitetskrav.updatedAt
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksNotGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+                    aktivitetskrav = aktivitetskravList.first()
+                    aktivitetskrav.updatedAt shouldBeEqualTo updatedAt
+                }
+
+                it("updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert and start changed") {
                     database.createAktivitetskrav(nyAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -377,7 +408,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
-                it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
+                it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert and start changed") {
                     database.createAktivitetskrav(nyAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -448,7 +479,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
-                it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert") {
+                it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert and start changed") {
                     database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -482,6 +513,37 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
+                it("does not update Aktivitetskrav(AUTOMATISK_OPPFYLT) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
+                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+
+                    var aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+                    var aktivitetskrav = aktivitetskravList.first()
+                    val updatedAt = aktivitetskrav.updatedAt
+
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelleNineWeeksGradert
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    verify(exactly = 0) {
+                        kafkaProducer.send(any())
+                    }
+
+                    aktivitetskravList = database.getAktivitetskrav(
+                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    )
+                    aktivitetskrav = aktivitetskravList.first()
+                    aktivitetskrav.updatedAt shouldBeEqualTo updatedAt
+                }
             }
             describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for oppfolgingstilfelle") {
                 val nyAktivitetskrav = createAktivitetskravNy(
@@ -496,7 +558,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 )
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status
-                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle not gradert") {
+                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle not gradert and start changed") {
                         database.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
@@ -527,7 +589,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     }
-                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle gradert") {
+                    it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle gradert and start changed") {
                         database.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
@@ -557,6 +619,37 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                    }
+                    it("does not update Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
+                        database.createAktivitetskrav(aktivitetskrav)
+
+                        var aktivitetskravList = database.getAktivitetskrav(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                        )
+                        var pAktivitetskrav = aktivitetskravList.first()
+                        val updatedAt = pAktivitetskrav.updatedAt
+
+                        mockKafkaConsumerOppfolgingstilfellePerson(
+                            kafkaOppfolgingstilfelleNineWeeksNotGradert
+                        )
+
+                        kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                            kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                        )
+
+                        verify(exactly = 1) {
+                            mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                        }
+
+                        verify(exactly = 0) {
+                            kafkaProducer.send(any())
+                        }
+
+                        aktivitetskravList = database.getAktivitetskrav(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+                        )
+                        pAktivitetskrav = aktivitetskravList.first()
+                        pAktivitetskrav.updatedAt shouldBeEqualTo updatedAt
                     }
                 }
             }
