@@ -11,7 +11,7 @@ object Versions {
     const val jacksonDataType = "2.14.2"
     const val kafka = "3.4.0"
     const val kluent = "1.72"
-    const val ktor = "2.2.4"
+    const val ktor = "2.3.1"
     const val logback = "1.4.5"
     const val logstashEncoder = "7.2"
     const val micrometerRegistry = "1.10.3"
@@ -87,6 +87,7 @@ dependencies {
     // Tests
     testImplementation("io.ktor:ktor-server-tests:${Versions.ktor}")
     testImplementation("io.mockk:mockk:${Versions.mockk}")
+    testImplementation("io.ktor:ktor-client-mock:${Versions.ktor}")
     testImplementation("com.nimbusds:nimbus-jose-jwt:${Versions.nimbusJoseJwt}")
     testImplementation("org.amshove.kluent:kluent:${Versions.kluent}")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:${Versions.spek}")

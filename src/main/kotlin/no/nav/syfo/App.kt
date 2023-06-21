@@ -17,6 +17,7 @@ import no.nav.syfo.application.database.databaseModule
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
+import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.getWellKnown
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
@@ -33,6 +34,10 @@ fun main() {
     )
     val azureAdClient = AzureAdClient(
         azureEnvironment = environment.azure
+    )
+    val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
+        azureAdClient = azureAdClient,
+        clientEnvironment = environment.clients.syfotilgangskontroll,
     )
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
@@ -64,8 +69,8 @@ fun main() {
                 database = applicationDatabase,
                 environment = environment,
                 wellKnownInternalAzureAD = wellKnownInternalAzureAD,
-                azureAdClient = azureAdClient,
                 aktivitetskravService = aktivitetskravService,
+                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             )
         }
     }

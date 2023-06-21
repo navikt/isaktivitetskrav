@@ -8,11 +8,7 @@ import no.nav.syfo.client.ClientsEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
 import java.time.LocalDate
 
-fun testEnvironment(
-    azureOpenIdTokenEndpoint: String,
-    syfoTilgangskontrollUrl: String,
-    pdlUrl: String,
-) = Environment(
+fun testEnvironment() = Environment(
     database = DatabaseEnvironment(
         host = "localhost",
         port = "5432",
@@ -24,7 +20,7 @@ fun testEnvironment(
         appClientId = "isaktivitetskrav-client-id",
         appClientSecret = "isaktivitetskrav-secret",
         appWellKnownUrl = "wellknown",
-        openidConfigTokenEndpoint = azureOpenIdTokenEndpoint,
+        openidConfigTokenEndpoint = "azureOpenIdTokenEndpoint",
     ),
     kafka = KafkaEnvironment(
         aivenBootstrapServers = "kafkaBootstrapServers",
@@ -38,11 +34,11 @@ fun testEnvironment(
     ),
     clients = ClientsEnvironment(
         syfotilgangskontroll = ClientEnvironment(
-            baseUrl = syfoTilgangskontrollUrl,
+            baseUrl = "syfoTilgangskontrollUrl",
             clientId = "dev-fss.teamsykefravr.syfotilgangskontroll",
         ),
         pdl = ClientEnvironment(
-            baseUrl = pdlUrl,
+            baseUrl = "pdlUrl",
             clientId = "pdlClientId",
         ),
     ),

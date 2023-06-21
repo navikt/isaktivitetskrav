@@ -1,5 +1,6 @@
 package no.nav.syfo.client.azuread
 
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -12,8 +13,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 class AzureAdClient(
     private val azureEnvironment: AzureEnvironment,
+    private val httpClient: HttpClient = httpClientProxy(),
 ) {
-    private val httpClient = httpClientProxy()
 
     suspend fun getOnBehalfOfToken(scopeClientId: String, token: String): AzureAdToken? = getAccessToken(
         Parameters.build {
