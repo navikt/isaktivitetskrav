@@ -1,5 +1,6 @@
 package no.nav.syfo.client.pdl
 
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -15,8 +16,8 @@ import org.slf4j.LoggerFactory
 class PdlClient(
     private val azureAdClient: AzureAdClient,
     private val pdlEnvironment: ClientEnvironment,
+    private val httpClient: HttpClient = httpClientDefault(),
 ) {
-    private val httpClient = httpClientDefault()
 
     suspend fun getPdlIdenter(
         personIdent: PersonIdent,
@@ -63,6 +64,7 @@ class PdlClient(
                     pdlIdenterResponse.data
                 }
             }
+
             else -> {
                 COUNT_CALL_PDL_IDENTER_FAIL.increment()
                 logger.error("Request to get IdentList with url: ${pdlEnvironment.clientId} failed with reponse code ${response.status.value}")

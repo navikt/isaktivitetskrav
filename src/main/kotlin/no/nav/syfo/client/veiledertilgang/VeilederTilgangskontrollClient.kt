@@ -1,5 +1,6 @@
 package no.nav.syfo.client.veiledertilgang
 
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -16,8 +17,8 @@ import org.slf4j.LoggerFactory
 class VeilederTilgangskontrollClient(
     private val azureAdClient: AzureAdClient,
     private val clientEnvironment: ClientEnvironment,
+    private val httpClient: HttpClient = httpClientDefault(),
 ) {
-    private val httpClient = httpClientDefault()
     private val tilgangskontrollPersonUrl = "${clientEnvironment.baseUrl}$TILGANGSKONTROLL_PERSON_PATH"
 
     suspend fun hasAccess(callId: String, personIdent: PersonIdent, token: String): Boolean {
