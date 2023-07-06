@@ -5,17 +5,17 @@ group = "no.nav.syfo"
 version = "0.0.1"
 
 object Versions {
-    const val confluent = "7.3.1"
-    const val flyway = "9.12.0"
+    const val confluent = "7.4.0"
+    const val flyway = "9.20.0"
     const val hikari = "5.0.1"
-    const val jacksonDataType = "2.14.2"
+    const val jacksonDataType = "2.15.2"
     const val kafka = "3.4.0"
-    const val kluent = "1.72"
-    const val ktor = "2.3.1"
-    const val logback = "1.4.5"
-    const val logstashEncoder = "7.2"
-    const val micrometerRegistry = "1.10.3"
-    const val mockk = "1.13.3"
+    const val kluent = "1.73"
+    const val ktor = "2.3.2"
+    const val logback = "1.4.7"
+    const val logstashEncoder = "7.3"
+    const val micrometerRegistry = "1.11.0"
+    const val mockk = "1.13.5"
     const val nimbusJoseJwt = "9.31"
     const val postgres = "42.5.1"
     val postgresEmbedded = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
@@ -24,9 +24,9 @@ object Versions {
 }
 
 plugins {
-    kotlin("jvm") version "1.8.22"
+    kotlin("jvm") version "1.9.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.jlleitschuh.gradle.ktlint") version "11.3.1"
+    id("org.jlleitschuh.gradle.ktlint") version "11.4.2"
 }
 
 repositories {
