@@ -1,0 +1,13 @@
+name: Gradle dependency submission
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**.gradle.kts"
+  workflow_dispatch:
+
+jobs:
+  dependency_submission:
+    uses: navikt/isworkflows/.github/workflows/gradle-dependency-submission.yml@master
+    secrets: inherit
