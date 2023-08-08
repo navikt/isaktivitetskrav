@@ -1,19 +1,21 @@
-apiVersion: "nais.io/v1"
-kind: "Alert"
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
   name: isaktivitetskrav-alerts
   namespace: teamsykefravr
   labels:
     team: teamsykefravr
 spec:
-  receivers:
-    slack:
-      channel: '#syfo-alarm'
-      prependText: '<!here> | '
-  alerts:
-    - alert: ISAKTIVITETSKRAV IS DOWN
-      expr: sum(up{app="isaktivitetskrav", job="kubernetes-pods"}) == 0
-      for: 30s
-      description: "Det er ingen pods for app kjørende i namespace og dermed er appen nede"
-      action: "Undersøk hvorfor pods er nede og få den kjørende igjen!"
-      severity: danger
+  groups:
+    - name: isaktivitetskrav-alerts
+      rules:
+        - alert: ISAKTIVITETSKRAV IS DOWN
+          expr: kube_deployment_status_replicas_available{deployment="isaktivitetskrav"} == 0
+          for: 30s
+          annotations:
+            consequence: Application is unavailable
+            action: "Undersøk hvorfor pods er nede og få den kjørende igjen!"
+            summary: "Det er ingen pods for app kjørende i namespace og dermed er appen nede"
+          labels:
+            namespace: teamsykefravr
+            severity: danger
