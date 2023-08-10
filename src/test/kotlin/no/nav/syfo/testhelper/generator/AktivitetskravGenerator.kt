@@ -33,24 +33,28 @@ fun createAktivitetskravOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskra
 }
 
 fun createAktivitetskravAvvent(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
-    val avventVurdering = AktivitetskravVurdering.create(
-        status = AktivitetskravStatus.AVVENT,
-        createdBy = UserConstants.VEILEDER_IDENT,
-        beskrivelse = "Avvent",
-        arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER, VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
-    )
+    val avventVurdering = createAvventVurdering()
     return nyAktivitetskrav.vurder(avventVurdering)
 }
 
+fun createAvventVurdering() = AktivitetskravVurdering.create(
+    status = AktivitetskravStatus.AVVENT,
+    createdBy = UserConstants.VEILEDER_IDENT,
+    beskrivelse = "Avvent",
+    arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER, VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
+)
+
 fun createAktivitetskravUnntak(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
-    val unntakVurdering = AktivitetskravVurdering.create(
-        status = AktivitetskravStatus.UNNTAK,
-        createdBy = UserConstants.VEILEDER_IDENT,
-        beskrivelse = "Unntak",
-        arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
-    )
+    val unntakVurdering = createUnntakVurdering()
     return nyAktivitetskrav.vurder(unntakVurdering)
 }
+
+fun createUnntakVurdering() = AktivitetskravVurdering.create(
+    status = AktivitetskravStatus.UNNTAK,
+    createdBy = UserConstants.VEILEDER_IDENT,
+    beskrivelse = "Unntak",
+    arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
+)
 
 fun createAktivitetskravIkkeOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
     val ikkeOppfyltVurdering = AktivitetskravVurdering.create(

@@ -6,6 +6,7 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.time.LocalDate
 import java.util.*
@@ -68,21 +69,18 @@ class AktivitetskravService(
     }
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
-        database.getAktivitetskrav(uuid = uuid)?.let { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
-        }
+        database.getAktivitetskrav(uuid = uuid)?.withVurderinger()
 
     internal fun getAktivitetskravAfterCutoff(
         personIdent: PersonIdent,
         connection: Connection? = null,
     ): List<Aktivitetskrav> =
-        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
-        }.filter { it.stoppunktAt.isAfter(arenaCutoff) }
+        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { it.withVurderinger() }
+            .filter { it.stoppunktAt.isAfter(arenaCutoff) }
 
     internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
-        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
+        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map {
+            it.withVurderinger()
         }
 
     internal fun createAndVurderAktivitetskrav(
@@ -108,11 +106,11 @@ class AktivitetskravService(
         )
     }
 
-    private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
+    private fun PAktivitetskrav.withVurderinger(connection: Connection? = null): Aktivitetskrav {
         val aktivitetskravVurderinger =
-            database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id)
+            database.getAktivitetskravVurderinger(aktivitetskravId = this.id, connection = connection)
                 .toAktivitetskravVurderingList()
-        return pAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
+        return this.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
     }
 
     internal fun updateAktivitetskrav(
@@ -125,5 +123,20 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )
+    }
+
+    internal fun deleteVurdering(connection: Connection, vurdering: PAktivitetskravVurdering) {
+        log.info("Deleting vurdering with uuid ${vurdering.uuid} and status ${vurdering.status}")
+        connection.deleteVurdering(uuid = vurdering.uuid)
+        val aktivitetskrav =
+            connection.getAktivitetskrav(id = vurdering.aktivitetskravId)!!.withVurderinger(connection = connection)
+        val updatedAktivitetskrav = aktivitetskrav.updateStatusFromVurderinger()
+        log.info("Updated aktivitetskrav for deleted vurdering to status ${updatedAktivitetskrav.status}")
+
+        updateAktivitetskrav(connection, updatedAktivitetskrav)
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AktivitetskravService::class.java)
     }
 }

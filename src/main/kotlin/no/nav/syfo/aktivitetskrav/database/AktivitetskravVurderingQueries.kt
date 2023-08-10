@@ -181,12 +181,28 @@ fun DatabaseInterface.getAktivitetskrav(
     }
 }
 
+const val queryGetAktivitetskravById =
+    """
+        SELECT *
+        FROM AKTIVITETSKRAV
+        WHERE id = ?
+    """
+
+fun Connection.getAktivitetskrav(id: Int): PAktivitetskrav? = prepareStatement(queryGetAktivitetskravById).use {
+    it.setInt(1, id)
+    it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
+}
+
 fun DatabaseInterface.getAktivitetskravVurderinger(
     aktivitetskravId: Int,
-): List<PAktivitetskravVurdering> = this.connection.use { connection ->
-    connection.prepareStatement(queryGetAktivitetskravVurderinger).use {
-        it.setInt(1, aktivitetskravId)
-        it.executeQuery().toList { toPAktivitetskravVurdering() }
+    connection: Connection? = null,
+): List<PAktivitetskravVurdering> {
+    return connection?.getAktivitetskravVurderinger(
+        aktivitetskravId = aktivitetskravId
+    ) ?: this.connection.use {
+        it.getAktivitetskravVurderinger(
+            aktivitetskravId = aktivitetskravId
+        )
     }
 }
 
@@ -196,6 +212,45 @@ const val queryGetAktivitetskravVurderinger =
         FROM AKTIVITETSKRAV_VURDERING
         WHERE aktivitetskrav_id = ?
         ORDER BY created_at DESC
+    """
+
+private fun Connection.getAktivitetskravVurderinger(
+    aktivitetskravId: Int,
+): List<PAktivitetskravVurdering> = prepareStatement(queryGetAktivitetskravVurderinger).use {
+    it.setInt(1, aktivitetskravId)
+    it.executeQuery().toList { toPAktivitetskravVurdering() }
+}
+
+fun DatabaseInterface.getAktivitetskravVurdering(uuid: UUID): PAktivitetskravVurdering? =
+    this.connection.use { connection ->
+        connection.prepareStatement(queryGetAktivitetskravVurdering).use {
+            it.setString(1, uuid.toString())
+            it.executeQuery().toList { toPAktivitetskravVurdering() }.firstOrNull()
+        }
+    }
+
+const val queryGetAktivitetskravVurdering =
+    """
+        SELECT *
+        FROM AKTIVITETSKRAV_VURDERING
+        WHERE uuid = ?
+    """
+
+fun Connection.deleteVurdering(uuid: UUID) {
+    val deletedId = this.prepareStatement(queryDeleteVurdering).use {
+        it.setString(1, uuid.toString())
+        it.executeUpdate()
+    }
+
+    if (deletedId != 1) {
+        throw SQLException("Failed to delete AktivitetskravVurdering with uuid $uuid")
+    }
+}
+
+const val queryDeleteVurdering =
+    """
+        DELETE FROM AKTIVITETSKRAV_VURDERING
+        WHERE uuid = ?
     """
 
 private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(

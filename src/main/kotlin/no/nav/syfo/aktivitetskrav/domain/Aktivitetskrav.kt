@@ -150,3 +150,7 @@ internal fun Aktivitetskrav.vurder(
 internal fun Aktivitetskrav.oppfyllAutomatisk(): Aktivitetskrav = this.copy(
     status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
 )
+
+internal fun Aktivitetskrav.updateStatusFromVurderinger(): Aktivitetskrav = this.copy(
+    status = this.vurderinger.firstOrNull()?.status ?: AktivitetskravStatus.NY,
+)
