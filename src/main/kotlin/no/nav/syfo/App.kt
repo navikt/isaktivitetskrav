@@ -17,6 +17,7 @@ import no.nav.syfo.application.database.databaseModule
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.getWellKnown
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -38,6 +39,9 @@ fun main() {
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
         clientEnvironment = environment.clients.syfotilgangskontroll,
+    )
+    val pdfGenClient = PdfGenClient(
+        pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,
     )
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
@@ -63,6 +67,7 @@ fun main() {
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,
+                pdfGenClient = pdfGenClient,
             )
             apiModule(
                 applicationState = applicationState,

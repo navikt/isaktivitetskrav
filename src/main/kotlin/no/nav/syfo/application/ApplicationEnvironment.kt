@@ -5,6 +5,7 @@ import no.nav.syfo.application.database.DatabaseEnvironment
 import no.nav.syfo.application.kafka.KafkaEnvironment
 import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.ClientsEnvironment
+import no.nav.syfo.client.OpenClientEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
 import java.time.LocalDate
 
@@ -46,6 +47,9 @@ data class Environment(
         pdl = ClientEnvironment(
             baseUrl = getEnvVar("PDL_URL"),
             clientId = getEnvVar("PDL_CLIENT_ID"),
+        ),
+        isaktivitetskravpdfgen = OpenClientEnvironment(
+            baseUrl = "http://dialogmeldingpdfgen",
         ),
         dokarkiv = ClientEnvironment(
             baseUrl = getEnvVar("DOKARKIV_URL"),

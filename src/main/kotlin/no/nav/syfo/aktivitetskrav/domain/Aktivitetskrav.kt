@@ -19,6 +19,7 @@ enum class AktivitetskravStatus {
     UNNTAK,
     OPPFYLT,
     AUTOMATISK_OPPFYLT,
+    FORHANDSVARSEL,
     STANS,
     IKKE_OPPFYLT,
     IKKE_AKTUELL,

@@ -3,10 +3,15 @@ package no.nav.syfo.client
 data class ClientsEnvironment(
     val syfotilgangskontroll: ClientEnvironment,
     val pdl: ClientEnvironment,
+    val isaktivitetskravpdfgen: OpenClientEnvironment,
     val dokarkiv: ClientEnvironment,
 )
 
 data class ClientEnvironment(
     val baseUrl: String,
     val clientId: String,
+)
+
+data class OpenClientEnvironment(
+    val baseUrl: String,
 )

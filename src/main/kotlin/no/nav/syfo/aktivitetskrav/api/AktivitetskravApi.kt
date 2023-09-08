@@ -10,13 +10,17 @@ import no.nav.syfo.aktivitetskrav.domain.toResponseDTOList
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.util.*
-import java.util.UUID
+import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
+import no.nav.syfo.util.getCallId
+import no.nav.syfo.util.getNAVIdent
+import no.nav.syfo.util.getPersonIdent
+import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
+const val forhandsVarselPath = "/forhandsvarsel"
 
 private const val API_ACTION = "access aktivitetskrav for person"
 
@@ -73,6 +77,17 @@ fun Route.registerAktivitetskravApi(
             )
 
             call.respond(HttpStatusCode.OK)
+        }
+        post(forhandsVarselPath) {
+            val personIdent = call.personIdent()
+            val callId = call.getCallId()
+
+            // Trenger kanskje ikke veilederIdent her?
+            // Vi må sette opp en reminder på at veileder skal få en oppgave når fristen på å svare til innbygger har gått ut.
+            // val veilederIdent = call.getNAVIdent()
+            val requestDTO = call.receive<ForhandsvarselDTO>()
+
+            aktivitetskravService.sendForhandsvarsel(personIdent, requestDTO, callId)
         }
     }
 }

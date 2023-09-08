@@ -1,9 +1,11 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
@@ -14,6 +16,7 @@ class AktivitetskravService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
+    private val pdfGenClient: PdfGenClient,
 ) {
 
     internal fun createAktivitetskrav(
@@ -125,5 +128,24 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )
+    }
+
+    suspend fun sendForhandsvarsel(
+        personIdent: PersonIdent,
+        forhandsvarselDTO: ForhandsvarselDTO,
+        callId: String,
+    ) {
+        // Create a gyldig forhåndsvarsel?
+        // forhandsvarselDTO.document can't be an empty list
+
+        // Generate pdf
+        val pdfBytes = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
+        // Store in DB
+
+
+        // Send to journalføring (chronjob?)
+        // update DB with `journalpost_id`
+
+        // Create a source from which eSyfo team can consume from
     }
 }
