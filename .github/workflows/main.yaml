@@ -4,5 +4,8 @@ on: push
 
 jobs:
   build-and-deploy:
+    permissions:
+      contents: read
+      id-token: write
     uses: navikt/isworkflows/.github/workflows/kotlin-build-deploy.yml@master
     secrets: inherit
