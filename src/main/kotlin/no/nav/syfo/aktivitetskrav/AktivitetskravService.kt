@@ -141,7 +141,7 @@ class AktivitetskravService(
         // Generate pdf
         val pdfBytes = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
         // Store in DB
-
+        
 
         // Send to journalføring (chronjob?)
         // update DB with `journalpost_id`
