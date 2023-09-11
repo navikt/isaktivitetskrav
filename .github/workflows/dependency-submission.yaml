@@ -9,5 +9,7 @@ on:
 
 jobs:
   dependency_submission:
+    permissions:
+      contents: write
     uses: navikt/isworkflows/.github/workflows/gradle-dependency-submission.yml@master
     secrets: inherit

@@ -12,6 +12,9 @@ on:
 jobs:
   deploy-dev:
     name: Deploy to NAIS Dev-gcp
+    permissions:
+      contents: read
+      id-token: write
     uses: navikt/isworkflows/.github/workflows/manual-deploy-dev.yml@master
     with:
       git-commit: ${{ github.event.inputs.gitCommit }}
