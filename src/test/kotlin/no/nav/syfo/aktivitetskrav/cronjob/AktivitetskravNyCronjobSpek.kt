@@ -10,6 +10,7 @@ import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -30,13 +31,17 @@ class AktivitetskravNyCronjobSpek : Spek({
         val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
         val aktivitetskravVurderingProducer =
             AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer)
+        val pdfgenClient = PdfGenClient(
+            pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
+            httpClient = externalMockEnvironment.mockHttpClient,
+        )
 
         val aktivitetskravService = AktivitetskravService(
             database = database,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
             aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
-            pdfGenClient = mockk(relaxed = true),
+            pdfGenClient = pdfgenClient,
         )
 
         val aktivitetskravNyCronjob = AktivitetskravNyCronjob(

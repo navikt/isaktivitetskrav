@@ -68,7 +68,7 @@ class PdfGenClient(
 
     companion object {
         private const val API_BASE_PATH = "/api/v1/genpdf/isaktivitetskrav"
-        private const val FORHANDSVARSEL_PATH = "/forhandsvarsel"
+        const val FORHANDSVARSEL_PATH = "/forhandsvarsel"
 
         private val log = LoggerFactory.getLogger(PdfGenClient::class.java)
     }

@@ -10,6 +10,7 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -50,6 +51,11 @@ class AktivitetskravApiSpek : Spek({
             val database = externalMockEnvironment.database
             val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+            val pdfgenClient = PdfGenClient(
+                pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
+                httpClient = externalMockEnvironment.mockHttpClient,
+            )
+
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,
                 aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
@@ -61,7 +67,7 @@ class AktivitetskravApiSpek : Spek({
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-                pdfGenClient = mockk(relaxed = true),
+                pdfGenClient = pdfgenClient,
             )
 
             beforeEachTest {
