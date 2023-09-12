@@ -23,12 +23,12 @@ class PdfGenClient(
     suspend fun createForhandsvarselPdf(
         callId: String,
         documentComponents: List<DocumentComponentDTO>,
-    ): ByteArray? =
+    ): ByteArray =
         getPdf(
             callId = callId,
             payload = documentComponents,
             pdfUrl = "$pdfGenBaseUrl$API_BASE_PATH$FORHANDSVARSEL_PATH",
-        )
+        ) ?: throw RuntimeException("Failed to request pdf for forhandsvarsel, callId: $callId")
 
     private suspend fun getPdf(
         callId: String,

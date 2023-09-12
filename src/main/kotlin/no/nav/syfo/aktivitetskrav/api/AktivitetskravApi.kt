@@ -78,16 +78,26 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(HttpStatusCode.OK)
         }
-        post(forhandsVarselPath) {
+        post("/{$aktivitetskravParam}$forhandsVarselPath") {
             val personIdent = call.personIdent()
             val callId = call.getCallId()
+            val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
 
             // Trenger kanskje ikke veilederIdent her?
             // Vi må sette opp en reminder på at veileder skal få en oppgave når fristen på å svare til innbygger har gått ut.
             // val veilederIdent = call.getNAVIdent()
             val requestDTO = call.receive<ForhandsvarselDTO>()
+            if (requestDTO.document.isEmpty()) {
+                throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
+            }
 
-            aktivitetskravService.sendForhandsvarsel(personIdent, requestDTO, callId)
+            aktivitetskravService.sendForhandsvarsel(
+                personIdent,
+                call.getNAVIdent(),
+                aktivitetskravUUID,
+                requestDTO,
+                callId
+            )
         }
     }
 }

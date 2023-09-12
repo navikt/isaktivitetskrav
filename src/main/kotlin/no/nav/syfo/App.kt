@@ -6,6 +6,7 @@ import io.ktor.server.config.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurderingSerializer
 import no.nav.syfo.application.ApplicationState
@@ -43,6 +44,7 @@ fun main() {
     val pdfGenClient = PdfGenClient(
         pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,
     )
+    val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         kafkaProducerAktivitetskravVurdering = KafkaProducer(
@@ -65,6 +67,7 @@ fun main() {
             )
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,
                 pdfGenClient = pdfGenClient,

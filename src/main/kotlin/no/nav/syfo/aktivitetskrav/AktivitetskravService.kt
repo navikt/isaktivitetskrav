@@ -14,6 +14,7 @@ import java.util.*
 
 class AktivitetskravService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
+    private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
     private val pdfGenClient: PdfGenClient,
@@ -132,16 +133,28 @@ class AktivitetskravService(
 
     suspend fun sendForhandsvarsel(
         personIdent: PersonIdent,
+        veilederIdent: String,
+        aktivitetskravUuid: UUID,
         forhandsvarselDTO: ForhandsvarselDTO,
         callId: String,
     ) {
-        // Create a gyldig forhåndsvarsel?
-        // forhandsvarselDTO.document can't be an empty list
+        val aktivitetskrav =
+            getAktivitetskrav(uuid = aktivitetskravUuid)
+                ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
+        val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
+        val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
+        val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
+        val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
 
-        // Generate pdf
-        val pdfBytes = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
-        // Store in DB
-        
+        // TODO: Store in DB
+        aktivitetskravVarselRepository.create(
+            aktivitetskrav = updatedAktivitetskrav,
+            vurdering = vurdering,
+            varsel = forhandsvarsel,
+            pdf = pdf,
+        )
+
+        // Vurdering på kafka
 
         // Send to journalføring (chronjob?)
         // update DB with `journalpost_id`
