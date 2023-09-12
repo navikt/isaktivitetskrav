@@ -49,6 +49,7 @@ class AktivitetskravApiSpek : Spek({
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
             val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,
                 aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
@@ -59,6 +60,8 @@ class AktivitetskravApiSpek : Spek({
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                pdfGenClient = mockk(relaxed = true),
             )
 
             beforeEachTest {

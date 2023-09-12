@@ -4,6 +4,7 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
@@ -34,6 +35,8 @@ class AktivitetskravNyCronjobSpek : Spek({
             database = database,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+            aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
+            pdfGenClient = mockk(relaxed = true),
         )
 
         val aktivitetskravNyCronjob = AktivitetskravNyCronjob(

@@ -39,6 +39,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
             arenaCutoff = arenaCutoff,
+            aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
+            pdfGenClient = mockk(relaxed = true),
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,

@@ -5,6 +5,7 @@ import no.nav.syfo.application.database.DatabaseEnvironment
 import no.nav.syfo.application.kafka.KafkaEnvironment
 import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.ClientsEnvironment
+import no.nav.syfo.client.OpenClientEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
 import java.time.LocalDate
 
@@ -44,6 +45,9 @@ fun testEnvironment() = Environment(
         dokarkiv = ClientEnvironment(
             baseUrl = "dokarkivUrl",
             clientId = "dokarkivClientId",
+        ),
+        isaktivitetskravpdfgen = OpenClientEnvironment(
+            baseUrl = "isaktivitetskravpdfgenUrl",
         ),
     ),
     arenaCutoff = LocalDate.now().minusDays(365),

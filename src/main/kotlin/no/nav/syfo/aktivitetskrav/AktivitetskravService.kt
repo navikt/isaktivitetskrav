@@ -141,12 +141,15 @@ class AktivitetskravService(
         val aktivitetskrav =
             getAktivitetskrav(uuid = aktivitetskravUuid)
                 ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
+        if (aktivitetskrav.personIdent != personIdent) {
+            throw IllegalArgumentException("Failed to create forhandsvarsel: personIdent on aktivitetskrav differs from request")
+        }
+
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
         val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
         val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
 
-        // TODO: Store in DB
         aktivitetskravVarselRepository.create(
             aktivitetskrav = updatedAktivitetskrav,
             vurdering = vurdering,
@@ -154,8 +157,9 @@ class AktivitetskravService(
             pdf = pdf,
         )
 
-        // Vurdering på kafka
-
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
+            aktivitetskrav = updatedAktivitetskrav
+        )
         // Send to journalføring (chronjob?)
         // update DB with `journalpost_id`
 

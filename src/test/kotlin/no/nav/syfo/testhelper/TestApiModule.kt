@@ -2,6 +2,7 @@ package no.nav.syfo.testhelper
 
 import io.ktor.server.application.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.api.apiModule
 import no.nav.syfo.client.azuread.AzureAdClient
@@ -25,6 +26,9 @@ fun Application.testApiModule(
         database = externalMockEnvironment.database,
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
         pdfGenClient = pdfgenClient,
+        aktivitetskravVarselRepository = AktivitetskravVarselRepository(
+            database = externalMockEnvironment.database
+        )
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
