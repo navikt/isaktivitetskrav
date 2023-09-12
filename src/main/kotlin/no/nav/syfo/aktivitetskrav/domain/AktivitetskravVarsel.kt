@@ -15,5 +15,15 @@ data class AktivitetskravVarsel internal constructor(
             journalpostId = null,
             document = document,
         )
+
+        fun createFromDatabase(
+            uuid: UUID,
+            journalpostId: String?,
+            document: List<DocumentComponentDTO>,
+        ) = AktivitetskravVarsel(
+            uuid = uuid,
+            journalpostId = journalpostId,
+            document = document,
+        )
     }
 }

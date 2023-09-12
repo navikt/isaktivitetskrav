@@ -14,6 +14,7 @@ import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.*
@@ -357,45 +358,21 @@ class AktivitetskravApiSpek : Spek({
 
             describe("Forhåndsvarsel") {
                 beforeEachTest {
-                    createAktivitetskrav(
-                        nyAktivitetskrav,
-                    )
+                    createAktivitetskrav(nyAktivitetskrav)
                 }
-                /*
-                Happy case:
-               Sende forhåndsvarsel skal: Oppdatere aktivitetskrav, opprette vurdering, varsel og pdf. sende på kafka
-               Unhappy case:
-               Finnes ikke aktivitetskrav med gitt aktivitetskrav
-               Personident på aktivitetskrav stemmer ikke med header
-               Tomt document
-                 */
-
                 val urlForhandsvarselAktivitetskrav =
                     "$aktivitetskravApiBasePath/${nyAktivitetskrav.uuid}$forhandsvarselPath"
                 val fritekst = "Dette er et forhåndsvarsel"
                 val forhandsvarselDTO = ForhandsvarselDTO(
-                    fritekst = fritekst, document = listOf(
-                        DocumentComponentDTO(
-                            type = DocumentComponentType.HEADER_H1,
-                            title = null,
-                            texts = listOf("Forhåndsvarsel"),
-                        ),
-                        DocumentComponentDTO(
-                            type = DocumentComponentType.PARAGRAPH,
-                            title = null,
-                            texts = listOf(fritekst),
-                        ),
-                        DocumentComponentDTO(
-                            type = DocumentComponentType.PARAGRAPH,
-                            key = "Standardtekst",
-                            title = null,
-                            texts = listOf("Dette er en standardtekst"),
-                        ),
+                    fritekst = fritekst,
+                    document = generateDocumentComponentDTO(
+                        fritekst = fritekst,
+                        header = "Forhåndsvarsel"
                     )
                 )
 
                 describe("Happy path") {
-                    it("Updates aktivitetskrav with vurdering, creates varsel and pdf and produces to Kafka if request is succesful") {
+                    it("Successfully creates a new forhandsvarsel") {
                         with(
                             handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -405,6 +382,50 @@ class AktivitetskravApiSpek : Spek({
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
+                            objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
+                        }
+                    }
+                }
+
+                describe("Unhappy path") {
+                    it("Can't find aktivitetskrav for given uuid") {
+                        val urlWithOtherUuid = "$aktivitetskravApiBasePath/${UUID.randomUUID()}$forhandsvarselPath"
+                        with(
+                            handleRequest(HttpMethod.Post, urlWithOtherUuid) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(forhandsvarselDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+
+                    it("Doesn't match personident in header with personident in aktivitetskrav for given uuid") {
+                        with(
+                            handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(forhandsvarselDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+
+                    it("Fails if document is empty") {
+                        val varselWithoutDocument = forhandsvarselDTO.copy(document = emptyList())
+                        with(
+                            handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(varselWithoutDocument))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
                 }

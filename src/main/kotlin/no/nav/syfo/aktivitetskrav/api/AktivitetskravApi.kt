@@ -91,7 +91,7 @@ fun Route.registerAktivitetskravApi(
                 throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
             }
 
-            aktivitetskravService.sendForhandsvarsel(
+            val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
                 personIdent,
                 call.getNAVIdent(),
                 aktivitetskravUUID,
@@ -99,7 +99,7 @@ fun Route.registerAktivitetskravApi(
                 callId
             )
 
-            call.respond(HttpStatusCode.Created)
+            call.respond(HttpStatusCode.Created, forhandsvarsel)
         }
     }
 }

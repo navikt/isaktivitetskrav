@@ -137,7 +137,7 @@ class AktivitetskravService(
         aktivitetskravUuid: UUID,
         forhandsvarselDTO: ForhandsvarselDTO,
         callId: String,
-    ) {
+    ): AktivitetskravVarsel {
         val aktivitetskrav =
             getAktivitetskrav(uuid = aktivitetskravUuid)
                 ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
@@ -150,7 +150,7 @@ class AktivitetskravService(
         val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
         val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
 
-        aktivitetskravVarselRepository.create(
+        val nyttForhandsvarsel = aktivitetskravVarselRepository.create(
             aktivitetskrav = updatedAktivitetskrav,
             vurdering = vurdering,
             varsel = forhandsvarsel,
@@ -160,9 +160,7 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )
-        // Send to journalføring (chronjob?)
-        // update DB with `journalpost_id`
 
-        // Create a source from which eSyfo team can consume from
+        return nyttForhandsvarsel.toAktivitetkravVarsel()
     }
 }
