@@ -49,6 +49,7 @@ spec:
       external:
         - host: "login.microsoftonline.com"
         - host: "pdl-api.dev-fss-pub.nais.io"
+        - host: "dokarkiv.dev-fss-pub.nais.io"
       rules:
         - application: syfo-tilgangskontroll
   gcp:
@@ -83,3 +84,7 @@ spec:
       value: "false"
     - name: NY_CRONJOB_ENABLED
       value: "false"
+    - name: DOKARKIV_CLIENT_ID
+      value: "dev-fss.teamdokumenthandtering.dokarkiv-q1"
+    - name: DOKARKIV_URL
+      value: "https://dokarkiv.dev-fss-pub.nais.io"
