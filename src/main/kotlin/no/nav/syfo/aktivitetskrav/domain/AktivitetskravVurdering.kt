@@ -28,6 +28,7 @@ private val allowedVurderingStatus = EnumSet.of(
     AktivitetskravStatus.OPPFYLT,
     AktivitetskravStatus.IKKE_OPPFYLT,
     AktivitetskravStatus.IKKE_AKTUELL,
+    AktivitetskravStatus.FORHANDSVARSEL,
 )
 
 data class AktivitetskravVurdering private constructor(

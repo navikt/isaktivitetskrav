@@ -38,6 +38,12 @@ fun DatabaseInterface.dropData() {
         """
         DELETE FROM AKTIVITETSKRAV_VURDERING
         """.trimIndent(),
+        """
+        DELETE FROM AKTIVITETSKRAV_VARSEL
+        """.trimIndent(),
+        """
+        DELETE FROM AKTIVITETSKRAV_VARSEL_PDF
+        """.trimIndent(),
     )
     this.connection.use { connection ->
         queryList.forEach { query ->

@@ -355,6 +355,61 @@ class AktivitetskravApiSpek : Spek({
                 }
             }
 
+            describe("Forhåndsvarsel") {
+                beforeEachTest {
+                    createAktivitetskrav(
+                        nyAktivitetskrav,
+                    )
+                }
+                /*
+                Happy case:
+               Sende forhåndsvarsel skal: Oppdatere aktivitetskrav, opprette vurdering, varsel og pdf. sende på kafka
+               Unhappy case:
+               Finnes ikke aktivitetskrav med gitt aktivitetskrav
+               Personident på aktivitetskrav stemmer ikke med header
+               Tomt document
+                 */
+
+                val urlForhandsvarselAktivitetskrav =
+                    "$aktivitetskravApiBasePath/${nyAktivitetskrav.uuid}$forhandsvarselPath"
+                val fritekst = "Dette er et forhåndsvarsel"
+                val forhandsvarselDTO = ForhandsvarselDTO(
+                    fritekst = fritekst, document = listOf(
+                        DocumentComponentDTO(
+                            type = DocumentComponentType.HEADER_H1,
+                            title = null,
+                            texts = listOf("Forhåndsvarsel"),
+                        ),
+                        DocumentComponentDTO(
+                            type = DocumentComponentType.PARAGRAPH,
+                            title = null,
+                            texts = listOf(fritekst),
+                        ),
+                        DocumentComponentDTO(
+                            type = DocumentComponentType.PARAGRAPH,
+                            key = "Standardtekst",
+                            title = null,
+                            texts = listOf("Dette er en standardtekst"),
+                        ),
+                    )
+                )
+
+                describe("Happy path") {
+                    it("Updates aktivitetskrav with vurdering, creates varsel and pdf and produces to Kafka if request is succesful") {
+                        with(
+                            handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(forhandsvarselDTO))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                        }
+                    }
+                }
+            }
+
             describe("Vurder existing aktivitetskrav for person") {
                 beforeEachTest {
                     createAktivitetskrav(

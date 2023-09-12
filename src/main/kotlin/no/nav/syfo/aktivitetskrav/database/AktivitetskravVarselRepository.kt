@@ -51,7 +51,7 @@ private const val queryCreateAktivitetskravVarsel =
         aktivitetskrav_vurdering_id,
         document,
         journalpost_id
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?)
+    ) values (DEFAULT, ?, ?, ?, ?, ?::jsonb, ?)
     RETURNING id
     """
 

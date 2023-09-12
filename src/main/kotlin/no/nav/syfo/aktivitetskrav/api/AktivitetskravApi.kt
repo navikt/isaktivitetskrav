@@ -20,7 +20,7 @@ const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
-const val forhandsVarselPath = "/forhandsvarsel"
+const val forhandsvarselPath = "/forhandsvarsel"
 
 private const val API_ACTION = "access aktivitetskrav for person"
 
@@ -78,7 +78,7 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(HttpStatusCode.OK)
         }
-        post("/{$aktivitetskravParam}$forhandsVarselPath") {
+        post("/{$aktivitetskravParam}$forhandsvarselPath") {
             val personIdent = call.personIdent()
             val callId = call.getCallId()
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
@@ -98,6 +98,8 @@ fun Route.registerAktivitetskravApi(
                 requestDTO,
                 callId
             )
+
+            call.respond(HttpStatusCode.Created)
         }
     }
 }
