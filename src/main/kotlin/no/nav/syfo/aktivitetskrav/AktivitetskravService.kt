@@ -144,11 +144,12 @@ class AktivitetskravService(
         if (aktivitetskrav.personIdent != personIdent) {
             throw IllegalArgumentException("Failed to create forhandsvarsel: personIdent on aktivitetskrav differs from request")
         }
+        val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
+
 
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
         val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
-        val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
 
         val nyttForhandsvarsel = aktivitetskravVarselRepository.create(
             aktivitetskrav = updatedAktivitetskrav,

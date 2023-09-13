@@ -7,6 +7,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.micrometer.core.instrument.Counter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.application.metric.METRICS_NS
@@ -34,22 +36,24 @@ class PdfGenClient(
         callId: String,
         payload: List<DocumentComponentDTO>,
         pdfUrl: String,
-    ): ByteArray? {
-        return try {
-            val response: HttpResponse = httpClient.post(pdfUrl) {
-                header(NAV_CALL_ID_HEADER, callId)
-                accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
-                setBody(payload)
+    ): ByteArray? =
+        withContext(Dispatchers.IO) {
+            try {
+                val response: HttpResponse = httpClient.post(pdfUrl) {
+                    header(NAV_CALL_ID_HEADER, callId)
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+                Metrics.COUNT_CALL_PDFGEN_SUCCESS.increment()
+                response.body()
+            } catch (e: ClientRequestException) {
+                handleUnexpectedResponseException(pdfUrl, e.response, callId)
+            } catch (e: ServerResponseException) {
+                handleUnexpectedResponseException(pdfUrl, e.response, callId)
             }
-            Metrics.COUNT_CALL_PDFGEN_SUCCESS.increment()
-            response.body()
-        } catch (e: ClientRequestException) {
-            handleUnexpectedResponseException(pdfUrl, e.response, callId)
-        } catch (e: ServerResponseException) {
-            handleUnexpectedResponseException(pdfUrl, e.response, callId)
         }
-    }
+
 
     private fun handleUnexpectedResponseException(
         url: String,
