@@ -67,8 +67,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             database.dropData()
         }
 
-        describe(JournalforAktivitetskravVarselCronjob::class.java.simpleName) {
-            it("Journalfører and updates journalpostId for ikke-journalført forhandsvarsel") {
+        describe("${JournalforAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
+            it("Journalfører og oppdaterer journalpostId for ikke-journalført forhandsvarsel") {
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
                     tittel = "Forhåndsvarsel om stans av sykepenger",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
@@ -117,7 +117,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     }
                 }
             }
-            it("Journalfører ikke og oppdaterer ingenting når person tilknyttet forhåndsvarsel mangler navn") {
+            it("Feiler og oppdaterer ingenting når person tilknyttet forhåndsvarsel mangler navn") {
                 every { aktivitetskravVarselService.getIkkeJournalforte() } returns listOf(
                     Triple(
                         UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME,
