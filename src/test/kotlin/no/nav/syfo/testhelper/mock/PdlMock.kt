@@ -24,6 +24,15 @@ suspend fun MockRequestHandleScope.pdlMockResponse(request: HttpRequestData): Ht
         val pdlRequest = request.receiveBody<PdlHentPersonRequest>()
         when (PersonIdent(pdlRequest.variables.ident)) {
             UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME -> respond(generatePdlPersonResponse())
+            UserConstants.ARBEIDSTAKER_PERSONIDENT_NAME_WITH_DASH -> respond(
+                generatePdlPersonResponse(
+                    PdlPersonNavn(
+                        fornavn = UserConstants.PERSON_FORNAVN_DASH,
+                        mellomnavn = UserConstants.PERSON_MELLOMNAVN,
+                        etternavn = UserConstants.PERSON_ETTERNAVN,
+                    )
+                )
+            )
             else -> respond(generatePdlPersonResponse(generatePdlPersonNavn()))
         }
     }
