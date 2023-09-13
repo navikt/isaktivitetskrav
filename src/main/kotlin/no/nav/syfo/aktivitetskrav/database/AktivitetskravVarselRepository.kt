@@ -133,7 +133,6 @@ fun DatabaseInterface.getAktivitetskravVarselPdf(
         }
     }
 
-
 private fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
     PAktivitetskravVarsel(
         id = getInt("id"),

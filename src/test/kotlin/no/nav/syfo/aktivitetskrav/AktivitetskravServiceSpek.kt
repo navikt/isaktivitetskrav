@@ -94,8 +94,6 @@ class AktivitetskravServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo personIdent.value
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.FORHANDSVARSEL.name
                 }
-
-
             }
         }
     }

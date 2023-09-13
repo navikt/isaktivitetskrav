@@ -54,7 +54,6 @@ class PdfGenClient(
             }
         }
 
-
     private fun handleUnexpectedResponseException(
         url: String,
         response: HttpResponse,
