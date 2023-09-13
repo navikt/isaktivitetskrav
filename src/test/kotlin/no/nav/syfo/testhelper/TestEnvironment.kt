@@ -41,6 +41,10 @@ fun testEnvironment() = Environment(
             baseUrl = "pdlUrl",
             clientId = "pdlClientId",
         ),
+        dokarkiv = ClientEnvironment(
+            baseUrl = "dokarkivUrl",
+            clientId = "dokarkivClientId",
+        ),
     ),
     arenaCutoff = LocalDate.now().minusDays(365),
     electorPath = "electorPath",
