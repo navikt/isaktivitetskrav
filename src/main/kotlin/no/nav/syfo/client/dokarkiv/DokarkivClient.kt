@@ -24,39 +24,39 @@ class DokarkivClient(
 
     suspend fun journalfor(
         journalpostRequest: JournalpostRequest,
-    ): JournalpostResponse? {
-        val accessToken = azureAdClient.getSystemToken(dokarkivEnvironment.clientId)?.accessToken
-        accessToken?.let { token ->
-            return try {
-                val response: HttpResponse = httpClient.post(journalpostUrl) {
-                    parameter(JOURNALPOST_PARAM_STRING, JOURNALPOST_PARAM_VALUE)
-                    header(HttpHeaders.Authorization, bearerHeader(token))
-                    accept(ContentType.Application.Json)
-                    contentType(ContentType.Application.Json)
-                    setBody(journalpostRequest)
-                }
-                val journalpostResponse = response.body<JournalpostResponse>()
-                COUNT_CALL_DOKARKIV_JOURNALPOST_SUCCESS.increment()
-                journalpostResponse
-            } catch (e: ClientRequestException) {
-                handleUnexpectedResponseException(e.response, e.message)
-            } catch (e: ServerResponseException) {
-                handleUnexpectedResponseException(e.response, e.message)
+    ): JournalpostResponse {
+        val token = azureAdClient.getSystemToken(dokarkivEnvironment.clientId)?.accessToken
+            ?: throw RuntimeException("Failed to Journalfor Journalpost: No token was found")
+        return try {
+            val response: HttpResponse = httpClient.post(journalpostUrl) {
+                parameter(JOURNALPOST_PARAM_STRING, JOURNALPOST_PARAM_VALUE)
+                header(HttpHeaders.Authorization, bearerHeader(token))
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+                setBody(journalpostRequest)
             }
-        } ?: throw RuntimeException("Failed to Journalfor Journalpost: No accessToken was found")
+            val journalpostResponse = response.body<JournalpostResponse>()
+            COUNT_CALL_DOKARKIV_JOURNALPOST_SUCCESS.increment()
+            journalpostResponse
+        } catch (e: ClientRequestException) {
+            handleUnexpectedResponseException(e.response, e.message)
+            throw e
+        } catch (e: ServerResponseException) {
+            handleUnexpectedResponseException(e.response, e.message)
+            throw e
+        }
     }
 
     private fun handleUnexpectedResponseException(
         response: HttpResponse,
         message: String?,
-    ): JournalpostResponse? {
+    ) {
         log.error(
             "Error while requesting Dokarkiv to Journalpost PDF with {}, {}",
             StructuredArguments.keyValue("statusCode", response.status.value.toString()),
             StructuredArguments.keyValue("message", message),
         )
         COUNT_CALL_DOKARKIV_JOURNALPOST_FAIL.increment()
-        return null
     }
 
     companion object {
