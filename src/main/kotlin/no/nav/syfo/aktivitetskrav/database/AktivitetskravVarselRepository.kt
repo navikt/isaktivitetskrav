@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
@@ -20,16 +19,16 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     fun create(
         aktivitetskrav: Aktivitetskrav,
-        vurdering: AktivitetskravVurdering,
         varsel: AktivitetskravVarsel,
         pdf: ByteArray,
     ): PAktivitetskravVarsel {
         lateinit var nyttVarsel: PAktivitetskravVarsel
         database.connection.use { connection ->
-            val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav = aktivitetskrav)
+            val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav)
+            val newestVurdering = aktivitetskrav.vurderinger.first()
             val vurderingId = connection.createAktivitetskravVurdering(
                 aktivitetskravId = aktivitetskravId,
-                aktivitetskravVurdering = vurdering,
+                aktivitetskravVurdering = newestVurdering,
             )
             nyttVarsel = connection.createAktivitetskravVarsel(
                 vurderingId = vurderingId,
@@ -44,6 +43,9 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
         return nyttVarsel
     }
+
+    fun getVarselPdf(aktivitetskravVarselId: Int): PAktivitetskravVarselPdf? =
+        database.getAktivitetskravVarselPdf(aktivitetskravVarselId)
 }
 
 private val mapper = configuredJacksonMapper()
@@ -62,7 +64,10 @@ private const val queryCreateAktivitetskravVarsel =
     RETURNING *
     """
 
-private fun Connection.createAktivitetskravVarsel(vurderingId: Int, varsel: AktivitetskravVarsel): PAktivitetskravVarsel {
+private fun Connection.createAktivitetskravVarsel(
+    vurderingId: Int,
+    varsel: AktivitetskravVarsel
+): PAktivitetskravVarsel {
     val now = nowUTC()
     val varsler = this.prepareStatement(queryCreateAktivitetskravVarsel).use {
         it.setString(1, varsel.uuid.toString())
@@ -90,31 +95,64 @@ private const val queryCreateAktivitetskravVarselPdf =
         aktivitetskrav_varsel_id,
         pdf
     ) values (DEFAULT, ?, ?, ?, ?)
-    RETURNING id
+    RETURNING *
     """
 
-private fun Connection.createAktivitetskravVarselPdf(varselId: Int, pdf: ByteArray): Int {
-    val idList = this.prepareStatement(queryCreateAktivitetskravVarselPdf).use {
+private fun Connection.createAktivitetskravVarselPdf(varselId: Int, pdf: ByteArray): PAktivitetskravVarselPdf {
+    val varselPdfs = this.prepareStatement(queryCreateAktivitetskravVarselPdf).use {
         it.setString(1, UUID.randomUUID().toString())
         it.setObject(2, nowUTC())
         it.setInt(3, varselId)
         it.setBytes(4, pdf)
-        it.executeQuery().toList { getInt("id") }
+        it.executeQuery().toList { toPAktivitetskravVarselPdf() }
     }
 
-    if (idList.size != 1) {
-        throw NoElementInsertedException("Creating AKTIVITETSKRAV_VARSEL failed, no rows affected.")
+    if (varselPdfs.size != 1) {
+        throw NoElementInsertedException("Creating AKTIVITETSKRAV_VARSEL_PDF failed, no rows affected.")
     }
 
-    return idList.first()
+    return varselPdfs.first()
 }
 
-private fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel = PAktivitetskravVarsel(
-    id = getInt("id"),
-    uuid = UUID.fromString(getString("uuid")),
-    createdAt = getObject("created_at", OffsetDateTime::class.java),
-    updatedAt = getObject("updated_at", OffsetDateTime::class.java),
-    aktivitetskravVurderingId = getInt("aktivitetskrav_vurdering_id"),
-    journalpostId = getString("journalpost_id"),
-    document = mapper.readValue(getString("document"), object : TypeReference<List<DocumentComponentDTO>>() {}),
-)
+const val queryGetAktivitetskravVarselPdf =
+    """
+        SELECT *
+        FROM AKTIVITETSKRAV_VARSEL_PDF
+        WHERE aktivitetskrav_varsel_id = ?
+    """
+
+fun DatabaseInterface.getAktivitetskravVarselPdf(
+    aktivitetskravVarselId: Int,
+): PAktivitetskravVarselPdf? =
+    this.connection.use { connection ->
+        connection.prepareStatement(queryGetAktivitetskravVarselPdf).use {
+            it.setInt(1, aktivitetskravVarselId)
+            it.executeQuery()
+                .toList { toPAktivitetskravVarselPdf() }
+                .firstOrNull()
+        }
+    }
+
+
+private fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
+    PAktivitetskravVarsel(
+        id = getInt("id"),
+        uuid = UUID.fromString(getString("uuid")),
+        createdAt = getObject("created_at", OffsetDateTime::class.java),
+        updatedAt = getObject("updated_at", OffsetDateTime::class.java),
+        aktivitetskravVurderingId = getInt("aktivitetskrav_vurdering_id"),
+        journalpostId = getString("journalpost_id"),
+        document = mapper.readValue(
+            getString("document"),
+            object : TypeReference<List<DocumentComponentDTO>>() {}
+        ),
+    )
+
+private fun ResultSet.toPAktivitetskravVarselPdf(): PAktivitetskravVarselPdf =
+    PAktivitetskravVarselPdf(
+        id = getInt("id"),
+        uuid = UUID.fromString(getString("uuid")),
+        createdAt = getObject("created_at", OffsetDateTime::class.java),
+        aktivitetskravVarselId = getInt("aktivitetskrav_varsel_id"),
+        pdf = getBytes("pdf"),
+    )

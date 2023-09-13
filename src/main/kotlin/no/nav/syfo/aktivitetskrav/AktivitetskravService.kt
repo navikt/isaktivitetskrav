@@ -146,14 +146,12 @@ class AktivitetskravService(
         }
         val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
 
-
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
         val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
 
         val nyttForhandsvarsel = aktivitetskravVarselRepository.create(
             aktivitetskrav = updatedAktivitetskrav,
-            vurdering = vurdering,
             varsel = forhandsvarsel,
             pdf = pdf,
         )
