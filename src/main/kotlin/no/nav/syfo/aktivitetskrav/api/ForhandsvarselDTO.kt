@@ -13,9 +13,6 @@ data class ForhandsvarselDTO(
         createdBy = veilederIdent,
         beskrivelse = this.fritekst,
         arsaker = emptyList(),
-        // Svarfrist for innbygger å svare på forhandsvarsel.
-        // Oppgave lages for veileder når denne fristen har gått ut
-        // Sjekk om dette er riktig. Forskjellig frist når fysisk brev og digitalt?
         frist = LocalDate.now().plusWeeks(2),
     )
 }

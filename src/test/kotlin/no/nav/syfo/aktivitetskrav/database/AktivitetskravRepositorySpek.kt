@@ -45,7 +45,7 @@ class AktivitetskravRepositorySpek : Spek({
 
                 beforeEachTest { database.createAktivitetskrav(aktivitetskrav) }
 
-                it("Should update existing aktivitetskrav") {
+                it("Should create forhåndsvarsel in db") {
                     val vurdering: AktivitetskravVurdering =
                         forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
                     val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
