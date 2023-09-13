@@ -50,6 +50,7 @@ fun testEnvironment() = Environment(
     electorPath = "electorPath",
     automatiskOppfyltCronJobEnabled = true,
     nyCronjobEnabled = true,
+    journalforAktivitetskravVarselEnabled = true,
 )
 
 fun testAppState() = ApplicationState(

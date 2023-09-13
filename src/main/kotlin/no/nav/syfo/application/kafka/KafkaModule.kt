@@ -4,7 +4,6 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.database.DatabaseInterface
-import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.identhendelse.IdenthendelseService
 import no.nav.syfo.identhendelse.kafka.KafkaIdenthendelseService
@@ -16,7 +15,7 @@ fun launchKafkaModule(
     applicationState: ApplicationState,
     environment: Environment,
     database: DatabaseInterface,
-    azureAdClient: AzureAdClient,
+    pdlClient: PdlClient,
     aktivitetskravService: AktivitetskravService,
 ) {
     val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
@@ -30,10 +29,6 @@ fun launchKafkaModule(
         kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
     )
 
-    val pdlClient = PdlClient(
-        azureAdClient = azureAdClient,
-        pdlEnvironment = environment.clients.pdl,
-    )
     val identhendelseService = IdenthendelseService(database = database, pdlClient = pdlClient)
     val kafkaIdenthendelseService = KafkaIdenthendelseService(identhendelseService = identhendelseService)
     launchKafkaTaskIdenthendelse(
