@@ -6,22 +6,29 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.*
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
+import no.nav.syfo.aktivitetskrav.database.getAktivitetskravVurderinger
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.client.pdfgen.PdfGenClient
+import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.util.*
-import org.amshove.kluent.*
-import org.apache.kafka.clients.producer.*
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldNotBeEqualTo
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Future
 
 class AktivitetskravApiSpek : Spek({
@@ -357,11 +364,7 @@ class AktivitetskravApiSpek : Spek({
             }
 
             describe("Forhåndsvarsel") {
-                beforeEachTest {
-                    createAktivitetskrav(nyAktivitetskrav)
-                }
-                val urlForhandsvarselAktivitetskrav =
-                    "$aktivitetskravApiBasePath/${nyAktivitetskrav.uuid}$forhandsvarselPath"
+                beforeEachTest { createAktivitetskrav(nyAktivitetskrav) }
                 val fritekst = "Dette er et forhåndsvarsel"
                 val forhandsvarselDTO = ForhandsvarselDTO(
                     fritekst = fritekst,
@@ -371,16 +374,23 @@ class AktivitetskravApiSpek : Spek({
                     )
                 )
 
+                fun postForhandsvarsel(
+                    aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+                    arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
+                ) = run {
+                    val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
+                    handleRequest(HttpMethod.Post, url) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                        addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                        setBody(objectMapper.writeValueAsString(newForhandsvarselDTO))
+                    }
+                }
+
                 describe("Happy path") {
                     it("Successfully creates a new forhandsvarsel") {
-                        with(
-                            handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(forhandsvarselDTO))
-                            }
-                        ) {
+                        with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                             objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
                         }
@@ -389,42 +399,20 @@ class AktivitetskravApiSpek : Spek({
 
                 describe("Unhappy path") {
                     it("Can't find aktivitetskrav for given uuid") {
-                        val urlWithOtherUuid = "$aktivitetskravApiBasePath/${UUID.randomUUID()}$forhandsvarselPath"
-                        with(
-                            handleRequest(HttpMethod.Post, urlWithOtherUuid) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(forhandsvarselDTO))
-                            }
-                        ) {
+                        with(postForhandsvarsel(aktivitetskravUuid = UUID.randomUUID())) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
 
                     it("Doesn't match personident in header with personident in aktivitetskrav for given uuid") {
-                        with(
-                            handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(forhandsvarselDTO))
-                            }
-                        ) {
+                        with(postForhandsvarsel(arbeidstakerPersonIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
 
                     it("Fails if document is empty") {
                         val varselWithoutDocument = forhandsvarselDTO.copy(document = emptyList())
-                        with(
-                            handleRequest(HttpMethod.Post, urlForhandsvarselAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(varselWithoutDocument))
-                            }
-                        ) {
+                        with(postForhandsvarsel(newForhandsvarselDTO = varselWithoutDocument)) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
