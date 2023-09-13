@@ -85,10 +85,10 @@ private object Metrics {
 
     val COUNT_CALL_PDFGEN_SUCCESS: Counter = Counter
         .builder(CALL_PDFGEN_SUCCESS)
-        .description("Counts the number of successful calls to dialogmeldingpdfgen")
+        .description("Counts the number of successful calls to isaktivitetskravpdfgen")
         .register(METRICS_REGISTRY)
     val COUNT_CALL_PDFGEN_FAIL: Counter = Counter
         .builder(CALL_PDFGEN_FAIL)
-        .description("Counts the number of failed calls to dialogmeldingpdfgen")
+        .description("Counts the number of failed calls to isaktivitetskravpdfgen")
         .register(METRICS_REGISTRY)
 }

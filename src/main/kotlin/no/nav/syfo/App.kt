@@ -44,7 +44,6 @@ fun main() {
     val pdfGenClient = PdfGenClient(
         pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,
     )
-    val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         kafkaProducerAktivitetskravVurdering = KafkaProducer(
@@ -65,6 +64,7 @@ fun main() {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,

@@ -49,7 +49,7 @@ data class Environment(
             clientId = getEnvVar("PDL_CLIENT_ID"),
         ),
         isaktivitetskravpdfgen = OpenClientEnvironment(
-            baseUrl = "http://dialogmeldingpdfgen",
+            baseUrl = "http://isaktivitetskravpdfgen",
         ),
         dokarkiv = ClientEnvironment(
             baseUrl = getEnvVar("DOKARKIV_URL"),
