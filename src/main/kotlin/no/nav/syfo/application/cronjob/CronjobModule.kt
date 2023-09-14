@@ -1,10 +1,10 @@
 package no.nav.syfo.application.cronjob
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.cronjob.AktivitetskravAutomatiskOppfyltCronjob
 import no.nav.syfo.aktivitetskrav.cronjob.AktivitetskravNyCronjob
 import no.nav.syfo.aktivitetskrav.cronjob.JournalforAktivitetskravVarselCronjob
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.application.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.client.azuread.AzureAdClient
@@ -17,6 +17,7 @@ fun launchCronjobModule(
     environment: Environment,
     database: DatabaseInterface,
     aktivitetskravService: AktivitetskravService,
+    aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     pdlClient: PdlClient,
     azureAdClient: AzureAdClient,
 ) {
@@ -48,9 +49,8 @@ fun launchCronjobModule(
             azureAdClient = azureAdClient,
             dokarkivEnvironment = environment.clients.dokarkiv,
         )
-        val aktivitetskravVarselService = AktivitetskravVarselService(database = database)
         val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
-            aktivitetskravVarselService = aktivitetskravVarselService,
+            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             dokarkivClient = dokarkivClient,
             pdlClient = pdlClient
         )
