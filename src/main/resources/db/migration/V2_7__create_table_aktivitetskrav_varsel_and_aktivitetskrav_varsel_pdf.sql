@@ -4,7 +4,7 @@ CREATE TABLE AKTIVITETSKRAV_VARSEL
     uuid                        CHAR(36)    NOT NULL UNIQUE,
     created_at                  timestamptz NOT NULL,
     updated_at                  timestamptz NOT NULL,
-    aktivitetskrav_vurdering_id INTEGER REFERENCES AKTIVITETSKRAV_VURDERING (id) ON DELETE CASCADE,
+    aktivitetskrav_vurdering_id INTEGER     NOT NULL UNIQUE REFERENCES AKTIVITETSKRAV_VURDERING (id) ON DELETE CASCADE,
     document                    JSONB       NOT NULL DEFAULT '[]'::jsonb,
     journalpost_id              VARCHAR(20)
 );
@@ -16,7 +16,7 @@ CREATE TABLE AKTIVITETSKRAV_VARSEL_PDF
     id                       SERIAL PRIMARY KEY,
     uuid                     VARCHAR(50) NOT NULL UNIQUE,
     created_at               timestamptz NOT NULL,
-    aktivitetskrav_varsel_id INTEGER REFERENCES AKTIVITETSKRAV_VARSEL (id) ON DELETE CASCADE,
+    aktivitetskrav_varsel_id INTEGER     NOT NULL UNIQUE REFERENCES AKTIVITETSKRAV_VARSEL (id) ON DELETE CASCADE,
     pdf                      bytea       NOT NULL
 );
 

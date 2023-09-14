@@ -79,20 +79,16 @@ fun Route.registerAktivitetskravApi(
             call.respond(HttpStatusCode.OK)
         }
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
-            val personIdent = call.personIdent()
             val callId = call.getCallId()
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
-
             val requestDTO = call.receive<ForhandsvarselDTO>()
             if (requestDTO.document.isEmpty()) {
                 throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
             }
+
             val aktivitetskrav =
                 aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
                     ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
-            if (aktivitetskrav.personIdent != personIdent) {
-                throw IllegalArgumentException("Failed to create forhandsvarsel: personIdent on aktivitetskrav differs from request")
-            }
 
             val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
@@ -100,7 +96,6 @@ fun Route.registerAktivitetskravApi(
                 forhandsvarselDTO = requestDTO,
                 callId = callId,
             )
-
             call.respond(HttpStatusCode.Created, forhandsvarsel)
         }
     }

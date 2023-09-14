@@ -141,7 +141,7 @@ internal fun Aktivitetskrav.updateStoppunkt(oppfolgingstilfelle: Oppfolgingstilf
     )
 }
 
-fun Aktivitetskrav.vurder(
+internal fun Aktivitetskrav.vurder(
     aktivitetskravVurdering: AktivitetskravVurdering,
 ): Aktivitetskrav = this.copy(
     status = aktivitetskravVurdering.status,

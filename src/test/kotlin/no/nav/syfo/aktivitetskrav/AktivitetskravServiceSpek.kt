@@ -74,9 +74,8 @@ class AktivitetskravServiceSpek : Spek({
 
                     runBlocking {
                         val varsel = aktivitetskravService.sendForhandsvarsel(
-                            personIdent = personIdent,
+                            aktivitetskrav = aktivitetskrav,
                             veilederIdent = UserConstants.VEILEDER_IDENT,
-                            aktivitetskravUuid = aktivitetskrav.uuid,
                             forhandsvarselDTO = forhandsvarselDTO,
                             callId = "",
                         )

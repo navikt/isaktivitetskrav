@@ -21,8 +21,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
         aktivitetskrav: Aktivitetskrav,
         varsel: AktivitetskravVarsel,
         pdf: ByteArray,
-    ): PAktivitetskravVarsel {
-        lateinit var nyttVarsel: PAktivitetskravVarsel
+    ): PAktivitetskravVarsel =
         database.connection.use { connection ->
             val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav)
             val newestVurdering = aktivitetskrav.vurderinger.first()
@@ -30,7 +29,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
                 aktivitetskravId = aktivitetskravId,
                 aktivitetskravVurdering = newestVurdering,
             )
-            nyttVarsel = connection.createAktivitetskravVarsel(
+            val nyttVarsel = connection.createAktivitetskravVarsel(
                 vurderingId = vurderingId,
                 varsel = varsel,
             )
@@ -39,13 +38,8 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
                 pdf = pdf,
             )
             connection.commit()
+            nyttVarsel
         }
-
-        return nyttVarsel
-    }
-
-    fun getVarselPdf(aktivitetskravVarselId: Int): PAktivitetskravVarselPdf? =
-        database.getAktivitetskravVarselPdf(aktivitetskravVarselId)
 }
 
 private val mapper = configuredJacksonMapper()
