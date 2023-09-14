@@ -29,7 +29,6 @@ class TestDatabase : DatabaseInterface {
         }
     }
 
-
     fun stop() {
         pg.close()
     }

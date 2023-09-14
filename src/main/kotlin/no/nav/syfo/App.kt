@@ -19,6 +19,7 @@ import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
+import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.getWellKnown
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -36,6 +37,10 @@ fun main() {
     )
     val azureAdClient = AzureAdClient(
         azureEnvironment = environment.azure
+    )
+    val pdlClient = PdlClient(
+        azureAdClient = azureAdClient,
+        pdlEnvironment = environment.clients.pdl,
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
@@ -90,7 +95,7 @@ fun main() {
             applicationState = applicationState,
             environment = environment,
             database = applicationDatabase,
-            azureAdClient = azureAdClient,
+            pdlClient = pdlClient,
             aktivitetskravService = aktivitetskravService,
         )
         launchCronjobModule(
@@ -98,6 +103,8 @@ fun main() {
             environment = environment,
             database = applicationDatabase,
             aktivitetskravService = aktivitetskravService,
+            pdlClient = pdlClient,
+            azureAdClient = azureAdClient,
         )
     }
 
