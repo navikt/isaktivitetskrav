@@ -3,8 +3,8 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
@@ -18,7 +18,6 @@ import no.nav.syfo.testhelper.generator.generateJournalpostRequest
 import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.util.*
 
 const val anyJournalpostId = 1
 const val anyJournalpostIdAsString = anyJournalpostId.toString()
@@ -31,7 +30,7 @@ val anyJournalpostResponse = JournalpostResponse(
 )
 
 val pdf = byteArrayOf(23)
-val aktivitetskravVarsel = AktivitetskravVarsel(uuid = UUID.randomUUID())
+val aktivitetskravVarsel = AktivitetskravVarsel.create(document = emptyList())
 
 class JournalforAktivitetskravVarselCronjobSpek : Spek({
     with(TestApplicationEngine()) {
