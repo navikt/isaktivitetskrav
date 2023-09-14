@@ -108,25 +108,6 @@ private fun Connection.createAktivitetskravVarselPdf(varselId: Int, pdf: ByteArr
     return varselPdfs.first()
 }
 
-const val queryGetAktivitetskravVarselPdf =
-    """
-        SELECT *
-        FROM AKTIVITETSKRAV_VARSEL_PDF
-        WHERE aktivitetskrav_varsel_id = ?
-    """
-
-fun DatabaseInterface.getAktivitetskravVarselPdf(
-    aktivitetskravVarselId: Int,
-): PAktivitetskravVarselPdf? =
-    this.connection.use { connection ->
-        connection.prepareStatement(queryGetAktivitetskravVarselPdf).use {
-            it.setInt(1, aktivitetskravVarselId)
-            it.executeQuery()
-                .toList { toPAktivitetskravVarselPdf() }
-                .firstOrNull()
-        }
-    }
-
 private fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
     PAktivitetskravVarsel(
         id = getInt("id"),

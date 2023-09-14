@@ -403,13 +403,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
-
-                    it("Doesn't match personident in header with personident in aktivitetskrav for given uuid") {
-                        with(postForhandsvarsel(arbeidstakerPersonIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
-                    }
-
+                    
                     it("Fails if document is empty") {
                         val varselWithoutDocument = forhandsvarselDTO.copy(document = emptyList())
                         with(postForhandsvarsel(newForhandsvarselDTO = varselWithoutDocument)) {

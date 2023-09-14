@@ -5,10 +5,7 @@ import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.domain.vurder
-import no.nav.syfo.testhelper.ExternalMockEnvironment
-import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
-import no.nav.syfo.testhelper.dropData
+import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import org.amshove.kluent.shouldBeEqualTo
@@ -61,7 +58,7 @@ class AktivitetskravRepositorySpek : Spek({
                     val retrievedAktivitetskrav = database.getAktivitetskrav(updatedAktivitetskrav.uuid)
                     val vurderinger = database.getAktivitetskravVurderinger(retrievedAktivitetskrav!!.id)
                     val newVurdering = vurderinger.first()
-                    val newVarselPdf = aktivitetskravVarselRepository.getVarselPdf(newVarsel.id)
+                    val newVarselPdf = database.getAktivitetskravVarselPdf(newVarsel.id)
 
                     retrievedAktivitetskrav.status shouldBeEqualTo updatedAktivitetskrav.status.name
                     retrievedAktivitetskrav.updatedAt shouldBeGreaterThan retrievedAktivitetskrav.createdAt
@@ -72,6 +69,7 @@ class AktivitetskravRepositorySpek : Spek({
                     newVarsel.aktivitetskravVurderingId shouldBeEqualTo newVurdering.id
                     newVarsel.journalpostId shouldBeEqualTo null
 
+                    newVarselPdf?.pdf?.size shouldBeEqualTo pdf.size
                     newVarselPdf?.pdf?.get(0) shouldBeEqualTo pdf[0]
                     newVarselPdf?.pdf?.get(1) shouldBeEqualTo pdf[1]
                     newVarselPdf?.aktivitetskravVarselId shouldBeEqualTo newVarsel.id
