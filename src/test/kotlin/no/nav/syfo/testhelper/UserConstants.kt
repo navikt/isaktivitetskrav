@@ -11,6 +11,7 @@ object UserConstants {
     const val PERSON_FORNAVN_DASH = "JAN-OLA"
     const val PERSON_FULLNAME = "Ullen Mellomnavn Bamse"
     const val PERSON_FULLNAME_WITH_DASHES = "Jan-Ola Mellomnavn Bamse"
+    val PDF_FORHANDSVARSEL = byteArrayOf(0x2E, 0x28)
     private const val ARBEIDSTAKER_FNR = "12345678912"
     private const val VIRKSOMHETSNUMMER = "123456789"
 

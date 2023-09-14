@@ -32,6 +32,11 @@ Run checking: `./gradlew --continue ktlintCheck`
 
 Run formatting: `./gradlew ktlintFormat`
 
+##### Git Hooks
+Apply checking: `./gradlew addKtlintCheckGitPreCommitHook`
+
+Apply formatting: `./gradlew addKtlintFormatGitPreCommitHook`
+
 ## Kafka
 
 This application produces the following topic(s):

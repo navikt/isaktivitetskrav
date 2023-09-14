@@ -65,7 +65,7 @@ const val queryCreateAktivitetskravVurdering =
 fun Connection.createAktivitetskravVurdering(
     aktivitetskravId: Int,
     aktivitetskravVurdering: AktivitetskravVurdering,
-) {
+): Int {
     val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use {
         it.setString(1, aktivitetskravVurdering.uuid.toString())
         it.setInt(2, aktivitetskravId)
@@ -81,6 +81,8 @@ fun Connection.createAktivitetskravVurdering(
     if (idList.size != 1) {
         throw NoElementInsertedException("Creating AKTIVITETSKRAV_VURDERING failed, no rows affected.")
     }
+
+    return idList.first()
 }
 
 const val queryUpdateAktivitetskrav =

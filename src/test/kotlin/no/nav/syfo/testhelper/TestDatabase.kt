@@ -1,11 +1,15 @@
 package no.nav.syfo.testhelper
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVarselPdf
 import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.application.database.toList
 import org.flywaydb.core.Flyway
 import java.sql.Connection
+import java.sql.ResultSet
+import java.time.OffsetDateTime
 import java.util.*
 
 class TestDatabase : DatabaseInterface {
@@ -30,6 +34,34 @@ class TestDatabase : DatabaseInterface {
     }
 }
 
+private const val queryGetAktivitetskravVarselPdf =
+    """
+        SELECT *
+        FROM AKTIVITETSKRAV_VARSEL_PDF
+        WHERE aktivitetskrav_varsel_id = ?
+    """
+
+fun TestDatabase.getAktivitetskravVarselPdf(
+    aktivitetskravVarselId: Int,
+): PAktivitetskravVarselPdf? =
+    this.connection.use { connection ->
+        connection.prepareStatement(queryGetAktivitetskravVarselPdf).use {
+            it.setInt(1, aktivitetskravVarselId)
+            it.executeQuery()
+                .toList { toPAktivitetskravVarselPdf() }
+                .firstOrNull()
+        }
+    }
+
+private fun ResultSet.toPAktivitetskravVarselPdf(): PAktivitetskravVarselPdf =
+    PAktivitetskravVarselPdf(
+        id = getInt("id"),
+        uuid = UUID.fromString(getString("uuid")),
+        createdAt = getObject("created_at", OffsetDateTime::class.java),
+        aktivitetskravVarselId = getInt("aktivitetskrav_varsel_id"),
+        pdf = getBytes("pdf"),
+    )
+
 fun DatabaseInterface.dropData() {
     val queryList = listOf(
         """
@@ -37,6 +69,12 @@ fun DatabaseInterface.dropData() {
         """.trimIndent(),
         """
         DELETE FROM AKTIVITETSKRAV_VURDERING
+        """.trimIndent(),
+        """
+        DELETE FROM AKTIVITETSKRAV_VARSEL
+        """.trimIndent(),
+        """
+        DELETE FROM AKTIVITETSKRAV_VARSEL_PDF
         """.trimIndent(),
     )
     this.connection.use { connection ->

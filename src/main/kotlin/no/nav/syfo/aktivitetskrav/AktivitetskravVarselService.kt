@@ -1,10 +1,8 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.domain.PersonIdent
-import java.util.UUID
-
-data class AktivitetskravVarsel(val uuid: UUID) // TODO: Delete
 
 class AktivitetskravVarselService(private val database: DatabaseInterface) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, AktivitetskravVarsel, ByteArray>> {

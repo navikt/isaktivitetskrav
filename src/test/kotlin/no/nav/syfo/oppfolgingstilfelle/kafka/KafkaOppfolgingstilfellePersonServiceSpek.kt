@@ -7,6 +7,7 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.*
@@ -35,10 +36,17 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
             kafkaProducerAktivitetskravVurdering = kafkaProducer,
         )
+        val pdfgenClient = PdfGenClient(
+            pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
+            httpClient = externalMockEnvironment.mockHttpClient,
+        )
+
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
             arenaCutoff = arenaCutoff,
+            aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
+            pdfGenClient = pdfgenClient,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,

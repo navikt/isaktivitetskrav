@@ -10,13 +10,17 @@ import no.nav.syfo.aktivitetskrav.domain.toResponseDTOList
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.util.*
-import java.util.UUID
+import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
+import no.nav.syfo.util.getCallId
+import no.nav.syfo.util.getNAVIdent
+import no.nav.syfo.util.getPersonIdent
+import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
+const val forhandsvarselPath = "/forhandsvarsel"
 
 private const val API_ACTION = "access aktivitetskrav for person"
 
@@ -73,6 +77,26 @@ fun Route.registerAktivitetskravApi(
             )
 
             call.respond(HttpStatusCode.OK)
+        }
+        post("/{$aktivitetskravParam}$forhandsvarselPath") {
+            val callId = call.getCallId()
+            val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
+            val requestDTO = call.receive<ForhandsvarselDTO>()
+            if (requestDTO.document.isEmpty()) {
+                throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
+            }
+
+            val aktivitetskrav =
+                aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
+                    ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
+
+            val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
+                aktivitetskrav = aktivitetskrav,
+                veilederIdent = call.getNAVIdent(),
+                forhandsvarselDTO = requestDTO,
+                callId = callId,
+            )
+            call.respond(HttpStatusCode.Created, forhandsvarsel)
         }
     }
 }

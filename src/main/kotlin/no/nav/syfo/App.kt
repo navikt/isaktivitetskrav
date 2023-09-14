@@ -6,6 +6,7 @@ import io.ktor.server.config.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurderingSerializer
 import no.nav.syfo.application.ApplicationState
@@ -17,6 +18,7 @@ import no.nav.syfo.application.database.databaseModule
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.getWellKnown
@@ -44,6 +46,9 @@ fun main() {
         azureAdClient = azureAdClient,
         clientEnvironment = environment.clients.syfotilgangskontroll,
     )
+    val pdfGenClient = PdfGenClient(
+        pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,
+    )
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         kafkaProducerAktivitetskravVurdering = KafkaProducer(
@@ -64,10 +69,13 @@ fun main() {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,
+                pdfGenClient = pdfGenClient,
             )
             apiModule(
                 applicationState = applicationState,

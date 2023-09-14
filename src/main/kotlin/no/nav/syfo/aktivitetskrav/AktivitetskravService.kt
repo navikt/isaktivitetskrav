@@ -1,9 +1,11 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
@@ -12,8 +14,10 @@ import java.util.*
 
 class AktivitetskravService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
+    private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
+    private val pdfGenClient: PdfGenClient,
 ) {
 
     internal fun createAktivitetskrav(
@@ -125,5 +129,30 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )
+    }
+
+    suspend fun sendForhandsvarsel(
+        aktivitetskrav: Aktivitetskrav,
+        veilederIdent: String,
+        forhandsvarselDTO: ForhandsvarselDTO,
+        callId: String,
+    ): AktivitetskravVarsel {
+        val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
+
+        val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
+        val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
+        val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
+
+        val nyttForhandsvarsel = aktivitetskravVarselRepository.create(
+            aktivitetskrav = updatedAktivitetskrav,
+            varsel = forhandsvarsel,
+            pdf = pdf,
+        )
+
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
+            aktivitetskrav = updatedAktivitetskrav
+        )
+
+        return nyttForhandsvarsel.toAktivitetkravVarsel()
     }
 }
