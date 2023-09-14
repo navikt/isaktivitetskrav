@@ -132,18 +132,11 @@ class AktivitetskravService(
     }
 
     suspend fun sendForhandsvarsel(
-        personIdent: PersonIdent,
+        aktivitetskrav: Aktivitetskrav,
         veilederIdent: String,
-        aktivitetskravUuid: UUID,
         forhandsvarselDTO: ForhandsvarselDTO,
         callId: String,
     ): AktivitetskravVarsel {
-        val aktivitetskrav =
-            getAktivitetskrav(uuid = aktivitetskravUuid)
-                ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
-        if (aktivitetskrav.personIdent != personIdent) {
-            throw IllegalArgumentException("Failed to create forhandsvarsel: personIdent on aktivitetskrav differs from request")
-        }
         val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
 
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)

@@ -87,11 +87,16 @@ fun Route.registerAktivitetskravApi(
             if (requestDTO.document.isEmpty()) {
                 throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
             }
+            val aktivitetskrav =
+                aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
+                    ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
+            if (aktivitetskrav.personIdent != personIdent) {
+                throw IllegalArgumentException("Failed to create forhandsvarsel: personIdent on aktivitetskrav differs from request")
+            }
 
             val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
-                personIdent = personIdent,
+                aktivitetskrav = aktivitetskrav,
                 veilederIdent = call.getNAVIdent(),
-                aktivitetskravUuid = aktivitetskravUUID,
                 forhandsvarselDTO = requestDTO,
                 callId = callId,
             )
