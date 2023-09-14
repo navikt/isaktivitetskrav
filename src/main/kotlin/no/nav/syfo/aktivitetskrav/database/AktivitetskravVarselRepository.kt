@@ -15,6 +15,8 @@ import java.sql.Types
 import java.time.OffsetDateTime
 import java.util.*
 
+private val mapper = configuredJacksonMapper()
+
 class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     fun create(
@@ -41,8 +43,6 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             nyttVarsel
         }
 }
-
-private val mapper = configuredJacksonMapper()
 
 private const val queryCreateAktivitetskravVarsel =
     """
