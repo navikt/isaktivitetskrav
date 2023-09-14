@@ -392,7 +392,9 @@ class AktivitetskravApiSpek : Spek({
                     it("Successfully creates a new forhandsvarsel") {
                         with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
-                            objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
+                            val createdForhandsvarsel =
+                                objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
+                            createdForhandsvarsel.document shouldBeEqualTo forhandsvarselDTO.document
                         }
                     }
                 }
@@ -403,7 +405,7 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
-                    
+
                     it("Fails if document is empty") {
                         val varselWithoutDocument = forhandsvarselDTO.copy(document = emptyList())
                         with(postForhandsvarsel(newForhandsvarselDTO = varselWithoutDocument)) {
