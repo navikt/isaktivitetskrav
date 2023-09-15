@@ -2,10 +2,13 @@ package no.nav.syfo.testhelper
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVarselPdf
+import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
+import no.nav.syfo.aktivitetskrav.database.toPAktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.toList
+import no.nav.syfo.domain.PersonIdent
 import org.flywaydb.core.Flyway
 import java.sql.Connection
 import java.sql.ResultSet
@@ -91,6 +94,25 @@ fun DatabaseInterface.createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav
             connection.createAktivitetskrav(aktivitetskrav = it, referanseTilfelleBitUUID = UUID.randomUUID())
         }
         connection.commit()
+    }
+}
+
+const val queryGetVarslerForPerson = """
+    SELECT av.* 
+    FROM aktivitetskrav_varsel av 
+    INNER JOIN aktivitetskrav_vurdering avu
+    ON av.aktivitetskrav_vurdering_id = avu.id
+    INNER JOIN aktivitetskrav a
+    ON avu.aktivitetskrav_id = a.id
+    WHERE a.personident = ?
+"""
+
+fun DatabaseInterface.getVarsler(personIdent: PersonIdent): List<PAktivitetskravVarsel> {
+    return this.connection.use { connection ->
+        connection.prepareStatement(queryGetVarslerForPerson).use {
+            it.setString(1, personIdent.value)
+            it.executeQuery().toList { toPAktivitetskravVarsel() }
+        }
     }
 }
 

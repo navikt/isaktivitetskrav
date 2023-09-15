@@ -7,10 +7,12 @@ import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
+import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Types
 import java.time.OffsetDateTime
 import java.util.*
@@ -42,6 +44,11 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             connection.commit()
             nyttVarsel
         }
+
+    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> = database.getIkkeJournalforteVarsler()
+
+    fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
+        database.updateVarselJournalpostId(varsel, journalpostId)
 }
 
 private const val queryCreateAktivitetskravVarsel =
@@ -108,7 +115,48 @@ private fun Connection.createAktivitetskravVarselPdf(varselId: Int, pdf: ByteArr
     return varselPdfs.first()
 }
 
-private fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
+private const val queryGetIkkeJournalforteVarsler = """
+    SELECT av.*, avp.pdf as pdf, a.personident as personident 
+    FROM aktivitetskrav_varsel av 
+    INNER JOIN aktivitetskrav_varsel_pdf avp
+    ON av.id = avp.aktivitetskrav_varsel_id
+    INNER JOIN aktivitetskrav_vurdering avu
+    ON av.aktivitetskrav_vurdering_id = avu.id
+    INNER JOIN aktivitetskrav a
+    ON avu.aktivitetskrav_id = a.id
+    WHERE av.journalpost_id IS NULL
+"""
+
+private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> {
+    return this.connection.use { connection ->
+        connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
+            it.executeQuery().toList { Triple(PersonIdent(getString("personident")), toPAktivitetskravVarsel(), getBytes("pdf")) }
+        }
+    }
+}
+
+private const val queryUpdateJournalpostId = """
+    UPDATE aktivitetskrav_varsel
+    SET journalpost_id = ?, updated_at = ?
+    WHERE uuid = ?
+"""
+
+private fun DatabaseInterface.updateVarselJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) {
+    this.connection.use { connection ->
+        connection.prepareStatement(queryUpdateJournalpostId).use {
+            it.setString(1, journalpostId)
+            it.setObject(2, nowUTC())
+            it.setString(3, varsel.uuid.toString())
+            val updated = it.executeUpdate()
+            if (updated != 1) {
+                throw SQLException("Expected a single row to be updated, got update count $updated")
+            }
+        }
+        connection.commit()
+    }
+}
+
+fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
     PAktivitetskravVarsel(
         id = getInt("id"),
         uuid = UUID.fromString(getString("uuid")),

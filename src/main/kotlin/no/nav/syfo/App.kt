@@ -58,6 +58,7 @@ fun main() {
         )
     )
     lateinit var aktivitetskravService: AktivitetskravService
+    lateinit var aktivitetskravVarselRepository: AktivitetskravVarselRepository
 
     val applicationEngineEnvironment = applicationEngineEnvironment {
         log = logger
@@ -69,7 +70,7 @@ fun main() {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
-            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
+            aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
@@ -102,6 +103,7 @@ fun main() {
             applicationState = applicationState,
             environment = environment,
             database = applicationDatabase,
+            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             aktivitetskravService = aktivitetskravService,
             pdlClient = pdlClient,
             azureAdClient = azureAdClient,

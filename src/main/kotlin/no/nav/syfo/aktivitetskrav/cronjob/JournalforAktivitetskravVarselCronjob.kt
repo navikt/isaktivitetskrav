@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.application.cronjob.Cronjob
 import no.nav.syfo.application.cronjob.CronjobResult
 import no.nav.syfo.client.dokarkiv.DokarkivClient
@@ -11,7 +11,7 @@ import no.nav.syfo.domain.PersonIdent
 import org.slf4j.LoggerFactory
 
 class JournalforAktivitetskravVarselCronjob(
-    private val aktivitetskravVarselService: AktivitetskravVarselService,
+    private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     private val dokarkivClient: DokarkivClient,
     private val pdlClient: PdlClient,
 ) : Cronjob {
@@ -21,7 +21,7 @@ class JournalforAktivitetskravVarselCronjob(
     override suspend fun run() {
         val result = runJob()
         log.info(
-            "Completed journalføring of aktivitetskrav-varsel with result: {}, {}",
+            "Completed journalføring of varsel with result: {}, {}",
             StructuredArguments.keyValue("failed", result.failed),
             StructuredArguments.keyValue("updated", result.updated),
         )
@@ -29,10 +29,10 @@ class JournalforAktivitetskravVarselCronjob(
 
     suspend fun runJob(): CronjobResult {
         val result = CronjobResult()
+        val ikkeJournalforteVarsler = aktivitetskravVarselRepository.getIkkeJournalforte()
+            .map { Triple(it.first, it.second.toAktivitetkravVarsel(), it.third) }
 
-        val ikkeJournalforteAktivitetskravVarsel = aktivitetskravVarselService.getIkkeJournalforte()
-
-        ikkeJournalforteAktivitetskravVarsel.forEach { (personIdent, aktivitetskravVarsel, pdf) ->
+        ikkeJournalforteVarsler.forEach { (personIdent, varsel, pdf) ->
             try {
                 val navn = pdlClient.navn(personIdent = personIdent)
                 val journalpostRequest = createJournalpostRequest(
@@ -44,14 +44,14 @@ class JournalforAktivitetskravVarselCronjob(
                 dokarkivClient.journalfor(
                     journalpostRequest = journalpostRequest,
                 ).also {
-                    aktivitetskravVarselService.updateJournalpostId(
-                        varsel = aktivitetskravVarsel,
+                    aktivitetskravVarselRepository.updateJournalpostId(
+                        varsel = varsel,
                         journalpostId = it.journalpostId.toString(),
                     )
                     result.updated++
                 }
             } catch (e: Exception) {
-                log.error("Exception caught while attempting journalforing of aktivitetskrav-varsel", e)
+                log.error("Exception caught while attempting journalforing of varsel", e)
                 result.failed++
             }
         }
