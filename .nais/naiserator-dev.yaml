@@ -52,6 +52,7 @@ spec:
         - host: "dokarkiv.dev-fss-pub.nais.io"
       rules:
         - application: syfo-tilgangskontroll
+        - application: isaktivitetskravpdfgen
   gcp:
     sqlInstances:
       - type: POSTGRES_14
