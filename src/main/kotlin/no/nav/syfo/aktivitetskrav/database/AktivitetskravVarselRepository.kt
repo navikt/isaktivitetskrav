@@ -115,7 +115,7 @@ private fun Connection.createAktivitetskravVarselPdf(varselId: Int, pdf: ByteArr
     return varselPdfs.first()
 }
 
-const val queryGetIkkeJournalforteVarsler = """
+private const val queryGetIkkeJournalforteVarsler = """
     SELECT av.*, avp.pdf as pdf, a.personident as personident 
     FROM aktivitetskrav_varsel av 
     INNER JOIN aktivitetskrav_varsel_pdf avp
@@ -127,7 +127,7 @@ const val queryGetIkkeJournalforteVarsler = """
     WHERE av.journalpost_id IS NULL
 """
 
-fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> {
+private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> {
     return this.connection.use { connection ->
         connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
             it.executeQuery().toList { Triple(PersonIdent(getString("personident")), toPAktivitetskravVarsel(), getBytes("pdf")) }
@@ -135,17 +135,18 @@ fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAk
     }
 }
 
-const val queryUpdateJournalpostId = """
+private const val queryUpdateJournalpostId = """
     UPDATE aktivitetskrav_varsel
-    SET journalpost_id = ?
+    SET journalpost_id = ?, updated_at = ?
     WHERE uuid = ?
 """
 
-fun DatabaseInterface.updateVarselJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) {
+private fun DatabaseInterface.updateVarselJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) {
     this.connection.use { connection ->
         connection.prepareStatement(queryUpdateJournalpostId).use {
             it.setString(1, journalpostId)
-            it.setString(2, varsel.uuid.toString())
+            it.setObject(2, nowUTC())
+            it.setString(3, varsel.uuid.toString())
             val updated = it.executeUpdate()
             if (updated != 1) {
                 throw SQLException("Expected a single row to be updated, got update count $updated")

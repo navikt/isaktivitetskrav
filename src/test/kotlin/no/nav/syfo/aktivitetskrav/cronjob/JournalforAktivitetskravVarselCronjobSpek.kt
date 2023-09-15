@@ -16,10 +16,7 @@ import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBeNull
+import org.amshove.kluent.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -124,6 +121,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 val first = varsler.first()
                 first.uuid shouldBeEqualTo varsel.uuid
                 first.journalpostId.shouldNotBeNull()
+                first.updatedAt shouldBeGreaterThan first.createdAt
             }
             it("Journalfører ikke og oppdaterer ingenting når forhandsvarsel er journalført fra før") {
                 val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
@@ -186,6 +184,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 val first = varsler.first()
                 first.uuid shouldBeEqualTo varsel.uuid
                 first.journalpostId.shouldBeNull()
+                first.updatedAt shouldBeEqualTo first.createdAt
             }
             it("Oppdaterer ikke journalpostId når journalføring feiler") {
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
@@ -215,6 +214,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 val first = varsler.first()
                 first.uuid shouldBeEqualTo varsel.uuid
                 first.journalpostId.shouldBeNull()
+                first.updatedAt shouldBeEqualTo first.createdAt
             }
         }
     }
