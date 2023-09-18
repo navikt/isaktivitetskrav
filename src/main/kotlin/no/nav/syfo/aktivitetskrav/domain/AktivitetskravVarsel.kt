@@ -7,6 +7,7 @@ data class AktivitetskravVarsel internal constructor(
     val uuid: UUID,
     val journalpostId: String?,
     val document: List<DocumentComponentDTO>,
+    val isPublished: Boolean = false,
 ) {
 
     companion object {
@@ -20,10 +21,12 @@ data class AktivitetskravVarsel internal constructor(
             uuid: UUID,
             journalpostId: String?,
             document: List<DocumentComponentDTO>,
+            published: Boolean,
         ) = AktivitetskravVarsel(
             uuid = uuid,
             journalpostId = journalpostId,
             document = document,
+            isPublished = published,
         )
     }
 }

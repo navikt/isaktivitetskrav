@@ -52,6 +52,7 @@ spec:
         - host: "dokarkiv.prod-fss-pub.nais.io"
       rules:
         - application: syfo-tilgangskontroll
+        - application: isaktivitetskravpdfgen
   gcp:
     sqlInstances:
       - type: POSTGRES_14
@@ -85,6 +86,8 @@ spec:
     - name: NY_CRONJOB_ENABLED
       value: "false"
     - name: TOGGLE_JOURNALFOR_AKTIVITETSKRAV_VARSEL
+      value: "false"
+    - name: TOGGLE_PUBLISER_AKTIVITETSKRAV_VARSEL
       value: "false"
     - name: DOKARKIV_CLIENT_ID
       value: "prod-fss.teamdokumenthandtering.dokarkiv"

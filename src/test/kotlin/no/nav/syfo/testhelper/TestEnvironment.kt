@@ -55,6 +55,7 @@ fun testEnvironment() = Environment(
     automatiskOppfyltCronJobEnabled = true,
     nyCronjobEnabled = true,
     journalforAktivitetskravVarselEnabled = true,
+    publiserAktivitetskravVarselEnabled = true,
 )
 
 fun testAppState() = ApplicationState(
