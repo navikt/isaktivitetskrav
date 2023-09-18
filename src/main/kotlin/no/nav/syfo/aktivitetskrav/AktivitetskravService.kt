@@ -93,7 +93,7 @@ class AktivitetskravService(
         return database.getOutdatedAktivitetskrav(
             arenaCutoff = arenaCutoff,
             outdatedCutoff = outdatedCutoff
-        ).map { it.toAktivitetskrav(emptyList()) }
+        ).map { it.toAktivitetskrav(aktivitetskravVurderinger = emptyList()) }
     }
 
     internal fun lukk(aktivitetskrav: Aktivitetskrav) {

@@ -1,11 +1,10 @@
 package no.nav.syfo.aktivitetskrav.cronjob
 
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -17,6 +16,7 @@ import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -39,7 +39,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
         pdfGenClient = mockk<PdfGenClient>(),
     )
     val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
-        outdatedAktivitetskravCutoff = outdatedCutoff,
+        outdatedCutoff = outdatedCutoff,
         aktivitetskravService = aktivitetskravService,
     )
 
@@ -78,6 +78,19 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                 result.failed shouldBeEqualTo 0
                 result.updated shouldBeEqualTo 1
             }
+
+            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+            verify(exactly = 1) {
+                kafkaProducer.send(capture(producerRecordSlot))
+            }
+
+            val pAktivitetskravList = database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+            pAktivitetskravList.size shouldBeEqualTo 1
+            val lukketAktivitetskrav = pAktivitetskravList.first()
+            lukketAktivitetskrav.uuid shouldBeEqualTo aktivitetskrav.uuid
+
+            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+            kafkaAktivitetskravVurdering.status shouldBeEqualTo lukketAktivitetskrav.status
         }
         it("Lukker ikke vurdert aktivitetskrav hvor stoppunkt er etter arena-cutoff og før outdated-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -99,6 +112,13 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                 result.failed shouldBeEqualTo 0
                 result.updated shouldBeEqualTo 0
             }
+
+            verify(exactly = 0) {
+                kafkaProducer.send(any())
+            }
+
+            val pAktivitetskravList = database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
         }
         it("Lukker ikke nytt aktivitetskrav hvor stoppunkt er før arena-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -112,6 +132,13 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                 result.failed shouldBeEqualTo 0
                 result.updated shouldBeEqualTo 0
             }
+
+            verify(exactly = 0) {
+                kafkaProducer.send(any())
+            }
+
+            val pAktivitetskravList = database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
         }
         it("Lukker ikke nytt aktivitetskrav hvor stoppunkt er etter arena-cutoff og etter outdated-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -125,6 +152,13 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                 result.failed shouldBeEqualTo 0
                 result.updated shouldBeEqualTo 0
             }
+
+            verify(exactly = 0) {
+                kafkaProducer.send(any())
+            }
+
+            val pAktivitetskravList = database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
         }
         it("Lukker ikke nytt aktivitetskrav hvor stoppunkt er etter arena-cutoff og før outdated-cutoff hvis det finnes aktivitetskrav for samme person hvor stoppunkt er etter outdated-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -141,6 +175,13 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                 result.failed shouldBeEqualTo 0
                 result.updated shouldBeEqualTo 0
             }
+
+            verify(exactly = 0) {
+                kafkaProducer.send(any())
+            }
+
+            val pAktivitetskravList = database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
         }
     }
 })

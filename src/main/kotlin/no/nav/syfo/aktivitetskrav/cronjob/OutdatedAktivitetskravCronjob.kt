@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class OutdatedAktivitetskravCronjob(
-    private val outdatedAktivitetskravCutoff: LocalDate,
+    private val outdatedCutoff: LocalDate,
     private val aktivitetskravService: AktivitetskravService
 ) : Cronjob {
 
@@ -21,7 +21,7 @@ class OutdatedAktivitetskravCronjob(
     internal fun runJob(): CronjobResult {
         val result = CronjobResult()
         val outdatedAktivitetskrav = aktivitetskravService.getOutdatedAktivitetskrav(
-            outdatedCutoff = outdatedAktivitetskravCutoff
+            outdatedCutoff = outdatedCutoff
         )
 
         outdatedAktivitetskrav.forEach {
