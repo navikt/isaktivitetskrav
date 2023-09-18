@@ -5,6 +5,7 @@ import no.nav.syfo.aktivitetskrav.kafka.KafkaArbeidstakervarselSerializer
 import no.nav.syfo.aktivitetskrav.cronjob.AktivitetskravAutomatiskOppfyltCronjob
 import no.nav.syfo.aktivitetskrav.cronjob.AktivitetskravNyCronjob
 import no.nav.syfo.aktivitetskrav.cronjob.JournalforAktivitetskravVarselCronjob
+import no.nav.syfo.aktivitetskrav.cronjob.OutdatedAktivitetskravCronjob
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.cronjob.PubliserAktivitetskravVarselCronjob
 import no.nav.syfo.application.*
@@ -74,6 +75,13 @@ fun launchCronjobModule(
             arbeidstakervarselProducer = arbeidstakervarselProducer,
         )
         cronjobs.add(publiserAktivitetskravVarselCronjob)
+    }
+    if (environment.outdatedCronJobEnabled) {
+        val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
+            outdatedAktivitetskravCutoff = environment.outdatedCutoff,
+            aktivitetskravService = aktivitetskravService,
+        )
+        cronjobs.add(outdatedAktivitetskravCronjob)
     }
 
     cronjobs.forEach {

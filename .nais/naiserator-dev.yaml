@@ -93,3 +93,7 @@ spec:
       value: "dev-fss.teamdokumenthandtering.dokarkiv-q1"
     - name: DOKARKIV_URL
       value: "https://dokarkiv.dev-fss-pub.nais.io"
+    - name: OUTDATED_AKTIVITETSKRAV_CUTOFF
+      value: "2023-06-01"
+    - name: OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED
+      value: "false"
