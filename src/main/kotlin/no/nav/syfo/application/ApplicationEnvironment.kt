@@ -39,6 +39,7 @@ data class Environment(
     val automatiskOppfyltCronJobEnabled: Boolean = getEnvVar("AUTOMATISK_OPPFYLT_CRONJOB_ENABLED").toBoolean(),
     val nyCronjobEnabled: Boolean = getEnvVar("NY_CRONJOB_ENABLED").toBoolean(),
     val journalforAktivitetskravVarselEnabled: Boolean = getEnvVar("TOGGLE_JOURNALFOR_AKTIVITETSKRAV_VARSEL").toBoolean(),
+    val publiserAktivitetskravVarselEnabled: Boolean = getEnvVar("TOGGLE_PUBLISER_AKTIVITETSKRAV_VARSEL").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
     val clients: ClientsEnvironment = ClientsEnvironment(
         syfotilgangskontroll = ClientEnvironment(

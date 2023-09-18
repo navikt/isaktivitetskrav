@@ -13,10 +13,12 @@ data class PAktivitetskravVarsel(
     val aktivitetskravVurderingId: Int,
     val journalpostId: String?,
     val document: List<DocumentComponentDTO>,
+    val publishedAt: OffsetDateTime?,
 ) {
     fun toAktivitetkravVarsel() = AktivitetskravVarsel.createFromDatabase(
         uuid = uuid,
         journalpostId = journalpostId,
         document = document,
+        published = publishedAt != null,
     )
 }

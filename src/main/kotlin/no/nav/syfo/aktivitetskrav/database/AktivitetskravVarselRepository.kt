@@ -47,8 +47,13 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> = database.getIkkeJournalforteVarsler()
 
+    fun getIkkePubliserte(): List<Pair<PersonIdent, PAktivitetskravVarsel>> = database.getIkkePubliserteVarsler()
+
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
+
+    fun setPublished(varsel: AktivitetskravVarsel) =
+        database.setPublished(varsel)
 }
 
 private const val queryCreateAktivitetskravVarsel =
@@ -156,6 +161,51 @@ private fun DatabaseInterface.updateVarselJournalpostId(varsel: AktivitetskravVa
     }
 }
 
+private const val queryGetIkkePubliserteVarsler = """
+    SELECT av.*, a.personident as personident 
+    FROM aktivitetskrav_varsel av 
+    INNER JOIN aktivitetskrav_vurdering avu
+    ON av.aktivitetskrav_vurdering_id = avu.id
+    INNER JOIN aktivitetskrav a
+    ON avu.aktivitetskrav_id = a.id
+    WHERE av.journalpost_id IS NOT NULL and av.published_at IS NULL
+"""
+
+private fun DatabaseInterface.getIkkePubliserteVarsler(): List<Pair<PersonIdent, PAktivitetskravVarsel>> {
+    return this.connection.use { connection ->
+        connection.prepareStatement(queryGetIkkePubliserteVarsler).use {
+            it.executeQuery().toList {
+                Pair(
+                    PersonIdent(getString("personident")),
+                    toPAktivitetskravVarsel(),
+                )
+            }
+        }
+    }
+}
+
+private const val querySetPublished = """
+    UPDATE aktivitetskrav_varsel
+    SET published_at = ?, updated_at = ?
+    WHERE uuid = ?
+"""
+
+private fun DatabaseInterface.setPublished(varsel: AktivitetskravVarsel) {
+    val now = nowUTC()
+    this.connection.use { connection ->
+        connection.prepareStatement(querySetPublished).use {
+            it.setObject(1, now)
+            it.setObject(2, now)
+            it.setString(3, varsel.uuid.toString())
+            val updated = it.executeUpdate()
+            if (updated != 1) {
+                throw SQLException("Expected a single row to be updated, got update count $updated")
+            }
+        }
+        connection.commit()
+    }
+}
+
 fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
     PAktivitetskravVarsel(
         id = getInt("id"),
@@ -168,6 +218,7 @@ fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
             getString("document"),
             object : TypeReference<List<DocumentComponentDTO>>() {}
         ),
+        publishedAt = getObject("published_at", OffsetDateTime::class.java),
     )
 
 private fun ResultSet.toPAktivitetskravVarselPdf(): PAktivitetskravVarselPdf =
