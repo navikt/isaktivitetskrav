@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.toResponseDTOList
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
@@ -90,6 +91,12 @@ fun Route.registerAktivitetskravApi(
                 aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
                     ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
 
+            if (
+                aktivitetskrav.status != AktivitetskravStatus.NY &&
+                aktivitetskrav.status != AktivitetskravStatus.AVVENT
+            ) {
+                throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")
+            }
             val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
                 veilederIdent = call.getNAVIdent(),
