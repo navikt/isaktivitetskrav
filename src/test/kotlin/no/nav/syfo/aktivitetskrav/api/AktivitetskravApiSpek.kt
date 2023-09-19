@@ -412,6 +412,14 @@ class AktivitetskravApiSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
+                    it("Fails if already forhandsvarsel") {
+                        with(postForhandsvarsel()) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                        }
+                        with(postForhandsvarsel()) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
                 }
             }
 
