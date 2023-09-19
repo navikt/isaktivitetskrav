@@ -28,6 +28,9 @@ spec:
     timeout: 5
     failureThreshold: 3
   leaderElection: true
+  redis:
+    - instance: isaktivitetskrav
+      access: readwrite
   prometheus:
     enabled: true
     path: /internal/metrics
