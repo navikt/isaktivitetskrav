@@ -89,10 +89,11 @@ fun Route.registerAktivitetskravApi(
             val aktivitetskrav =
                 aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
                     ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
-
+            
             val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
                 veilederIdent = call.getNAVIdent(),
+                personIdent = call.personIdent(),
                 forhandsvarselDTO = requestDTO,
                 callId = callId,
             )

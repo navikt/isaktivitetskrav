@@ -10,7 +10,6 @@ import io.micrometer.core.instrument.Counter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.logstash.logback.argument.StructuredArguments
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.application.metric.METRICS_NS
 import no.nav.syfo.application.metric.METRICS_REGISTRY
 import no.nav.syfo.client.httpClientDefault
@@ -24,17 +23,17 @@ class PdfGenClient(
 
     suspend fun createForhandsvarselPdf(
         callId: String,
-        documentComponents: List<DocumentComponentDTO>,
+        forhandsvarselPdfDTO: ForhandsvarselPdfDTO,
     ): ByteArray =
         getPdf(
             callId = callId,
-            payload = documentComponents,
+            payload = forhandsvarselPdfDTO,
             pdfUrl = "$pdfGenBaseUrl$API_BASE_PATH$FORHANDSVARSEL_PATH",
         ) ?: throw RuntimeException("Failed to request pdf for forhandsvarsel, callId: $callId")
 
     private suspend fun getPdf(
         callId: String,
-        payload: List<DocumentComponentDTO>,
+        payload: ForhandsvarselPdfDTO,
         pdfUrl: String,
     ): ByteArray? =
         withContext(Dispatchers.IO) {
