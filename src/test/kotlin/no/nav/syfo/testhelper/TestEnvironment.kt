@@ -56,6 +56,8 @@ fun testEnvironment() = Environment(
     nyCronjobEnabled = true,
     journalforAktivitetskravVarselEnabled = true,
     publiserAktivitetskravVarselEnabled = true,
+    outdatedCutoff = LocalDate.now().minusMonths(6),
+    outdatedCronJobEnabled = true,
 )
 
 fun testAppState() = ApplicationState(

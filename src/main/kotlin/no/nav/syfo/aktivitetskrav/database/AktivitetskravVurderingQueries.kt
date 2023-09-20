@@ -6,6 +6,7 @@ import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -182,6 +183,25 @@ fun DatabaseInterface.getAktivitetskrav(
         it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
     }
 }
+
+const val queryGetOutdatedAktivitetskrav = """
+    SELECT * 
+    FROM AKTIVITETSKRAV
+    WHERE stoppunkt_at > ?
+    AND stoppunkt_at < ?
+    AND status = 'NY'
+    AND personident NOT IN (SELECT personident FROM AKTIVITETSKRAV WHERE stoppunkt_at >= ?);
+"""
+
+fun DatabaseInterface.getOutdatedAktivitetskrav(arenaCutoff: LocalDate, outdatedCutoff: LocalDate): List<PAktivitetskrav> =
+    this.connection.use { connection ->
+        connection.prepareStatement(queryGetOutdatedAktivitetskrav).use {
+            it.setObject(1, arenaCutoff)
+            it.setObject(2, outdatedCutoff)
+            it.setObject(3, outdatedCutoff)
+            it.executeQuery().toList { toPAktivitetskrav() }
+        }
+    }
 
 fun DatabaseInterface.getAktivitetskravVurderinger(
     aktivitetskravId: Int,
