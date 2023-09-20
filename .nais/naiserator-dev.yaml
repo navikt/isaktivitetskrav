@@ -85,10 +85,6 @@ spec:
       value: "false"
     - name: NY_CRONJOB_ENABLED
       value: "false"
-    - name: TOGGLE_JOURNALFOR_AKTIVITETSKRAV_VARSEL
-      value: "true"
-    - name: TOGGLE_PUBLISER_AKTIVITETSKRAV_VARSEL
-      value: "true"
     - name: DOKARKIV_CLIENT_ID
       value: "dev-fss.teamdokumenthandtering.dokarkiv-q1"
     - name: DOKARKIV_URL
