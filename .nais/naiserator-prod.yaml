@@ -31,6 +31,9 @@ spec:
   prometheus:
     enabled: true
     path: /internal/metrics
+  redis:
+    - instance: isaktivitetskrav
+      access: readwrite
   resources:
     limits:
       memory: 512Mi
