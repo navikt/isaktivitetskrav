@@ -7,8 +7,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.micrometer.core.instrument.Counter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.application.metric.METRICS_NS
 import no.nav.syfo.application.metric.METRICS_REGISTRY
@@ -36,21 +34,19 @@ class PdfGenClient(
         payload: ForhandsvarselPdfDTO,
         pdfUrl: String,
     ): ByteArray? =
-        withContext(Dispatchers.IO) {
-            try {
-                val response: HttpResponse = httpClient.post(pdfUrl) {
-                    header(NAV_CALL_ID_HEADER, callId)
-                    accept(ContentType.Application.Json)
-                    contentType(ContentType.Application.Json)
-                    setBody(payload)
-                }
-                Metrics.COUNT_CALL_PDFGEN_SUCCESS.increment()
-                response.body()
-            } catch (e: ClientRequestException) {
-                handleUnexpectedResponseException(pdfUrl, e.response, callId)
-            } catch (e: ServerResponseException) {
-                handleUnexpectedResponseException(pdfUrl, e.response, callId)
+        try {
+            val response: HttpResponse = httpClient.post(pdfUrl) {
+                header(NAV_CALL_ID_HEADER, callId)
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+                setBody(payload)
             }
+            Metrics.COUNT_CALL_PDFGEN_SUCCESS.increment()
+            response.body()
+        } catch (e: ClientRequestException) {
+            handleUnexpectedResponseException(pdfUrl, e.response, callId)
+        } catch (e: ServerResponseException) {
+            handleUnexpectedResponseException(pdfUrl, e.response, callId)
         }
 
     private fun handleUnexpectedResponseException(
@@ -70,7 +66,7 @@ class PdfGenClient(
 
     companion object {
         private const val API_BASE_PATH = "/api/v1/genpdf/isaktivitetskrav"
-        const val FORHANDSVARSEL_PATH = "/forhandsvarsel"
+        const val FORHANDSVARSEL_PATH = "/forhandsvarsel-til-innbygger-om-stans-av-sykepenger"
 
         private val log = LoggerFactory.getLogger(PdfGenClient::class.java)
     }

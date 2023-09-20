@@ -3,24 +3,25 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
 import no.nav.syfo.client.dokarkiv.domain.JournalpostKanal
 import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
 import no.nav.syfo.client.pdl.PdlClient
-import no.nav.syfo.testhelper.ExternalMockEnvironment
-import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.dropData
+import no.nav.syfo.testhelper.*
+import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
-import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDate
 
 const val anyJournalpostId = 1
-const val anyJournalpostIdAsString = anyJournalpostId.toString()
 val anyJournalpostResponse = JournalpostResponse(
     dokumenter = null,
     journalpostId = anyJournalpostId,
@@ -28,9 +29,20 @@ val anyJournalpostResponse = JournalpostResponse(
     journalstatus = "status",
     melding = null,
 )
-
 val pdf = byteArrayOf(23)
-val aktivitetskravVarsel = AktivitetskravVarsel.create(document = emptyList())
+
+val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+val aktivitetskrav = Aktivitetskrav.ny(
+    personIdent = personIdent,
+    tilfelleStart = LocalDate.now()
+)
+val personIdentManglerNavn = UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME
+val aktivitetskravPersonManglerNavn = Aktivitetskrav.ny(
+    personIdent = personIdentManglerNavn,
+    tilfelleStart = LocalDate.now()
+)
+
+val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")
 
 class JournalforAktivitetskravVarselCronjobSpek : Spek({
     with(TestApplicationEngine()) {
@@ -49,18 +61,32 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             httpClient = externalMockEnvironment.mockHttpClient,
         )
 
-        val aktivitetskravVarselService = mockk<AktivitetskravVarselService>()
+        val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
         val dokarkivClient = mockk<DokarkivClient>()
 
         val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
-            aktivitetskravVarselService = aktivitetskravVarselService,
+            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             dokarkivClient = dokarkivClient,
             pdlClient = pdlClient,
         )
 
+        fun createForhandsvarsel(aktivitetskrav: Aktivitetskrav, pdf: ByteArray): AktivitetskravVarsel {
+            database.createAktivitetskrav(aktivitetskrav)
+
+            val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
+            aktivitetskravVarselRepository.create(
+                aktivitetskrav = updatedAktivitetskrav,
+                varsel = forhandsvarsel,
+                pdf = pdf,
+            )
+
+            return forhandsvarsel
+        }
+
         beforeEachTest {
-            clearMocks(dokarkivClient, aktivitetskravVarselService)
-            every { aktivitetskravVarselService.updateJournalpostId(any(), anyJournalpostIdAsString) } returns Unit
+            clearMocks(dokarkivClient)
         }
         afterEachTest {
             database.dropData()
@@ -75,13 +101,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                 )
 
-                every { aktivitetskravVarselService.getIkkeJournalforte() } returns listOf(
-                    Triple(
-                        UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                        aktivitetskravVarsel,
-                        pdf
-                    )
-                )
+                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
 
                 runBlocking {
@@ -89,17 +110,23 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
 
                     result.failed shouldBeEqualTo 0
                     result.updated shouldBeEqualTo 1
-
-                    coVerify {
-                        dokarkivClient.journalfor(expectedJournalpostRequestForhandsvarsel)
-                    }
-                    verify {
-                        aktivitetskravVarselService.updateJournalpostId(aktivitetskravVarsel, anyJournalpostIdAsString)
-                    }
                 }
+
+                coVerify {
+                    dokarkivClient.journalfor(expectedJournalpostRequestForhandsvarsel)
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldNotBeNull()
+                first.updatedAt shouldBeGreaterThan first.createdAt
             }
             it("Journalfører ikke og oppdaterer ingenting når forhandsvarsel er journalført fra før") {
-                every { aktivitetskravVarselService.getIkkeJournalforte() } returns emptyList()
+                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+                aktivitetskravVarselRepository.updateJournalpostId(varsel, "1")
+
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
 
                 runBlocking {
@@ -107,23 +134,38 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
 
                     result.failed shouldBeEqualTo 0
                     result.updated shouldBeEqualTo 0
-
-                    coVerify(exactly = 0) {
-                        dokarkivClient.journalfor(any())
-                    }
-                    verify(exactly = 0) {
-                        aktivitetskravVarselService.updateJournalpostId(any(), any())
-                    }
                 }
+
+                coVerify(exactly = 0) {
+                    dokarkivClient.journalfor(any())
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldNotBeNull()
+            }
+            it("Journalfører ikke og oppdaterer ingenting når det ikke finnes forhandsvarsel") {
+                coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
+
+                runBlocking {
+                    val result = journalforAktivitetskravVarselCronjob.runJob()
+
+                    result.failed shouldBeEqualTo 0
+                    result.updated shouldBeEqualTo 0
+                }
+
+                coVerify(exactly = 0) {
+                    dokarkivClient.journalfor(any())
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.shouldBeEmpty()
             }
             it("Feiler og oppdaterer ingenting når person tilknyttet forhåndsvarsel mangler navn") {
-                every { aktivitetskravVarselService.getIkkeJournalforte() } returns listOf(
-                    Triple(
-                        UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME,
-                        aktivitetskravVarsel,
-                        pdf
-                    )
-                )
+                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskravPersonManglerNavn, pdf = pdf)
+
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
 
                 runBlocking {
@@ -131,14 +173,18 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
 
                     result.failed shouldBeEqualTo 1
                     result.updated shouldBeEqualTo 0
-
-                    coVerify(exactly = 0) {
-                        dokarkivClient.journalfor(any())
-                    }
-                    verify(exactly = 0) {
-                        aktivitetskravVarselService.updateJournalpostId(any(), any())
-                    }
                 }
+
+                coVerify(exactly = 0) {
+                    dokarkivClient.journalfor(any())
+                }
+
+                val varsler = database.getVarsler(personIdentManglerNavn)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldBeNull()
+                first.updatedAt shouldBeEqualTo first.createdAt
             }
             it("Oppdaterer ikke journalpostId når journalføring feiler") {
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
@@ -148,13 +194,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                 )
 
-                every { aktivitetskravVarselService.getIkkeJournalforte() } returns listOf(
-                    Triple(
-                        UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                        aktivitetskravVarsel,
-                        pdf
-                    )
-                )
+                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+
                 coEvery { dokarkivClient.journalfor(any()) } throws RuntimeException("Journalføring feilet")
 
                 runBlocking {
@@ -162,14 +203,18 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
 
                     result.failed shouldBeEqualTo 1
                     result.updated shouldBeEqualTo 0
-
-                    coVerify(exactly = 1) {
-                        dokarkivClient.journalfor(expectedJournalpostRequestForhandsvarsel)
-                    }
-                    verify(exactly = 0) {
-                        aktivitetskravVarselService.updateJournalpostId(any(), any())
-                    }
                 }
+
+                coVerify(exactly = 1) {
+                    dokarkivClient.journalfor(expectedJournalpostRequestForhandsvarsel)
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldBeNull()
+                first.updatedAt shouldBeEqualTo first.createdAt
             }
         }
     }

@@ -2,7 +2,6 @@ package no.nav.syfo.client.pdl.domain
 
 import java.util.*
 
-
 data class PdlPersonResponse(
     val errors: List<PdlError>?,
     val data: PdlHentPerson?
