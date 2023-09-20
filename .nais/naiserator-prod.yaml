@@ -31,6 +31,9 @@ spec:
   prometheus:
     enabled: true
     path: /internal/metrics
+  redis:
+    - instance: isaktivitetskrav
+      access: readwrite
   resources:
     limits:
       memory: 512Mi
@@ -85,11 +88,11 @@ spec:
       value: "false"
     - name: NY_CRONJOB_ENABLED
       value: "false"
-    - name: TOGGLE_JOURNALFOR_AKTIVITETSKRAV_VARSEL
-      value: "false"
-    - name: TOGGLE_PUBLISER_AKTIVITETSKRAV_VARSEL
-      value: "false"
     - name: DOKARKIV_CLIENT_ID
       value: "prod-fss.teamdokumenthandtering.dokarkiv"
     - name: DOKARKIV_URL
       value: "https://dokarkiv.prod-fss-pub.nais.io"
+    - name: OUTDATED_AKTIVITETSKRAV_CUTOFF
+      value: "2023-06-01"
+    - name: OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED
+      value: "false"

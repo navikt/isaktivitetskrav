@@ -1,12 +1,9 @@
 package no.nav.syfo.application.cronjob
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.cronjob.*
 import no.nav.syfo.aktivitetskrav.kafka.KafkaArbeidstakervarselSerializer
-import no.nav.syfo.aktivitetskrav.cronjob.AktivitetskravAutomatiskOppfyltCronjob
-import no.nav.syfo.aktivitetskrav.cronjob.AktivitetskravNyCronjob
-import no.nav.syfo.aktivitetskrav.cronjob.JournalforAktivitetskravVarselCronjob
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.cronjob.PubliserAktivitetskravVarselCronjob
 import no.nav.syfo.application.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
@@ -49,33 +46,35 @@ fun launchCronjobModule(
         )
         cronjobs.add(aktivitetskravNyCronjob)
     }
-    if (environment.journalforAktivitetskravVarselEnabled) {
-        val dokarkivClient = DokarkivClient(
-            azureAdClient = azureAdClient,
-            dokarkivEnvironment = environment.clients.dokarkiv,
-        )
-        val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
-            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-            dokarkivClient = dokarkivClient,
-            pdlClient = pdlClient
-        )
-        cronjobs.add(journalforAktivitetskravVarselCronjob)
-    }
-    if (environment.publiserAktivitetskravVarselEnabled) {
-        val arbeidstakervarselProducer = ArbeidstakervarselProducer(
-            kafkaArbeidstakervarselProducer = KafkaProducer(
-                kafkaAivenProducerConfig<KafkaArbeidstakervarselSerializer>(
-                    kafkaEnvironment = environment.kafka,
-                )
+    val dokarkivClient = DokarkivClient(
+        azureAdClient = azureAdClient,
+        dokarkivEnvironment = environment.clients.dokarkiv,
+    )
+    val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
+        aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+        dokarkivClient = dokarkivClient,
+        pdlClient = pdlClient
+    )
+    cronjobs.add(journalforAktivitetskravVarselCronjob)
+    val arbeidstakervarselProducer = ArbeidstakervarselProducer(
+        kafkaArbeidstakervarselProducer = KafkaProducer(
+            kafkaAivenProducerConfig<KafkaArbeidstakervarselSerializer>(
+                kafkaEnvironment = environment.kafka,
             )
         )
-        val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
-            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-            arbeidstakervarselProducer = arbeidstakervarselProducer,
+    )
+    val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
+        aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+        arbeidstakervarselProducer = arbeidstakervarselProducer,
+    )
+    cronjobs.add(publiserAktivitetskravVarselCronjob)
+    if (environment.outdatedCronJobEnabled) {
+        val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
+            outdatedCutoff = environment.outdatedCutoff,
+            aktivitetskravService = aktivitetskravService,
         )
-        cronjobs.add(publiserAktivitetskravVarselCronjob)
+        cronjobs.add(outdatedAktivitetskravCronjob)
     }
-
     cronjobs.forEach {
         launchBackgroundTask(
             applicationState = applicationState,

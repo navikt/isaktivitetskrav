@@ -13,6 +13,6 @@ data class ForhandsvarselDTO(
         createdBy = veilederIdent,
         beskrivelse = this.fritekst,
         arsaker = emptyList(),
-        frist = LocalDate.now().plusWeeks(2),
+        frist = LocalDate.now().plusWeeks(3), // På sikt avhengig av om bruker er reservert mot digital kommunikasjon eller ikke
     )
 }
