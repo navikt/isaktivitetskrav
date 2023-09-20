@@ -5,33 +5,24 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.api.apiModule
-import no.nav.syfo.client.azuread.AzureAdClient
-import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 
 fun Application.testApiModule(
     externalMockEnvironment: ExternalMockEnvironment,
     aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
 ) {
-    val azureAdClient = AzureAdClient(
-        azureEnvironment = externalMockEnvironment.environment.azure,
-        httpClient = externalMockEnvironment.mockHttpClient,
-    )
-    val pdfgenClient = PdfGenClient(
-        pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
-        httpClient = externalMockEnvironment.mockHttpClient,
-    )
     val aktivitetskravService = AktivitetskravService(
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         database = externalMockEnvironment.database,
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
-        pdfGenClient = pdfgenClient,
+        pdfGenClient = externalMockEnvironment.pdfgenClient,
         aktivitetskravVarselRepository = AktivitetskravVarselRepository(
             database = externalMockEnvironment.database
-        )
+        ),
+        pdlClient = externalMockEnvironment.pdlClient,
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
-        azureAdClient = azureAdClient,
+        azureAdClient = externalMockEnvironment.azureAdClient,
         clientEnvironment = externalMockEnvironment.environment.clients.syfotilgangskontroll,
         httpClient = externalMockEnvironment.mockHttpClient,
     )

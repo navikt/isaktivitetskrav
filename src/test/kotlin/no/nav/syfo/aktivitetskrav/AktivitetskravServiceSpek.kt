@@ -8,7 +8,6 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
-import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.createAktivitetskrav
@@ -33,17 +32,14 @@ class AktivitetskravServiceSpek : Spek({
             val database = externalMockEnvironment.database
             val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-            val pdfgenClient = PdfGenClient(
-                pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
-                httpClient = externalMockEnvironment.mockHttpClient,
-            )
 
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer),
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-                pdfGenClient = pdfgenClient,
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
             )
 
             beforeEachTest {
@@ -76,6 +72,7 @@ class AktivitetskravServiceSpek : Spek({
                         val varsel = aktivitetskravService.sendForhandsvarsel(
                             aktivitetskrav = aktivitetskrav,
                             veilederIdent = UserConstants.VEILEDER_IDENT,
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                             forhandsvarselDTO = forhandsvarselDTO,
                             callId = "",
                         )
