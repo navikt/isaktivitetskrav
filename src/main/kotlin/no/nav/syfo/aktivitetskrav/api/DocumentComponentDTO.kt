@@ -10,6 +10,8 @@ data class DocumentComponentDTO(
 enum class DocumentComponentType {
     HEADER_H1,
     HEADER_H2,
+    HEADER_H3,
     PARAGRAPH,
+    BULLET_POINTS,
     LINK,
 }
