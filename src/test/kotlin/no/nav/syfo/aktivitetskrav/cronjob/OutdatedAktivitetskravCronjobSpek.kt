@@ -6,7 +6,6 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.client.pdfgen.PdfGenClient
@@ -37,6 +36,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
         arenaCutoff = arenaCutoff,
         aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
         pdfGenClient = mockk<PdfGenClient>(),
+        pdlClient = externalMockEnvironment.pdlClient,
     )
     val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
         outdatedCutoff = outdatedCutoff,
