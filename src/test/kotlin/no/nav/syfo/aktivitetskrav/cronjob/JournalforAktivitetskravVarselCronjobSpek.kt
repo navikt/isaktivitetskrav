@@ -1,18 +1,19 @@
 package no.nav.syfo.aktivitetskrav.cronjob
 
 import io.ktor.server.testing.*
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.vurder
-import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
 import no.nav.syfo.client.dokarkiv.domain.JournalpostKanal
 import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
-import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
@@ -51,23 +52,13 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         val externalMockEnvironment = ExternalMockEnvironment.instance
         val database = externalMockEnvironment.database
 
-        val azureAdClient = AzureAdClient(
-            azureEnvironment = externalMockEnvironment.environment.azure,
-            httpClient = externalMockEnvironment.mockHttpClient,
-        )
-        val pdlClient = PdlClient(
-            azureAdClient = azureAdClient,
-            pdlEnvironment = externalMockEnvironment.environment.clients.pdl,
-            httpClient = externalMockEnvironment.mockHttpClient,
-        )
-
         val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
         val dokarkivClient = mockk<DokarkivClient>()
 
         val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             dokarkivClient = dokarkivClient,
-            pdlClient = pdlClient,
+            pdlClient = externalMockEnvironment.pdlClient,
         )
 
         fun createForhandsvarsel(aktivitetskrav: Aktivitetskrav, pdf: ByteArray): AktivitetskravVarsel {

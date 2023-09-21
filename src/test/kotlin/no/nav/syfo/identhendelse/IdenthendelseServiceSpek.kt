@@ -3,10 +3,13 @@ package no.nav.syfo.identhendelse
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
-import no.nav.syfo.client.azuread.AzureAdClient
-import no.nav.syfo.client.pdl.PdlClient
-import no.nav.syfo.testhelper.*
-import no.nav.syfo.testhelper.generator.*
+import no.nav.syfo.testhelper.ExternalMockEnvironment
+import no.nav.syfo.testhelper.UserConstants
+import no.nav.syfo.testhelper.createAktivitetskrav
+import no.nav.syfo.testhelper.dropData
+import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
+import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.generateKafkaIdenthendelseDTO
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
@@ -25,19 +28,10 @@ class IdenthendelseServiceSpek : Spek({
 
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
-            val azureAdClient = AzureAdClient(
-                azureEnvironment = externalMockEnvironment.environment.azure,
-                httpClient = externalMockEnvironment.mockHttpClient,
-            )
-            val pdlClient = PdlClient(
-                azureAdClient = azureAdClient,
-                pdlEnvironment = externalMockEnvironment.environment.clients.pdl,
-                httpClient = externalMockEnvironment.mockHttpClient,
-            )
 
             val identhendelseService = IdenthendelseService(
                 database = database,
-                pdlClient = pdlClient,
+                pdlClient = externalMockEnvironment.pdlClient,
             )
 
             afterEachTest {
