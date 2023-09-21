@@ -1,12 +1,14 @@
 package no.nav.syfo.testhelper
 
 import no.nav.syfo.application.*
+import no.nav.syfo.application.cache.RedisConfig
 import no.nav.syfo.application.database.DatabaseEnvironment
 import no.nav.syfo.application.kafka.KafkaEnvironment
 import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.ClientsEnvironment
 import no.nav.syfo.client.OpenClientEnvironment
 import no.nav.syfo.client.azuread.AzureEnvironment
+import java.net.URI
 import java.time.LocalDate
 
 fun testEnvironment() = Environment(
@@ -32,6 +34,12 @@ fun testEnvironment() = Environment(
         aivenSchemaRegistryUrl = "http://kafka-schema-registry.tpa.svc.nais.local:8081",
         aivenRegistryUser = "registryuser",
         aivenRegistryPassword = "registrypassword",
+    ),
+    redisConfig = RedisConfig(
+        redisUri = URI("http://localhost:6379"),
+        redisUsername = "redisUser",
+        redisPassword = "redisPassword",
+        ssl = false,
     ),
     clients = ClientsEnvironment(
         syfotilgangskontroll = ClientEnvironment(
