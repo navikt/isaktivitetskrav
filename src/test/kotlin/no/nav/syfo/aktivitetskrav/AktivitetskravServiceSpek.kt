@@ -8,12 +8,14 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
+import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
+import no.nav.syfo.testhelper.generator.generateForhandsvarselPdfDTO
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -89,6 +91,43 @@ class AktivitetskravServiceSpek : Spek({
                     val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo personIdent.value
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.FORHANDSVARSEL.name
+                }
+                it("Sends expected requestBody to pdfgenclient") {
+                    val mockedPdfGenClient = mockk<PdfGenClient>()
+                    val expectedForhandsvarselPdfRequestBody = generateForhandsvarselPdfDTO(forhandsvarselDTO)
+                    database.createAktivitetskrav(aktivitetskrav)
+                    val aktivitetskravServiceWithMockedPdfGenClient = AktivitetskravService(
+                        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer),
+                        database = database,
+                        arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                        aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                        pdfGenClient = mockedPdfGenClient,
+                        pdlClient = externalMockEnvironment.pdlClient,
+                    )
+
+                    coEvery {
+                        mockedPdfGenClient.createForhandsvarselPdf(
+                            any(),
+                            any()
+                        )
+                    } returns UserConstants.PDF_FORHANDSVARSEL
+
+                    runBlocking {
+                        aktivitetskravServiceWithMockedPdfGenClient.sendForhandsvarsel(
+                            aktivitetskrav = aktivitetskrav,
+                            veilederIdent = UserConstants.VEILEDER_IDENT,
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            forhandsvarselDTO = forhandsvarselDTO,
+                            callId = "",
+                        )
+                    }
+
+                    coVerify {
+                        mockedPdfGenClient.createForhandsvarselPdf(
+                            callId = "",
+                            forhandsvarselPdfDTO = expectedForhandsvarselPdfRequestBody
+                        )
+                    }
                 }
             }
         }
