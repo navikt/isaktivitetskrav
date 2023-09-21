@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.cronjob
 
+import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.application.cronjob.Cronjob
 import no.nav.syfo.application.cronjob.CronjobResult
@@ -34,6 +35,11 @@ class OutdatedAktivitetskravCronjob(
             }
         }
 
+        log.info(
+            "Completed aktivitetskrav-outdated job with result: {}, {}",
+            StructuredArguments.keyValue("failed", result.failed),
+            StructuredArguments.keyValue("updated", result.updated),
+        )
         return result
     }
 
