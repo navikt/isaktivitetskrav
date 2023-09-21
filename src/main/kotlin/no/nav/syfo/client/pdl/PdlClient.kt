@@ -85,8 +85,10 @@ class PdlClient(
         val cacheKey = "$NAVN_CACHE_KEY_PREFIX${personIdent.value}"
         val cachedNavn: String? = cache.get(key = cacheKey)
         return if (cachedNavn != null) {
+            COUNT_CALL_PDL_PERSON_NAVN_CACHE_HIT.increment()
             cachedNavn
         } else {
+            COUNT_CALL_PDL_PERSON_CACHE_NAVN_MISS.increment()
             val token = azureAdClient.getSystemToken(pdlEnvironment.clientId)
                 ?: throw RuntimeException("Failed to send request to PDL: No token was found")
             val navn = (
