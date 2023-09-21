@@ -3,20 +3,28 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.*
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
-import no.nav.syfo.client.pdfgen.PdfGenClient
-import no.nav.syfo.testhelper.*
+import no.nav.syfo.testhelper.ExternalMockEnvironment
+import no.nav.syfo.testhelper.UserConstants
+import no.nav.syfo.testhelper.createAktivitetskrav
+import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.*
-import org.amshove.kluent.*
+import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeEqualTo
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.*
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.*
+import java.time.Duration
+import java.time.LocalDate
 import java.util.concurrent.Future
 
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
@@ -36,17 +44,13 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
             kafkaProducerAktivitetskravVurdering = kafkaProducer,
         )
-        val pdfgenClient = PdfGenClient(
-            pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
-            httpClient = externalMockEnvironment.mockHttpClient,
-        )
-
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
             arenaCutoff = arenaCutoff,
             aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
-            pdfGenClient = pdfgenClient,
+            pdfGenClient = externalMockEnvironment.pdfgenClient,
+            pdlClient = externalMockEnvironment.pdlClient,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,

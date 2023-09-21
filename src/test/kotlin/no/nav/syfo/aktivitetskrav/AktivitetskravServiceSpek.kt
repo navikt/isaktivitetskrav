@@ -15,6 +15,7 @@ import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
+import no.nav.syfo.testhelper.generator.generateForhandsvarselPdfDTO
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -33,17 +34,14 @@ class AktivitetskravServiceSpek : Spek({
             val database = externalMockEnvironment.database
             val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-            val pdfgenClient = PdfGenClient(
-                pdfGenBaseUrl = externalMockEnvironment.environment.clients.isaktivitetskravpdfgen.baseUrl,
-                httpClient = externalMockEnvironment.mockHttpClient,
-            )
 
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer),
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-                pdfGenClient = pdfgenClient,
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
             )
 
             beforeEachTest {
@@ -76,6 +74,7 @@ class AktivitetskravServiceSpek : Spek({
                         val varsel = aktivitetskravService.sendForhandsvarsel(
                             aktivitetskrav = aktivitetskrav,
                             veilederIdent = UserConstants.VEILEDER_IDENT,
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                             forhandsvarselDTO = forhandsvarselDTO,
                             callId = "",
                         )
@@ -92,6 +91,43 @@ class AktivitetskravServiceSpek : Spek({
                     val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo personIdent.value
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.FORHANDSVARSEL.name
+                }
+                it("Sends expected requestBody to pdfgenclient") {
+                    val mockedPdfGenClient = mockk<PdfGenClient>()
+                    val expectedForhandsvarselPdfRequestBody = generateForhandsvarselPdfDTO(forhandsvarselDTO)
+                    database.createAktivitetskrav(aktivitetskrav)
+                    val aktivitetskravServiceWithMockedPdfGenClient = AktivitetskravService(
+                        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer),
+                        database = database,
+                        arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                        aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                        pdfGenClient = mockedPdfGenClient,
+                        pdlClient = externalMockEnvironment.pdlClient,
+                    )
+
+                    coEvery {
+                        mockedPdfGenClient.createForhandsvarselPdf(
+                            any(),
+                            any()
+                        )
+                    } returns UserConstants.PDF_FORHANDSVARSEL
+
+                    runBlocking {
+                        aktivitetskravServiceWithMockedPdfGenClient.sendForhandsvarsel(
+                            aktivitetskrav = aktivitetskrav,
+                            veilederIdent = UserConstants.VEILEDER_IDENT,
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            forhandsvarselDTO = forhandsvarselDTO,
+                            callId = "",
+                        )
+                    }
+
+                    coVerify {
+                        mockedPdfGenClient.createForhandsvarselPdf(
+                            callId = "",
+                            forhandsvarselPdfDTO = expectedForhandsvarselPdfRequestBody
+                        )
+                    }
                 }
             }
         }

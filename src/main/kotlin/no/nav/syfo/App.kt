@@ -77,6 +77,7 @@ fun main() {
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,
                 pdfGenClient = pdfGenClient,
+                pdlClient = pdlClient,
             )
             apiModule(
                 applicationState = applicationState,

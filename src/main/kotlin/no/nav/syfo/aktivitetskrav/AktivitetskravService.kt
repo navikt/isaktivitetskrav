@@ -5,7 +5,9 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
+import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
@@ -18,6 +20,7 @@ class AktivitetskravService(
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
     private val pdfGenClient: PdfGenClient,
+    private val pdlClient: PdlClient,
 ) {
 
     internal fun createAktivitetskrav(
@@ -154,10 +157,19 @@ class AktivitetskravService(
     suspend fun sendForhandsvarsel(
         aktivitetskrav: Aktivitetskrav,
         veilederIdent: String,
+        personIdent: PersonIdent,
         forhandsvarselDTO: ForhandsvarselDTO,
         callId: String,
     ): AktivitetskravVarsel {
-        val pdf = pdfGenClient.createForhandsvarselPdf(callId, forhandsvarselDTO.document)
+        val personNavn = pdlClient.navn(personIdent)
+        val pdf = pdfGenClient.createForhandsvarselPdf(
+            callId,
+            ForhandsvarselPdfDTO.create(
+                mottakerNavn = personNavn,
+                mottakerFodselsnummer = personIdent.value,
+                documentComponents = forhandsvarselDTO.document,
+            )
+        )
 
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)

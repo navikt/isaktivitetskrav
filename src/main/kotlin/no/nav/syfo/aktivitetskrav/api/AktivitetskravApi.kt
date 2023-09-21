@@ -80,7 +80,6 @@ fun Route.registerAktivitetskravApi(
             call.respond(HttpStatusCode.OK)
         }
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
-            val callId = call.getCallId()
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
             val requestDTO = call.receive<ForhandsvarselDTO>()
             if (requestDTO.document.isEmpty()) {
@@ -97,11 +96,13 @@ fun Route.registerAktivitetskravApi(
             ) {
                 throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")
             }
+
             val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
                 veilederIdent = call.getNAVIdent(),
+                personIdent = call.personIdent(),
                 forhandsvarselDTO = requestDTO,
-                callId = callId,
+                callId = call.getCallId(),
             )
             call.respond(HttpStatusCode.Created, forhandsvarsel)
         }

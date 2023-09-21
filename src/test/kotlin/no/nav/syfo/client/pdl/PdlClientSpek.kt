@@ -1,7 +1,6 @@
 package no.nav.syfo.client.pdl
 
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import org.amshove.kluent.internal.assertFailsWith
@@ -11,15 +10,7 @@ import org.spekframework.spek2.style.specification.describe
 
 class PdlClientSpek : Spek({
     val externalMockEnvironment = ExternalMockEnvironment.instance
-    val azureAdClient = AzureAdClient(
-        azureEnvironment = externalMockEnvironment.environment.azure,
-        httpClient = externalMockEnvironment.mockHttpClient,
-    )
-    val pdlClient = PdlClient(
-        azureAdClient = azureAdClient,
-        pdlEnvironment = externalMockEnvironment.environment.clients.pdl,
-        httpClient = externalMockEnvironment.mockHttpClient,
-    )
+    val pdlClient = externalMockEnvironment.pdlClient
 
     describe("${PdlClient::class.java.simpleName}: navn") {
         it("returns full name when person has name") {

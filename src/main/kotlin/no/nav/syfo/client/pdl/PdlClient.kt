@@ -11,7 +11,10 @@ import no.nav.syfo.client.azuread.AzureAdToken
 import no.nav.syfo.client.httpClientDefault
 import no.nav.syfo.client.pdl.domain.*
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.util.*
+import no.nav.syfo.util.ALLE_TEMA_HEADERVERDI
+import no.nav.syfo.util.NAV_CALL_ID_HEADER
+import no.nav.syfo.util.TEMA_HEADER
+import no.nav.syfo.util.bearerHeader
 import org.slf4j.LoggerFactory
 
 class PdlClient(
@@ -86,7 +89,7 @@ class PdlClient(
     private suspend fun person(
         personIdent: PersonIdent,
         token: AzureAdToken,
-    ): PdlHentPerson? {
+    ): PdlPerson? {
         val query = getPdlQuery("/pdl/hentPerson.graphql")
         val request = PdlHentPersonRequest(query, PdlHentPersonRequestVariables(personIdent.value))
 
@@ -108,9 +111,10 @@ class PdlClient(
                     null
                 } else {
                     COUNT_CALL_PDL_PERSON_SUCCESS.increment()
-                    pdlPersonReponse.data
+                    pdlPersonReponse.data?.hentPerson
                 }
             }
+
             else -> {
                 COUNT_CALL_PDL_PERSON_FAIL.increment()
                 logger.error("Request with url: ${pdlEnvironment.baseUrl} failed with reponse code ${response.status.value}")
