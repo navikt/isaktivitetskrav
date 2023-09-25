@@ -8,7 +8,7 @@ import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurderingSerializer
+import no.nav.syfo.aktivitetskrav.kafka.aktivitetskravVurderingProducerConfig
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.api.apiModule
@@ -16,7 +16,6 @@ import no.nav.syfo.application.cache.RedisStore
 import no.nav.syfo.application.cronjob.launchCronjobModule
 import no.nav.syfo.application.database.applicationDatabase
 import no.nav.syfo.application.database.databaseModule
-import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
@@ -72,9 +71,7 @@ fun main() {
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         kafkaProducerAktivitetskravVurdering = KafkaProducer(
-            kafkaAivenProducerConfig<KafkaAktivitetskravVurderingSerializer>(
-                kafkaEnvironment = environment.kafka,
-            )
+            aktivitetskravVurderingProducerConfig(kafkaEnvironment = environment.kafka)
         )
     )
     lateinit var aktivitetskravService: AktivitetskravService
