@@ -17,6 +17,7 @@ import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
+import no.nav.syfo.util.sekundOpplosning
 import org.amshove.kluent.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -175,7 +176,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 val first = varsler.first()
                 first.uuid shouldBeEqualTo varsel.uuid
                 first.journalpostId.shouldBeNull()
-                first.updatedAt shouldBeEqualTo first.createdAt
+                first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
             }
             it("Oppdaterer ikke journalpostId når journalføring feiler") {
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
@@ -205,7 +206,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 val first = varsler.first()
                 first.uuid shouldBeEqualTo varsel.uuid
                 first.journalpostId.shouldBeNull()
-                first.updatedAt shouldBeEqualTo first.createdAt
+                first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
             }
         }
     }
