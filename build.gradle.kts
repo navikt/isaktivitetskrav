@@ -9,6 +9,7 @@ object Versions {
     const val flyway = "9.20.0"
     const val hikari = "5.0.1"
     const val jacksonDataType = "2.15.2"
+    const val jedis = "5.0.0"
     const val kafka = "3.4.0"
     const val kluent = "1.73"
     const val ktor = "2.3.2"
@@ -19,6 +20,7 @@ object Versions {
     const val nimbusJoseJwt = "9.31"
     const val postgres = "42.5.1"
     val postgresEmbedded = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
+    const val redisEmbedded = "0.7.3"
     const val scala = "2.13.9"
     const val spek = "2.0.19"
 }
@@ -71,6 +73,10 @@ dependencies {
 
     // (De-)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.jacksonDataType}")
+
+    // Cache
+    implementation("redis.clients:jedis:${Versions.jedis}")
+    testImplementation("it.ozimov:embedded-redis:${Versions.redisEmbedded}")
 
     // Kafka
     val excludeLog4j = fun ExternalModuleDependency.() {

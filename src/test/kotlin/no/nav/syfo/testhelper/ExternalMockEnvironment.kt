@@ -22,6 +22,7 @@ class ExternalMockEnvironment private constructor() {
     val database = TestDatabase()
     val environment = testEnvironment()
     val mockHttpClient = mockHttpClient(environment = environment)
+    val redisServer = testRedisServer(redisConfig = environment.redisConfig)
     val wellKnownInternalAzureAD = wellKnownInternalAzureAD()
     val azureAdClient = AzureAdClient(
         azureEnvironment = environment.azure,
@@ -35,9 +36,10 @@ class ExternalMockEnvironment private constructor() {
         azureAdClient = azureAdClient,
         pdlEnvironment = environment.clients.pdl,
         httpClient = mockHttpClient,
+        cache = testRedisCache(redisConfig = environment.redisConfig),
     )
 
     companion object {
-        val instance: ExternalMockEnvironment = ExternalMockEnvironment()
+        val instance: ExternalMockEnvironment = ExternalMockEnvironment().also { it.redisServer.start() }
     }
 }
