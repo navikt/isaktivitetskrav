@@ -3,7 +3,10 @@ package no.nav.syfo.aktivitetskrav.kafka
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.toKafkaAktivitetskravVurdering
+import no.nav.syfo.application.kafka.KafkaEnvironment
+import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -52,3 +55,8 @@ class AktivitetskravVurderingProducer(
         private val log = LoggerFactory.getLogger(AktivitetskravVurderingProducer::class.java)
     }
 }
+
+fun aktivitetskravVurderingProducerConfig(kafkaEnvironment: KafkaEnvironment) =
+    kafkaAivenProducerConfig<KafkaAktivitetskravVurderingSerializer>(kafkaEnvironment).apply {
+        this[ProducerConfig.LINGER_MS_CONFIG] = "1000"
+    }
