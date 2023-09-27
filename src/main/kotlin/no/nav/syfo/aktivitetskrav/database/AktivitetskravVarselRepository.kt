@@ -50,7 +50,8 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
         database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> = database.getIkkePubliserteVarsler()
+    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> =
+        database.getIkkePubliserteVarsler()
 
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
@@ -60,13 +61,32 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
         withContext(Dispatchers.IO) {
-            database.connection.run {
+            val expiredVarsler = database.connection.run {
                 prepareStatement(Queries.selectExpiredVarsler).run {
                     executeQuery()
                         .toList { toPAktivitetskravVarsel() }
                 }
             }
+            val totalRowsAffected = updateExpiredVarselPublishedAt(expiredVarsler)
+            if (totalRowsAffected != expiredVarsler.size) {
+                throw SQLException("Expected ${expiredVarsler.size} of rows to be updated, got update count $totalRowsAffected")
+            }
+            expiredVarsler
         }
+
+    private fun updateExpiredVarselPublishedAt(
+        expiredVarsler: List<PAktivitetskravVarsel>
+    ): Int = database.connection.run {
+        val totalRowsAffected = expiredVarsler.sumOf { expiredVarsel ->
+            prepareStatement(Queries.setExpiredVarselPublishedAt).run {
+                setObject(1, nowUTC())
+                setString(2, expiredVarsel.uuid.toString())
+                executeUpdate()
+            }
+        }
+        commit()
+        totalRowsAffected
+    }
 }
 
 private object Queries {
@@ -76,6 +96,13 @@ private object Queries {
             FROM aktivitetskrav_varsel
             WHERE created_at <= (NOW() - INTERVAL '4 weeks')
                 AND expired_varsel_published_at IS NULL
+        """
+
+    const val setExpiredVarselPublishedAt =
+        """
+            UPDATE aktivitetskrav_varsel
+            SET expired_varsel_published_at = ?
+            WHERE uuid = ?
         """
 }
 
