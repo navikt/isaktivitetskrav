@@ -31,6 +31,10 @@ class AktivitetskravVarselProducer(private val kafkaProducer: KafkaProducer<Stri
                     kafkaAktivitetskravVarsel,
                 )
             ).get()
+            log.info(
+                "Varsel with uuid: {} published",
+                kafkaAktivitetskravVarsel.varselUuid
+            )
         } catch (e: Exception) {
             log.error(
                 "Exception was thrown when attempting to send KafkaAktivitetskravVarsel with id {}: ${e.message}",
