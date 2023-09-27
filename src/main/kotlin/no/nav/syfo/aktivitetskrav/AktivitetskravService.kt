@@ -5,6 +5,7 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
@@ -21,6 +22,7 @@ class AktivitetskravService(
     private val arenaCutoff: LocalDate,
     private val pdfGenClient: PdfGenClient,
     private val pdlClient: PdlClient,
+    private val krrClient: KRRClient,
 ) {
 
     internal fun createAktivitetskrav(

@@ -42,6 +42,7 @@ class AktivitetskravServiceSpek : Spek({
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 pdfGenClient = externalMockEnvironment.pdfgenClient,
                 pdlClient = externalMockEnvironment.pdlClient,
+                krrClient = externalMockEnvironment.krrClient,
             )
 
             beforeEachTest {
@@ -103,6 +104,7 @@ class AktivitetskravServiceSpek : Spek({
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                         pdfGenClient = mockedPdfGenClient,
                         pdlClient = externalMockEnvironment.pdlClient,
+                        krrClient = externalMockEnvironment.krrClient,
                     )
 
                     coEvery {

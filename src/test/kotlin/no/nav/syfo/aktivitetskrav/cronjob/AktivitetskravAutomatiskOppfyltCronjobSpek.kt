@@ -42,6 +42,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
             aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
+            krrClient = externalMockEnvironment.krrClient,
         )
 
         val aktivitetskravAutomatiskOppfyltCronjob = AktivitetskravAutomatiskOppfyltCronjob(
