@@ -37,6 +37,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
         aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
         pdfGenClient = mockk<PdfGenClient>(),
         pdlClient = externalMockEnvironment.pdlClient,
+        krrClient = externalMockEnvironment.krrClient,
     )
     val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
         outdatedCutoff = outdatedCutoff,

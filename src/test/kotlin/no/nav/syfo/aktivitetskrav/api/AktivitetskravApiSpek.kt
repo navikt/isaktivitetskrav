@@ -72,6 +72,7 @@ class AktivitetskravApiSpek : Spek({
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 pdfGenClient = externalMockEnvironment.pdfgenClient,
                 pdlClient = externalMockEnvironment.pdlClient,
+                krrClient = externalMockEnvironment.krrClient,
             )
 
             beforeEachTest {

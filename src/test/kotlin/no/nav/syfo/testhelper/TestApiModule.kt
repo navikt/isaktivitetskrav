@@ -20,6 +20,7 @@ fun Application.testApiModule(
             database = externalMockEnvironment.database
         ),
         pdlClient = externalMockEnvironment.pdlClient,
+        krrClient = externalMockEnvironment.krrClient,
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = externalMockEnvironment.azureAdClient,

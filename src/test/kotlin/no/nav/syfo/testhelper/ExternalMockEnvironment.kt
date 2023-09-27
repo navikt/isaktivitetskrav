@@ -2,6 +2,7 @@ package no.nav.syfo.testhelper
 
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.azuread.AzureAdClient
+import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.client.wellknown.WellKnown
@@ -37,6 +38,11 @@ class ExternalMockEnvironment private constructor() {
         pdlEnvironment = environment.clients.pdl,
         httpClient = mockHttpClient,
         cache = testRedisCache(redisConfig = environment.redisConfig),
+    )
+    val krrClient = KRRClient(
+        azureAdClient = azureAdClient,
+        baseUrl = environment.clients.krr.baseUrl,
+        clientId = environment.clients.krr.clientId,
     )
 
     companion object {

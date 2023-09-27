@@ -51,6 +51,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
+            krrClient = externalMockEnvironment.krrClient,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
             database = database,

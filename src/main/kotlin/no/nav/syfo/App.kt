@@ -18,6 +18,7 @@ import no.nav.syfo.application.database.applicationDatabase
 import no.nav.syfo.application.database.databaseModule
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
+import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
@@ -61,6 +62,11 @@ fun main() {
         pdlEnvironment = environment.clients.pdl,
         cache = cache,
     )
+    val krrClient = KRRClient(
+        azureAdClient = azureAdClient,
+        baseUrl = environment.clients.krr.baseUrl,
+        clientId = environment.clients.krr.clientId,
+    )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
         clientEnvironment = environment.clients.syfotilgangskontroll,
@@ -95,6 +101,7 @@ fun main() {
                 arenaCutoff = environment.arenaCutoff,
                 pdfGenClient = pdfGenClient,
                 pdlClient = pdlClient,
+                krrClient = krrClient,
             )
             apiModule(
                 applicationState = applicationState,
