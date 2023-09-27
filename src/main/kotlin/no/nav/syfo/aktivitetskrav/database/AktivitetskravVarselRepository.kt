@@ -50,7 +50,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
         database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Pair<PersonIdent, PAktivitetskravVarsel>> = database.getIkkePubliserteVarsler()
+    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> = database.getIkkePubliserteVarsler()
 
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
@@ -97,11 +97,10 @@ private fun Connection.createAktivitetskravVarsel(
     vurderingId: Int,
     varsel: AktivitetskravVarsel
 ): PAktivitetskravVarsel {
-    val now = nowUTC()
     val varsler = this.prepareStatement(queryCreateAktivitetskravVarsel).use {
         it.setString(1, varsel.uuid.toString())
-        it.setObject(2, now)
-        it.setObject(3, now)
+        it.setObject(2, varsel.createdAt)
+        it.setObject(3, nowUTC())
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
@@ -191,7 +190,7 @@ private fun DatabaseInterface.updateVarselJournalpostId(varsel: AktivitetskravVa
 }
 
 private const val queryGetIkkePubliserteVarsler = """
-    SELECT av.*, a.personident as personident 
+    SELECT av.*, a.personident as personident, a.uuid as aktivitetskravUuid 
     FROM aktivitetskrav_varsel av 
     INNER JOIN aktivitetskrav_vurdering avu
     ON av.aktivitetskrav_vurdering_id = avu.id
@@ -200,13 +199,14 @@ private const val queryGetIkkePubliserteVarsler = """
     WHERE av.journalpost_id IS NOT NULL and av.published_at IS NULL
 """
 
-private fun DatabaseInterface.getIkkePubliserteVarsler(): List<Pair<PersonIdent, PAktivitetskravVarsel>> {
+private fun DatabaseInterface.getIkkePubliserteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> {
     return this.connection.use { connection ->
         connection.prepareStatement(queryGetIkkePubliserteVarsler).use {
             it.executeQuery().toList {
-                Pair(
+                Triple(
                     PersonIdent(getString("personident")),
                     toPAktivitetskravVarsel(),
+                    UUID.fromString(getString("aktivitetskravUuid")),
                 )
             }
         }

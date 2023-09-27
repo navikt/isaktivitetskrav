@@ -11,4 +11,6 @@ fun tomorrow(): LocalDate = LocalDate.now().plusDays(1)
 
 fun OffsetDateTime.millisekundOpplosning(): OffsetDateTime = this.truncatedTo(ChronoUnit.MILLIS)
 
+fun OffsetDateTime.sekundOpplosning(): OffsetDateTime = this.truncatedTo(ChronoUnit.SECONDS)
+
 fun LocalDate.isAfterOrEqual(date: LocalDate) = !this.isBefore(date)

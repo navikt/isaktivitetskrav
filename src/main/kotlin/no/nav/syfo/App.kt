@@ -10,10 +10,11 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselSerializer
-import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurderingSerializer
+import no.nav.syfo.aktivitetskrav.kafka.aktivitetskravVurderingProducerConfig
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.api.apiModule
+import no.nav.syfo.application.cache.RedisStore
 import no.nav.syfo.application.cronjob.launchCronjobModule
 import no.nav.syfo.application.database.applicationDatabase
 import no.nav.syfo.application.database.databaseModule
@@ -26,6 +27,10 @@ import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.getWellKnown
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
+import redis.clients.jedis.DefaultJedisClientConfig
+import redis.clients.jedis.HostAndPort
+import redis.clients.jedis.JedisPool
+import redis.clients.jedis.JedisPoolConfig
 import java.util.concurrent.TimeUnit
 
 const val applicationPort = 8080
@@ -34,6 +39,20 @@ fun main() {
     val applicationState = ApplicationState()
     val logger = LoggerFactory.getLogger("ktor.application")
     val environment = Environment()
+
+    val redisConfig = environment.redisConfig
+    val cache = RedisStore(
+        JedisPool(
+            JedisPoolConfig(),
+            HostAndPort(redisConfig.host, redisConfig.port),
+            DefaultJedisClientConfig.builder()
+                .ssl(redisConfig.ssl)
+                .user(redisConfig.redisUsername)
+                .password(redisConfig.redisPassword)
+                .build()
+        )
+    )
+
     val wellKnownInternalAzureAD = getWellKnown(
         wellKnownUrl = environment.azure.appWellKnownUrl,
     )
@@ -43,6 +62,7 @@ fun main() {
     val pdlClient = PdlClient(
         azureAdClient = azureAdClient,
         pdlEnvironment = environment.clients.pdl,
+        cache = cache,
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
@@ -54,9 +74,7 @@ fun main() {
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         kafkaProducerAktivitetskravVurdering = KafkaProducer(
-            kafkaAivenProducerConfig<KafkaAktivitetskravVurderingSerializer>(
-                kafkaEnvironment = environment.kafka,
-            )
+            aktivitetskravVurderingProducerConfig(kafkaEnvironment = environment.kafka)
         )
     )
     val expiredVarselProducer = ExpiredVarselProducer(

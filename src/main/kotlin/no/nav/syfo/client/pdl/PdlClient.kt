@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import no.nav.syfo.application.cache.RedisStore
 import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.azuread.AzureAdToken
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory
 class PdlClient(
     private val azureAdClient: AzureAdClient,
     private val pdlEnvironment: ClientEnvironment,
+    private val cache: RedisStore,
     private val httpClient: HttpClient = httpClientDefault(),
 ) {
 
@@ -80,10 +82,22 @@ class PdlClient(
     suspend fun navn(
         personIdent: PersonIdent,
     ): String {
-        val token = azureAdClient.getSystemToken(pdlEnvironment.clientId)
-            ?: throw RuntimeException("Failed to send request to PDL: No token was found")
-        return person(personIdent, token)?.fullName()
-            ?: throw RuntimeException("PDL returned empty navn for given fnr")
+        val cacheKey = "$NAVN_CACHE_KEY_PREFIX${personIdent.value}"
+        val cachedNavn: String? = cache.get(key = cacheKey)
+        return if (cachedNavn != null) {
+            COUNT_CALL_PDL_PERSON_NAVN_CACHE_HIT.increment()
+            cachedNavn
+        } else {
+            COUNT_CALL_PDL_PERSON_CACHE_NAVN_MISS.increment()
+            val token = azureAdClient.getSystemToken(pdlEnvironment.clientId)
+                ?: throw RuntimeException("Failed to send request to PDL: No token was found")
+            val navn = (
+                person(personIdent, token)?.fullName()
+                    ?: throw RuntimeException("PDL returned empty navn for given fnr")
+                )
+            cache.set(key = cacheKey, value = navn, expireSeconds = CACHE_EXPIRE_SECONDS)
+            navn
+        }
     }
 
     private suspend fun person(
@@ -130,6 +144,8 @@ class PdlClient(
     }
 
     companion object {
+        private val NAVN_CACHE_KEY_PREFIX = "pdl-navn-"
+        private val CACHE_EXPIRE_SECONDS = 24L * 3600
         const val IDENTER_HEADER = "identer"
         private val logger = LoggerFactory.getLogger(PdlClient::class.java)
     }
