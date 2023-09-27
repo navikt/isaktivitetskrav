@@ -4,6 +4,8 @@ import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
@@ -16,6 +18,7 @@ import java.util.*
 
 class AktivitetskravService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
+    private val expiredVarselProducer: ExpiredVarselProducer,
     private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
@@ -186,5 +189,17 @@ class AktivitetskravService(
         )
 
         return nyttForhandsvarsel.toAktivitetkravVarsel()
+    }
+
+    suspend fun publishExpiredVarsler(): List<ExpiredVarsel> {
+        val expiredVarsler: List<PAktivitetskravVarsel> = aktivitetskravVarselRepository.getExpiredVarsler()
+        val expiredVarslerToPublish = expiredVarsler.map {
+            ExpiredVarsel(uuid = it.uuid, svarfrist = it.svarfrist)
+        }
+
+        expiredVarslerToPublish.forEach { expiredVarsel ->
+            expiredVarselProducer.publishExpiredVarsel(expiredVarsel)
+        }
+        return expiredVarslerToPublish
     }
 }
