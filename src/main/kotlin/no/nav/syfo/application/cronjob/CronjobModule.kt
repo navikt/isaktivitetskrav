@@ -4,10 +4,12 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.cronjob.*
 import no.nav.syfo.aktivitetskrav.kafka.KafkaArbeidstakervarselSerializer
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.application.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
+import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVarselSerializer
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.leaderelection.LeaderPodClient
@@ -46,6 +48,7 @@ fun launchCronjobModule(
         )
         cronjobs.add(aktivitetskravNyCronjob)
     }
+
     val dokarkivClient = DokarkivClient(
         azureAdClient = azureAdClient,
         dokarkivEnvironment = environment.clients.dokarkiv,
@@ -56,6 +59,7 @@ fun launchCronjobModule(
         pdlClient = pdlClient
     )
     cronjobs.add(journalforAktivitetskravVarselCronjob)
+
     val arbeidstakervarselProducer = ArbeidstakervarselProducer(
         kafkaArbeidstakervarselProducer = KafkaProducer(
             kafkaAivenProducerConfig<KafkaArbeidstakervarselSerializer>(
@@ -63,11 +67,20 @@ fun launchCronjobModule(
             )
         )
     )
+    val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
+        kafkaProducer = KafkaProducer(
+            kafkaAivenProducerConfig<KafkaAktivitetskravVarselSerializer>(
+                kafkaEnvironment = environment.kafka,
+            )
+        )
+    )
     val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         arbeidstakervarselProducer = arbeidstakervarselProducer,
+        aktivitetskravVarselProducer = aktivitetskravVarselProducer,
     )
     cronjobs.add(publiserAktivitetskravVarselCronjob)
+
     if (environment.outdatedCronJobEnabled) {
         val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
             outdatedCutoff = environment.outdatedCutoff,

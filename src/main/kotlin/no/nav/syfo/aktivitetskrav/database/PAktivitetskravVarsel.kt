@@ -17,6 +17,7 @@ data class PAktivitetskravVarsel(
 ) {
     fun toAktivitetkravVarsel() = AktivitetskravVarsel.createFromDatabase(
         uuid = uuid,
+        createdAt = createdAt,
         journalpostId = journalpostId,
         document = document,
         published = publishedAt != null,
