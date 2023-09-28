@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.toResponseDTOList
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
@@ -28,6 +29,7 @@ private const val API_ACTION = "access aktivitetskrav for person"
 fun Route.registerAktivitetskravApi(
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
     aktivitetskravService: AktivitetskravService,
+    aktivitetskravVarselService: AktivitetskravVarselService,
 ) {
     route(aktivitetskravApiBasePath) {
         install(VeilederTilgangskontrollPlugin) {
@@ -97,7 +99,7 @@ fun Route.registerAktivitetskravApi(
                 throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")
             }
 
-            val forhandsvarsel = aktivitetskravService.sendForhandsvarsel(
+            val forhandsvarsel = aktivitetskravVarselService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
                 veilederIdent = call.getNAVIdent(),
                 personIdent = call.personIdent(),

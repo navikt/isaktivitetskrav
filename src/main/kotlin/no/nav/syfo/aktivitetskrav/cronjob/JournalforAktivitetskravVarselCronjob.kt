@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.application.cronjob.Cronjob
 import no.nav.syfo.application.cronjob.CronjobResult
 import no.nav.syfo.client.dokarkiv.DokarkivClient
@@ -11,7 +11,7 @@ import no.nav.syfo.domain.PersonIdent
 import org.slf4j.LoggerFactory
 
 class JournalforAktivitetskravVarselCronjob(
-    private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
+    private val aktivitetskravVarselService: AktivitetskravVarselService,
     private val dokarkivClient: DokarkivClient,
     private val pdlClient: PdlClient,
 ) : Cronjob {
@@ -29,8 +29,7 @@ class JournalforAktivitetskravVarselCronjob(
 
     suspend fun runJob(): CronjobResult {
         val result = CronjobResult()
-        val ikkeJournalforteVarsler = aktivitetskravVarselRepository.getIkkeJournalforte()
-            .map { Triple(it.first, it.second.toAktivitetkravVarsel(), it.third) }
+        val ikkeJournalforteVarsler = aktivitetskravVarselService.getIkkeJournalforte()
 
         ikkeJournalforteVarsler.forEach { (personIdent, varsel, pdf) ->
             try {
@@ -44,9 +43,9 @@ class JournalforAktivitetskravVarselCronjob(
                 dokarkivClient.journalfor(
                     journalpostRequest = journalpostRequest,
                 ).also {
-                    aktivitetskravVarselRepository.updateJournalpostId(
+                    aktivitetskravVarselService.setJournalfort(
                         varsel = varsel,
-                        journalpostId = it.journalpostId.toString(),
+                        journalpostId = it.journalpostId.toString()
                     )
                     result.updated++
                 }
