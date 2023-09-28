@@ -29,7 +29,8 @@ class AktivitetskravVarselService(
     }
 
     fun getIkkePubliserte(): List<Triple<PersonIdent, AktivitetskravVarsel, UUID>> {
-        return aktivitetskravVarselRepository.getIkkePubliserte().map { Triple(it.first, it.second.toAktivitetkravVarsel(), it.third) }
+        return aktivitetskravVarselRepository.getIkkePubliserte()
+            .map { Triple(it.first, it.second.toAktivitetkravVarsel(), it.third) }
     }
 
     fun publiser(varsel: AktivitetskravVarsel, personIdent: PersonIdent, aktivitetskravUuid: UUID) {
