@@ -8,8 +8,6 @@ import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselSerializer
 import no.nav.syfo.aktivitetskrav.kafka.aktivitetskravVurderingProducerConfig
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
@@ -18,7 +16,6 @@ import no.nav.syfo.application.cache.RedisStore
 import no.nav.syfo.application.cronjob.launchCronjobModule
 import no.nav.syfo.application.database.applicationDatabase
 import no.nav.syfo.application.database.databaseModule
-import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
@@ -77,11 +74,6 @@ fun main() {
             aktivitetskravVurderingProducerConfig(kafkaEnvironment = environment.kafka)
         )
     )
-    val expiredVarselProducer = ExpiredVarselProducer(
-        producer = KafkaProducer(
-            kafkaAivenProducerConfig<ExpiredVarselSerializer>(kafkaEnvironment = environment.kafka)
-        )
-    )
     lateinit var aktivitetskravService: AktivitetskravService
     lateinit var aktivitetskravVarselRepository: AktivitetskravVarselRepository
 
@@ -98,7 +90,6 @@ fun main() {
             aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
-                expiredVarselProducer = expiredVarselProducer,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,

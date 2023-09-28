@@ -2,16 +2,14 @@ package no.nav.syfo.application.cronjob
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.cronjob.*
+import no.nav.syfo.aktivitetskrav.kafka.KafkaArbeidstakervarselSerializer
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVarselSerializer
-import no.nav.syfo.aktivitetskrav.kafka.KafkaArbeidstakervarselSerializer
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.application.Environment
+import no.nav.syfo.application.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
-import no.nav.syfo.application.launchBackgroundTask
+import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
+import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVarselSerializer
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.leaderelection.LeaderPodClient
@@ -90,10 +88,6 @@ fun launchCronjobModule(
         )
         cronjobs.add(outdatedAktivitetskravCronjob)
     }
-    val publishExpiredVarslerCronJob =
-        PublishExpiredVarslerCronJob(aktivitetskravService)
-    cronjobs.add(publishExpiredVarslerCronJob)
-
     cronjobs.forEach {
         launchBackgroundTask(
             applicationState = applicationState,

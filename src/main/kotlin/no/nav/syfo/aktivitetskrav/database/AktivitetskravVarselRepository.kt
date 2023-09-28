@@ -1,8 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import com.fasterxml.jackson.core.type.TypeReference
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -47,63 +45,15 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             nyttVarsel
         }
 
-    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
-        database.getIkkeJournalforteVarsler()
+    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> = database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> =
-        database.getIkkePubliserteVarsler()
+    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> = database.getIkkePubliserteVarsler()
 
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
 
     fun setPublished(varsel: AktivitetskravVarsel) =
         database.setPublished(varsel)
-
-    suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
-        withContext(Dispatchers.IO) {
-            val expiredVarsler = database.connection.run {
-                prepareStatement(Queries.selectExpiredVarsler).run {
-                    executeQuery()
-                        .toList { toPAktivitetskravVarsel() }
-                }
-            }
-            val totalRowsAffected = updateExpiredVarselPublishedAt(expiredVarsler)
-            if (totalRowsAffected != expiredVarsler.size) {
-                throw SQLException("Expected ${expiredVarsler.size} of rows to be updated, got update count $totalRowsAffected")
-            }
-            expiredVarsler
-        }
-
-    private fun updateExpiredVarselPublishedAt(
-        expiredVarsler: List<PAktivitetskravVarsel>
-    ): Int = database.connection.run {
-        val totalRowsAffected = expiredVarsler.sumOf { expiredVarsel ->
-            prepareStatement(Queries.setExpiredVarselPublishedAt).run {
-                setObject(1, nowUTC())
-                setString(2, expiredVarsel.uuid.toString())
-                executeUpdate()
-            }
-        }
-        commit()
-        totalRowsAffected
-    }
-}
-
-private object Queries {
-    const val selectExpiredVarsler =
-        """
-            SELECT *
-            FROM aktivitetskrav_varsel
-            WHERE created_at <= (NOW() - INTERVAL '4 weeks')
-                AND expired_varsel_published_at IS NULL
-        """
-
-    const val setExpiredVarselPublishedAt =
-        """
-            UPDATE aktivitetskrav_varsel
-            SET expired_varsel_published_at = ?
-            WHERE uuid = ?
-        """
 }
 
 private const val queryCreateAktivitetskravVarsel =
@@ -181,19 +131,13 @@ private const val queryGetIkkeJournalforteVarsler = """
     WHERE av.journalpost_id IS NULL
 """
 
-private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
-    this.connection.use { connection ->
+private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> {
+    return this.connection.use { connection ->
         connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
-            it.executeQuery()
-                .toList {
-                    Triple(
-                        PersonIdent(getString("personident")),
-                        toPAktivitetskravVarsel(),
-                        getBytes("pdf")
-                    )
-                }
+            it.executeQuery().toList { Triple(PersonIdent(getString("personident")), toPAktivitetskravVarsel(), getBytes("pdf")) }
         }
     }
+}
 
 private const val queryUpdateJournalpostId = """
     UPDATE aktivitetskrav_varsel
@@ -275,8 +219,6 @@ fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
             object : TypeReference<List<DocumentComponentDTO>>() {}
         ),
         publishedAt = getObject("published_at", OffsetDateTime::class.java),
-        expiredVarselPublishedAt = getObject("expired_varsel_published_at", OffsetDateTime::class.java),
-        svarfrist = getDate("svarfrist").toLocalDate(),
     )
 
 private fun ResultSet.toPAktivitetskravVarselPdf(): PAktivitetskravVarselPdf =
