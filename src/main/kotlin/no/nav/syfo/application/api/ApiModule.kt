@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.api.registerAktivitetskravApi
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
@@ -19,6 +20,7 @@ fun Application.apiModule(
     environment: Environment,
     wellKnownInternalAzureAD: WellKnown,
     aktivitetskravService: AktivitetskravService,
+    aktivitetskravVarselService: AktivitetskravVarselService,
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
 ) {
     installMetrics()
@@ -45,6 +47,7 @@ fun Application.apiModule(
             registerAktivitetskravApi(
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
                 aktivitetskravService = aktivitetskravService,
+                aktivitetskravVarselService = aktivitetskravVarselService,
             )
         }
     }

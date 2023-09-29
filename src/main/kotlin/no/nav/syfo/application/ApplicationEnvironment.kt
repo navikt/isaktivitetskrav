@@ -64,6 +64,11 @@ data class Environment(
             baseUrl = getEnvVar("DOKARKIV_URL"),
             clientId = getEnvVar("DOKARKIV_CLIENT_ID"),
         ),
+        krr = ClientEnvironment(
+            baseUrl = getEnvVar("KRR_URL"),
+            clientId = getEnvVar("KRR_CLIENT_ID"),
+        )
+
     ),
 )
 

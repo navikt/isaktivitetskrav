@@ -56,6 +56,8 @@ spec:
       rules:
         - application: syfo-tilgangskontroll
         - application: isaktivitetskravpdfgen
+        - application: digdir-krr-proxy
+          namespace: team-rocket
   gcp:
     sqlInstances:
       - type: POSTGRES_14
@@ -92,6 +94,10 @@ spec:
       value: "dev-fss.teamdokumenthandtering.dokarkiv-q1"
     - name: DOKARKIV_URL
       value: "https://dokarkiv.dev-fss-pub.nais.io"
+    - name: KRR_CLIENT_ID
+      value: "dev-gcp.team-rocket.digdir-krr-proxy"
+    - name: KRR_URL
+      value: "http://digdir-krr-proxy.team-rocket"
     - name: OUTDATED_AKTIVITETSKRAV_CUTOFF
       value: "2023-06-01"
     - name: OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED

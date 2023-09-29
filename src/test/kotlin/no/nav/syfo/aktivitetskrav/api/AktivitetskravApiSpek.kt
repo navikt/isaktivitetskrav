@@ -6,7 +6,6 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskravVurderinger
 import no.nav.syfo.aktivitetskrav.domain.*
@@ -57,7 +56,6 @@ class AktivitetskravApiSpek : Spek({
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
             val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
-            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
 
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,
@@ -69,9 +67,6 @@ class AktivitetskravApiSpek : Spek({
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
-                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-                pdfGenClient = externalMockEnvironment.pdfgenClient,
-                pdlClient = externalMockEnvironment.pdlClient,
             )
 
             beforeEachTest {

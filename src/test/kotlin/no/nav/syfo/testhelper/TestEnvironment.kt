@@ -57,6 +57,10 @@ fun testEnvironment() = Environment(
         isaktivitetskravpdfgen = OpenClientEnvironment(
             baseUrl = "isaktivitetskravpdfgenUrl",
         ),
+        krr = ClientEnvironment(
+            baseUrl = "krrUrl",
+            clientId = "kkrClientId",
+        )
     ),
     arenaCutoff = LocalDate.now().minusDays(365),
     electorPath = "electorPath",

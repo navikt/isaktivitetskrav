@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -49,11 +50,18 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
             kafkaProducer = aktivitetskravVarselKafkaProducer,
         )
-
-        val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
+        val aktivitetskravVarselService = AktivitetskravVarselService(
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+            aktivitetskravVurderingProducer = mockk(),
             arbeidstakervarselProducer = arbeidstakerVarselProducer,
             aktivitetskravVarselProducer = aktivitetskravVarselProducer,
+            pdfGenClient = externalMockEnvironment.pdfgenClient,
+            pdlClient = externalMockEnvironment.pdlClient,
+            krrClient = externalMockEnvironment.krrClient,
+        )
+
+        val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
+            aktivitetskravVarselService = aktivitetskravVarselService,
         )
 
         fun createForhandsvarsel(
