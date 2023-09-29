@@ -13,9 +13,11 @@ import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
 import java.sql.Connection
+import java.sql.Date
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -117,8 +119,10 @@ private const val queryCreateAktivitetskravVarsel =
         updated_at,
         aktivitetskrav_vurdering_id,
         document,
-        journalpost_id
-    ) values (DEFAULT, ?, ?, ?, ?, ?::jsonb, ?)
+        journalpost_id,
+        svarfrist,
+        expired_varsel_published_at
+    ) values (DEFAULT, ?, ?, ?, ?, ?::jsonb, ?, ?, ?)
     RETURNING *
     """
 
@@ -133,6 +137,8 @@ private fun Connection.createAktivitetskravVarsel(
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
+        it.setDate(7, Date.valueOf(LocalDate.now().plusWeeks(3)))
+        it.setNull(8, Types.TIMESTAMP_WITH_TIMEZONE)
         it.executeQuery().toList { toPAktivitetskravVarsel() }
     }
 
@@ -277,6 +283,8 @@ fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
             object : TypeReference<List<DocumentComponentDTO>>() {}
         ),
         publishedAt = getObject("published_at", OffsetDateTime::class.java),
+        svarfrist = getDate("svarfrist").toLocalDate(),
+        expiredVarselPublishedAt = getObject("expired_varsel_published_at", OffsetDateTime::class.java),
     )
 
 private fun ResultSet.toPAktivitetskravVarselPdf(): PAktivitetskravVarselPdf =
