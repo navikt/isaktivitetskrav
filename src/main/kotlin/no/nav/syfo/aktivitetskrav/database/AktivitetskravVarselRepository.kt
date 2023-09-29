@@ -1,6 +1,8 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import com.fasterxml.jackson.core.type.TypeReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -45,15 +47,65 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             nyttVarsel
         }
 
-    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> = database.getIkkeJournalforteVarsler()
+    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
+        database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> = database.getIkkePubliserteVarsler()
+    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> =
+        database.getIkkePubliserteVarsler()
 
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
 
     fun setPublished(varsel: AktivitetskravVarsel) =
         database.setPublished(varsel)
+
+    suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
+        withContext(Dispatchers.IO) {
+            val expiredVarsler = database.connection.run {
+                prepareStatement(Queries.selectExpiredVarsler).run {
+                    executeQuery()
+                        .toList { toPAktivitetskravVarsel() }
+                }
+            }
+            expiredVarsler
+        }
+
+    suspend fun updateExpiredVarselPublishedAt(
+        publishedExpiredVarsler: List<PAktivitetskravVarsel>
+    ): Int =
+        withContext(Dispatchers.IO) {
+            database.connection.run {
+                val totalRowsAffected = publishedExpiredVarsler.sumOf { expiredVarsel ->
+                    prepareStatement(Queries.setExpiredVarselPublishedAt).run {
+                        setObject(1, nowUTC())
+                        setString(2, expiredVarsel.uuid.toString())
+                        executeUpdate()
+                    }
+                }
+                if (totalRowsAffected != publishedExpiredVarsler.size) {
+                    throw SQLException("Expected ${publishedExpiredVarsler.size} of rows to be updated, got update count $totalRowsAffected")
+                }
+                commit()
+                totalRowsAffected
+            }
+        }
+}
+
+private object Queries {
+    const val selectExpiredVarsler =
+        """
+            SELECT *
+            FROM aktivitetskrav_varsel
+            WHERE created_at <= (NOW() - INTERVAL '4 weeks')
+                AND expired_varsel_published_at IS NULL
+        """
+
+    const val setExpiredVarselPublishedAt =
+        """
+            UPDATE aktivitetskrav_varsel
+            SET expired_varsel_published_at = ?
+            WHERE uuid = ?
+        """
 }
 
 private const val queryCreateAktivitetskravVarsel =
@@ -131,13 +183,19 @@ private const val queryGetIkkeJournalforteVarsler = """
     WHERE av.journalpost_id IS NULL
 """
 
-private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> {
-    return this.connection.use { connection ->
-        connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
-            it.executeQuery().toList { Triple(PersonIdent(getString("personident")), toPAktivitetskravVarsel(), getBytes("pdf")) }
+private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
+    this.connection.use { connection ->
+        connection.prepareStatement(queryGetIkkeJournalforteVarsler).run {
+            executeQuery()
+                .toList {
+                    Triple(
+                        PersonIdent(getString("personident")),
+                        toPAktivitetskravVarsel(),
+                        getBytes("pdf")
+                    )
+                }
         }
     }
-}
 
 private const val queryUpdateJournalpostId = """
     UPDATE aktivitetskrav_varsel
