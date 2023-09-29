@@ -17,9 +17,7 @@ import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.util.*
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldNotBeEqualTo
+import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -185,6 +183,7 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.GRADERT)
+                            latestVurdering.varsel.shouldBeNull()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
@@ -193,6 +192,7 @@ class AktivitetskravApiSpek : Spek({
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
                                 VurderingArsak.INFORMASJON_BEHANDLER
                             )
+                            oldestVurdering.varsel.shouldBeNull()
                         }
                     }
 
@@ -386,6 +386,20 @@ class AktivitetskravApiSpek : Spek({
                             val createdForhandsvarsel =
                                 objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
                             createdForhandsvarsel.document shouldBeEqualTo forhandsvarselDTO.document
+                        }
+
+                        with(
+                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val responseDTOList =
+                                objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
+                            val aktivitetskravResponseDTO = responseDTOList.first()
+                            aktivitetskravResponseDTO.vurderinger.first().varsel.shouldNotBeNull()
                         }
                     }
                 }

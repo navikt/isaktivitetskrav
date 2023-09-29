@@ -8,7 +8,8 @@ import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.toResponseDTOList
+import no.nav.syfo.aktivitetskrav.domain.toResponseDTO
+import no.nav.syfo.aktivitetskrav.domain.toVurderingResponseDto
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
@@ -38,9 +39,16 @@ fun Route.registerAktivitetskravApi(
         }
         get(aktivitetskravApiPersonidentPath) {
             val personIdent = call.personIdent()
-            val responseDTOList = aktivitetskravService.getAktivitetskravAfterCutoff(
+            val aktivitetskravAfterCutoff = aktivitetskravService.getAktivitetskravAfterCutoff(
                 personIdent = personIdent,
-            ).toResponseDTOList()
+            )
+            val responseDTOList = aktivitetskravAfterCutoff.map { aktivitetskrav ->
+                val vurderingResponseDTOS = aktivitetskrav.vurderinger.map { vurdering ->
+                    val varsel = aktivitetskravVarselService.getVarsel(vurdering.uuid)
+                    vurdering.toVurderingResponseDto(varsel)
+                }
+                aktivitetskrav.toResponseDTO(vurderingResponseDTOS)
+            }
 
             call.respond(responseDTOList)
         }

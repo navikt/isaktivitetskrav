@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.domain
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.aktivitetskrav.api.VarselResponseDTO
 import no.nav.syfo.util.nowUTC
 import java.time.OffsetDateTime
 import java.util.*
@@ -35,4 +36,9 @@ data class AktivitetskravVarsel internal constructor(
             isPublished = published,
         )
     }
+
+    fun toVarselResponseDTO() = VarselResponseDTO(
+        uuid = this.uuid.toString(),
+        createdAt = this.createdAt.toLocalDateTime()
+    )
 }
