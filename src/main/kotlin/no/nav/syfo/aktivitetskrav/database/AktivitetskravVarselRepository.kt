@@ -98,8 +98,8 @@ private object Queries {
         """
             SELECT *
             FROM aktivitetskrav_varsel
-            WHERE created_at <= (NOW() - INTERVAL '4 weeks')
-                AND expired_varsel_published_at IS NULL
+            WHERE expired_varsel_published_at IS NULL
+                AND svarfrist <= (NOW() - INTERVAL '1 weeks')
         """
 
     const val setExpiredVarselPublishedAt =
