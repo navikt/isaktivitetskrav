@@ -43,11 +43,11 @@ fun Route.registerAktivitetskravApi(
                 personIdent = personIdent,
             )
             val responseDTOList = aktivitetskravAfterCutoff.map { aktivitetskrav ->
-                val vurderingResponseDTOS = aktivitetskrav.vurderinger.map { vurdering ->
+                val vurderingResponseDTOs = aktivitetskrav.vurderinger.map { vurdering ->
                     val varsel = aktivitetskravVarselService.getVarsel(vurdering.uuid)
                     vurdering.toVurderingResponseDto(varsel)
                 }
-                aktivitetskrav.toResponseDTO(vurderingResponseDTOS)
+                aktivitetskrav.toResponseDTO(vurderingResponseDTOs)
             }
 
             call.respond(responseDTOList)
