@@ -25,24 +25,25 @@ import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 import java.util.concurrent.Future
 
-class AktivitetskravServiceSpek : Spek({
+class AktivitetskravVarselServiceSpek : Spek({
 
-    describe(AktivitetskravServiceSpek::class.java.simpleName) {
+    describe(AktivitetskravVarselService::class.java.simpleName) {
         with(TestApplicationEngine()) {
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
             val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+            val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer)
 
-            val aktivitetskravService = AktivitetskravService(
-                aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer),
-                database = database,
-                arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+            val aktivitetskravVarselService = AktivitetskravVarselService(
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                arbeidstakervarselProducer = mockk(),
+                aktivitetskravVarselProducer = mockk(),
                 pdfGenClient = externalMockEnvironment.pdfgenClient,
                 pdlClient = externalMockEnvironment.pdlClient,
                 krrClient = externalMockEnvironment.krrClient,
+                aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             )
 
             beforeEachTest {
@@ -72,7 +73,7 @@ class AktivitetskravServiceSpek : Spek({
                     database.createAktivitetskrav(aktivitetskrav)
 
                     runBlocking {
-                        val varsel = aktivitetskravService.sendForhandsvarsel(
+                        val varsel = aktivitetskravVarselService.sendForhandsvarsel(
                             aktivitetskrav = aktivitetskrav,
                             veilederIdent = UserConstants.VEILEDER_IDENT,
                             personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
@@ -97,14 +98,14 @@ class AktivitetskravServiceSpek : Spek({
                     val mockedPdfGenClient = mockk<PdfGenClient>()
                     val expectedForhandsvarselPdfRequestBody = generateForhandsvarselPdfDTO(forhandsvarselDTO)
                     database.createAktivitetskrav(aktivitetskrav)
-                    val aktivitetskravServiceWithMockedPdfGenClient = AktivitetskravService(
-                        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer),
-                        database = database,
-                        arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                    val aktivitetskravVarselServiceWithMockedPdfGenClient = AktivitetskravVarselService(
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                        arbeidstakervarselProducer = mockk(),
+                        aktivitetskravVarselProducer = mockk(),
                         pdfGenClient = mockedPdfGenClient,
                         pdlClient = externalMockEnvironment.pdlClient,
                         krrClient = externalMockEnvironment.krrClient,
+                        aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                     )
 
                     coEvery {
@@ -115,7 +116,7 @@ class AktivitetskravServiceSpek : Spek({
                     } returns UserConstants.PDF_FORHANDSVARSEL
 
                     runBlocking {
-                        aktivitetskravServiceWithMockedPdfGenClient.sendForhandsvarsel(
+                        aktivitetskravVarselServiceWithMockedPdfGenClient.sendForhandsvarsel(
                             aktivitetskrav = aktivitetskrav,
                             veilederIdent = UserConstants.VEILEDER_IDENT,
                             personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,

@@ -3,12 +3,10 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
-import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.createAktivitetskrav
@@ -34,10 +32,6 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
         database = database,
         aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer),
         arenaCutoff = arenaCutoff,
-        aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database),
-        pdfGenClient = mockk<PdfGenClient>(),
-        pdlClient = externalMockEnvironment.pdlClient,
-        krrClient = externalMockEnvironment.krrClient,
     )
     val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
         outdatedCutoff = outdatedCutoff,
