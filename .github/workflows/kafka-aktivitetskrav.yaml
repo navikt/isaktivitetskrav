@@ -31,12 +31,12 @@ jobs:
           RESOURCE: .nais/kafka/aktivitetskrav-varsel.yaml
           VARS: .nais/kafka/dev.json
 
-      - name: Deploy aktivitetskrav-varsel-utgatt topic to dev
+      - name: Deploy aktivitetskrav-expired-varsel topic to dev
         uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
-          RESOURCE: .nais/kafka/aktivitetskrav-varsel-utgatt.yaml
+          RESOURCE: .nais/kafka/aktivitetskrav-expired-varsel.yaml
           VARS: .nais/kafka/dev.json
 
   deploy-kafka-aktivitetskrav-prod:
@@ -62,10 +62,10 @@ jobs:
           RESOURCE: .nais/kafka/aktivitetskrav-varsel.yaml
           VARS: .nais/kafka/prod.json
 
-      - name: Deploy aktivitetskrav-varsel-utgatt topic to prod
+      - name: Deploy aktivitetskrav-expired-varsel topic to prod
         uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
-          RESOURCE: .nais/kafka/aktivitetskrav-varsel-utgatt.yaml
-          VARS: .nais/kafka/dev.json
+          RESOURCE: .nais/kafka/aktivitetskrav-expired-varsel.yaml
+          VARS: .nais/kafka/prod.json
