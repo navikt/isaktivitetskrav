@@ -101,4 +101,4 @@ spec:
     - name: OUTDATED_AKTIVITETSKRAV_CUTOFF
       value: "2023-06-01"
     - name: OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED
-      value: "false"
+      value: "true"
