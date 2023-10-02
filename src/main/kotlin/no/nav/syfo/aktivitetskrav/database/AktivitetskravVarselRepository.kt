@@ -214,7 +214,7 @@ private fun DatabaseInterface.setPublished(varsel: AktivitetskravVarsel) {
     }
 }
 
-private const val queryGetVarselWithVurderingId = """
+private const val queryGetVarselWithVurderingUuid = """
     SELECT av.* 
     FROM aktivitetskrav_varsel av 
     INNER JOIN aktivitetskrav_vurdering avu
@@ -224,7 +224,7 @@ private const val queryGetVarselWithVurderingId = """
 
 private fun DatabaseInterface.getVarselForVurdering(vurderingUuid: UUID): PAktivitetskravVarsel? {
     return this.connection.use { connection ->
-        connection.prepareStatement(queryGetVarselWithVurderingId).use {
+        connection.prepareStatement(queryGetVarselWithVurderingUuid).use {
             it.setString(1, vurderingUuid.toString())
             it.executeQuery().toList { toPAktivitetskravVarsel() }
         }.firstOrNull()
