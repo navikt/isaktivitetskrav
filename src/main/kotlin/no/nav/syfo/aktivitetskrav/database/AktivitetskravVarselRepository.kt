@@ -135,7 +135,7 @@ private fun Connection.createAktivitetskravVarsel(
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
-        it.setDate(7, Date.valueOf(LocalDate.now().plusWeeks(3)))
+        it.setDate(7, Date.valueOf(varsel.svarfrist))
         it.setNull(8, Types.TIMESTAMP_WITH_TIMEZONE)
         it.executeQuery().toList { toPAktivitetskravVarsel() }
     }
@@ -189,8 +189,8 @@ private const val queryGetIkkeJournalforteVarsler = """
 
 private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
     this.connection.use { connection ->
-        connection.prepareStatement(queryGetIkkeJournalforteVarsler).run {
-            executeQuery()
+        connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
+            it.executeQuery()
                 .toList {
                     Triple(
                         PersonIdent(getString("personident")),
