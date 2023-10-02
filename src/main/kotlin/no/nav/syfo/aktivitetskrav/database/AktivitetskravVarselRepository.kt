@@ -63,9 +63,9 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
         withContext(Dispatchers.IO) {
-            val expiredVarsler = database.connection.run {
-                prepareStatement(Queries.selectExpiredVarsler).run {
-                    executeQuery()
+            val expiredVarsler = database.connection.use { connection ->
+                connection.prepareStatement(Queries.selectExpiredVarsler).use {
+                    it.executeQuery()
                         .toList { toPAktivitetskravVarsel() }
                 }
             }
@@ -73,22 +73,20 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
         }
 
     suspend fun updateExpiredVarselPublishedAt(
-        publishedExpiredVarsler: List<PAktivitetskravVarsel>
+        publishedExpiredVarsel: PAktivitetskravVarsel
     ): Int =
         withContext(Dispatchers.IO) {
-            database.connection.run {
-                val totalRowsAffected = publishedExpiredVarsler.sumOf { expiredVarsel ->
-                    prepareStatement(Queries.setExpiredVarselPublishedAt).run {
-                        setObject(1, nowUTC())
-                        setString(2, expiredVarsel.uuid.toString())
-                        executeUpdate()
-                    }
+            database.connection.use { connection ->
+                val rowsAffected = connection.prepareStatement(Queries.setExpiredVarselPublishedAt).use {
+                    it.setObject(1, nowUTC())
+                    it.setString(2, publishedExpiredVarsel.uuid.toString())
+                    it.executeUpdate()
                 }
-                if (totalRowsAffected != publishedExpiredVarsler.size) {
-                    throw SQLException("Expected ${publishedExpiredVarsler.size} of rows to be updated, got update count $totalRowsAffected")
+                if (rowsAffected != 1) {
+                    throw SQLException("Expected one row to be updated, got update count $rowsAffected")
                 }
-                commit()
-                totalRowsAffected
+                connection.commit()
+                rowsAffected
             }
         }
 }
