@@ -19,6 +19,7 @@ class AktivitetskravVarselService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val arbeidstakervarselProducer: ArbeidstakervarselProducer,
     private val aktivitetskravVarselProducer: AktivitetskravVarselProducer,
+    private val expiredVarselProducer: ExpiredVarselProducer,
     private val pdfGenClient: PdfGenClient,
     private val pdlClient: PdlClient,
     private val krrClient: KRRClient,
