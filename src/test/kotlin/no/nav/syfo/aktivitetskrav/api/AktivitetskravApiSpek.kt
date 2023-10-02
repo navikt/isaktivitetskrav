@@ -399,7 +399,9 @@ class AktivitetskravApiSpek : Spek({
                             val responseDTOList =
                                 objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
                             val aktivitetskravResponseDTO = responseDTOList.first()
-                            aktivitetskravResponseDTO.vurderinger.first().varsel.shouldNotBeNull()
+                            val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
+                            varselResponseDTO.shouldNotBeNull()
+                            varselResponseDTO.svarFrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate().plusWeeks(3)
                         }
                     }
                 }
