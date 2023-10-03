@@ -57,6 +57,8 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     fun setPublished(varsel: AktivitetskravVarsel) =
         database.setPublished(varsel)
 
+    fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
+
     suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
         withContext(Dispatchers.IO) {
             val expiredVarsler = database.connection.use { connection ->
@@ -261,6 +263,23 @@ private fun DatabaseInterface.setPublished(varsel: AktivitetskravVarsel) {
             }
         }
         connection.commit()
+    }
+}
+
+private const val queryGetVarselWithVurderingUuid = """
+    SELECT av.* 
+    FROM aktivitetskrav_varsel av 
+    INNER JOIN aktivitetskrav_vurdering avu
+    ON av.aktivitetskrav_vurdering_id = avu.id
+    WHERE avu.uuid = ?
+"""
+
+private fun DatabaseInterface.getVarselForVurdering(vurderingUuid: UUID): PAktivitetskravVarsel? {
+    return this.connection.use { connection ->
+        connection.prepareStatement(queryGetVarselWithVurderingUuid).use {
+            it.setString(1, vurderingUuid.toString())
+            it.executeQuery().toList { toPAktivitetskravVarsel() }
+        }.firstOrNull()
     }
 }
 

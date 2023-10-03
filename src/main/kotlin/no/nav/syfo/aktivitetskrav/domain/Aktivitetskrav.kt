@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.domain
 
 import no.nav.syfo.aktivitetskrav.api.AktivitetskravResponseDTO
+import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
@@ -120,15 +121,14 @@ fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
 
 fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 
-fun List<Aktivitetskrav>.toResponseDTOList() = this.map {
+fun Aktivitetskrav.toResponseDTO(vurderinger: List<AktivitetskravVurderingResponseDTO>): AktivitetskravResponseDTO =
     AktivitetskravResponseDTO(
-        uuid = it.uuid.toString(),
-        createdAt = it.createdAt.toLocalDateTime(),
-        status = it.status,
-        stoppunktAt = it.stoppunktAt,
-        vurderinger = it.vurderinger.toVurderingResponseDTOs()
+        uuid = uuid.toString(),
+        createdAt = createdAt.toLocalDateTime(),
+        status = status,
+        stoppunktAt = stoppunktAt,
+        vurderinger = vurderinger
     )
-}
 
 internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean {
     val updatedStoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)

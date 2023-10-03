@@ -93,10 +93,7 @@ data class AktivitetskravVurdering private constructor(
 
 fun AktivitetskravVurdering.arsakerToString() = this.arsaker.joinToString(",")
 
-fun List<AktivitetskravVurdering>.toVurderingResponseDTOs(): List<AktivitetskravVurderingResponseDTO> =
-    this.map { it.toVurderingResponseDto() }
-
-fun AktivitetskravVurdering.toVurderingResponseDto(): AktivitetskravVurderingResponseDTO =
+fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?): AktivitetskravVurderingResponseDTO =
     AktivitetskravVurderingResponseDTO(
         uuid = this.uuid.toString(),
         createdAt = this.createdAt.toLocalDateTime(),
@@ -105,4 +102,5 @@ fun AktivitetskravVurdering.toVurderingResponseDto(): AktivitetskravVurderingRes
         beskrivelse = this.beskrivelse,
         arsaker = this.arsaker,
         frist = this.frist,
+        varsel = varsel?.toVarselResponseDTO()
     )
