@@ -31,6 +31,7 @@ class AktivitetskravRepositorySpek : Spek({
             }
 
             describe("Forhåndsvarsel") {
+                val tenWeeksAgo = LocalDate.now().minusWeeks(10)
                 val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                 val newAktivitetskrav = createAktivitetskravNy(
                     tilfelleStart = LocalDate.now(),
@@ -81,7 +82,6 @@ class AktivitetskravRepositorySpek : Spek({
                 }
 
                 it("Should retrieve expired varsler when svarfrist is one week ago or more") {
-                    val tenWeeksAgo = LocalDate.now().minusWeeks(10)
                     val aktivitetskravList =
                         createNAktivitetskrav(5, tenWeeksAgo)
                             .map {
@@ -114,6 +114,31 @@ class AktivitetskravRepositorySpek : Spek({
                     expiredVarsler.any {
                         it.svarfrist == LocalDate.now().minusWeeks(1)
                     } shouldBe true
+                }
+
+                it("Should update varsel") {
+                    val aktivitetskrav = createAktivitetskravNy(tenWeeksAgo)
+                    val vurdering = AktivitetskravVurdering.create(
+                        status = AktivitetskravStatus.FORHANDSVARSEL,
+                        createdBy = UserConstants.VEILEDER_IDENT,
+                        beskrivelse = "En test vurdering",
+                        arsaker = emptyList(),
+                        frist = null,
+                    )
+                    val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                    database.createAktivitetskrav(updatedAktivitetskrav)
+                    val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                    aktivitetskravVarselRepository.create(
+                        aktivitetskrav = updatedAktivitetskrav,
+                        varsel = varsel,
+                        pdf = pdf,
+                    )
+                    val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
+                    val rowsUpdated =
+                        runBlocking { aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarsler.first()) }
+
+                    rowsUpdated shouldBe 1
+                    runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() } shouldBeEqualTo emptyList()
                 }
             }
         }
