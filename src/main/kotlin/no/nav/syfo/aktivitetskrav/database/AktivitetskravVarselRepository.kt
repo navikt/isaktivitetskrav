@@ -1,6 +1,8 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import com.fasterxml.jackson.core.type.TypeReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -10,12 +12,8 @@ import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
-import java.sql.Connection
+import java.sql.*
 import java.sql.Date
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Types
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -47,9 +45,11 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             nyttVarsel
         }
 
-    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> = database.getIkkeJournalforteVarsler()
+    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
+        database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> = database.getIkkePubliserteVarsler()
+    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> =
+        database.getIkkePubliserteVarsler()
 
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
@@ -58,6 +58,52 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
         database.setPublished(varsel)
 
     fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
+
+    suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
+        withContext(Dispatchers.IO) {
+            val expiredVarsler = database.connection.use { connection ->
+                connection.prepareStatement(Queries.selectExpiredVarsler).use {
+                    it.executeQuery()
+                        .toList { toPAktivitetskravVarsel() }
+                }
+            }
+            expiredVarsler
+        }
+
+    suspend fun updateExpiredVarselPublishedAt(
+        publishedExpiredVarsel: PAktivitetskravVarsel
+    ): Int =
+        withContext(Dispatchers.IO) {
+            database.connection.use { connection ->
+                val rowsAffected = connection.prepareStatement(Queries.setExpiredVarselPublishedAt).use {
+                    it.setObject(1, nowUTC())
+                    it.setString(2, publishedExpiredVarsel.uuid.toString())
+                    it.executeUpdate()
+                }
+                if (rowsAffected != 1) {
+                    throw SQLException("Expected one row to be updated, got update count $rowsAffected")
+                }
+                connection.commit()
+                rowsAffected
+            }
+        }
+}
+
+private object Queries {
+    const val selectExpiredVarsler =
+        """
+            SELECT *
+            FROM aktivitetskrav_varsel
+            WHERE expired_varsel_published_at IS NULL
+                AND svarfrist <= (NOW() - INTERVAL '1 weeks')
+        """
+
+    const val setExpiredVarselPublishedAt =
+        """
+            UPDATE aktivitetskrav_varsel
+            SET expired_varsel_published_at = ?
+            WHERE uuid = ?
+        """
 }
 
 private const val queryCreateAktivitetskravVarsel =
@@ -87,7 +133,7 @@ private fun Connection.createAktivitetskravVarsel(
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
-        it.setDate(7, Date.valueOf(LocalDate.now().plusWeeks(3)))
+        it.setDate(7, Date.valueOf(varsel.svarfrist))
         it.setNull(8, Types.TIMESTAMP_WITH_TIMEZONE)
         it.executeQuery().toList { toPAktivitetskravVarsel() }
     }
@@ -139,13 +185,19 @@ private const val queryGetIkkeJournalforteVarsler = """
     WHERE av.journalpost_id IS NULL
 """
 
-private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> {
-    return this.connection.use { connection ->
+private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
+    this.connection.use { connection ->
         connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
-            it.executeQuery().toList { Triple(PersonIdent(getString("personident")), toPAktivitetskravVarsel(), getBytes("pdf")) }
+            it.executeQuery()
+                .toList {
+                    Triple(
+                        PersonIdent(getString("personident")),
+                        toPAktivitetskravVarsel(),
+                        getBytes("pdf")
+                    )
+                }
         }
     }
-}
 
 private const val queryUpdateJournalpostId = """
     UPDATE aktivitetskrav_varsel

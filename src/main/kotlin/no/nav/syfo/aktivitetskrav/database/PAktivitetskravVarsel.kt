@@ -23,6 +23,7 @@ data class PAktivitetskravVarsel(
         createdAt = createdAt,
         journalpostId = journalpostId,
         document = document,
-        published = publishedAt != null,
+        svarfrist = svarfrist,
+        isPublished = publishedAt != null,
     )
 }
