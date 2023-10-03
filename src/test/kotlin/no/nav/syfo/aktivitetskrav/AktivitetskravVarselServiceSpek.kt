@@ -32,24 +32,25 @@ class AktivitetskravVarselServiceSpek : Spek({
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
-            val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+            val kafkaVurderingProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-            val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducer)
+            val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaVurderingProducer)
 
             val aktivitetskravVarselService = AktivitetskravVarselService(
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 arbeidstakervarselProducer = mockk(),
                 aktivitetskravVarselProducer = mockk(),
+                expiredVarselProducer = mockk(),
                 pdfGenClient = externalMockEnvironment.pdfgenClient,
                 pdlClient = externalMockEnvironment.pdlClient,
                 krrClient = externalMockEnvironment.krrClient,
-                aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             )
 
             beforeEachTest {
-                clearMocks(kafkaProducer)
+                clearMocks(kafkaVurderingProducer)
                 coEvery {
-                    kafkaProducer.send(any())
+                    kafkaVurderingProducer.send(any())
                 } returns mockk<Future<RecordMetadata>>(relaxed = true)
             }
 
@@ -87,7 +88,7 @@ class AktivitetskravVarselServiceSpek : Spek({
 
                     val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                     verify(exactly = 1) {
-                        kafkaProducer.send(capture(producerRecordSlot))
+                        kafkaVurderingProducer.send(capture(producerRecordSlot))
                     }
 
                     val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
@@ -102,6 +103,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                         arbeidstakervarselProducer = mockk(),
                         aktivitetskravVarselProducer = mockk(),
+                        expiredVarselProducer = mockk(),
                         pdfGenClient = mockedPdfGenClient,
                         pdlClient = externalMockEnvironment.pdlClient,
                         krrClient = externalMockEnvironment.krrClient,
