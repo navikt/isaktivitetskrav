@@ -1,7 +1,5 @@
 package no.nav.syfo.aktivitetskrav.kafka
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -23,7 +21,6 @@ class ExpiredVarselProducer(private val producer: KafkaProducer<String, ExpiredV
             log.error("Exception was thrown when attempting to publish expired varsel: ${e.message}")
             throw e
         }
-
 
     companion object {
         private const val TOPIC = "teamsykefravr.aktivitetskrav-expired-varsel"
