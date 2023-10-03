@@ -1,7 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
 import java.time.LocalDate
@@ -72,4 +71,31 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
     )
 
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
+}
+
+fun createNAktivitetskrav(
+    n: Int,
+    tilfelleStart: LocalDate,
+    personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+): List<Aktivitetskrav> {
+    val allAktivitetskrav = mutableListOf<Aktivitetskrav>()
+    for (i in 1..n) {
+        val newAktivitetskrav = Aktivitetskrav.ny(
+            personIdent,
+            tilfelleStart
+        )
+        allAktivitetskrav.add(newAktivitetskrav)
+    }
+    return allAktivitetskrav.toList()
+}
+
+fun createVarsler(): List<AktivitetskravVarsel> {
+    val document = generateDocumentComponentDTO(fritekst = "Et test varsel")
+    return listOf(
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1).minusDays(1)),
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusDays(6)),
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now()),
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusDays(1)),
+    )
 }

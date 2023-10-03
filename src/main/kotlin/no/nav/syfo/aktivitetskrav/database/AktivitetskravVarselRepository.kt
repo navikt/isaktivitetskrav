@@ -12,12 +12,8 @@ import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
-import java.sql.Connection
+import java.sql.*
 import java.sql.Date
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Types
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -60,6 +56,8 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     fun setPublished(varsel: AktivitetskravVarsel) =
         database.setPublished(varsel)
+
+    fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
 
     suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
         withContext(Dispatchers.IO) {
@@ -135,7 +133,7 @@ private fun Connection.createAktivitetskravVarsel(
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
-        it.setDate(7, Date.valueOf(LocalDate.now().plusWeeks(3)))
+        it.setDate(7, Date.valueOf(varsel.svarfrist))
         it.setNull(8, Types.TIMESTAMP_WITH_TIMEZONE)
         it.executeQuery().toList { toPAktivitetskravVarsel() }
     }
@@ -189,8 +187,8 @@ private const val queryGetIkkeJournalforteVarsler = """
 
 private fun DatabaseInterface.getIkkeJournalforteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
     this.connection.use { connection ->
-        connection.prepareStatement(queryGetIkkeJournalforteVarsler).run {
-            executeQuery()
+        connection.prepareStatement(queryGetIkkeJournalforteVarsler).use {
+            it.executeQuery()
                 .toList {
                     Triple(
                         PersonIdent(getString("personident")),
@@ -265,6 +263,23 @@ private fun DatabaseInterface.setPublished(varsel: AktivitetskravVarsel) {
             }
         }
         connection.commit()
+    }
+}
+
+private const val queryGetVarselWithVurderingUuid = """
+    SELECT av.* 
+    FROM aktivitetskrav_varsel av 
+    INNER JOIN aktivitetskrav_vurdering avu
+    ON av.aktivitetskrav_vurdering_id = avu.id
+    WHERE avu.uuid = ?
+"""
+
+private fun DatabaseInterface.getVarselForVurdering(vurderingUuid: UUID): PAktivitetskravVarsel? {
+    return this.connection.use { connection ->
+        connection.prepareStatement(queryGetVarselWithVurderingUuid).use {
+            it.setString(1, vurderingUuid.toString())
+            it.executeQuery().toList { toPAktivitetskravVarsel() }
+        }.firstOrNull()
     }
 }
 

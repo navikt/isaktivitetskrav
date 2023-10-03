@@ -21,4 +21,11 @@ data class AktivitetskravVurderingResponseDTO(
     val beskrivelse: String?,
     val arsaker: List<VurderingArsak>,
     val frist: LocalDate?,
+    val varsel: VarselResponseDTO?
+)
+
+data class VarselResponseDTO(
+    val uuid: String,
+    val createdAt: LocalDateTime,
+    val svarfrist: LocalDate,
 )
