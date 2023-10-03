@@ -21,7 +21,8 @@ class AktivitetskravVarselProducer(private val kafkaProducer: KafkaProducer<Stri
             varselUuid = varsel.uuid,
             createdAt = varsel.createdAt,
             journalpostId = varsel.journalpostId!!,
-            document = varsel.document
+            svarfrist = varsel.svarfrist,
+            document = varsel.document,
         )
         try {
             kafkaProducer.send(
