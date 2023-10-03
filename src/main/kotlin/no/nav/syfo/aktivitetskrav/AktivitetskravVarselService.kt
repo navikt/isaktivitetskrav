@@ -2,9 +2,7 @@ package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.client.krr.KRRClient
@@ -65,7 +63,8 @@ class AktivitetskravVarselService(
     }
 
     fun getVarsel(vurderingUuid: UUID): AktivitetskravVarsel? {
-        return aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = vurderingUuid)?.toAktivitetkravVarsel()
+        return aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = vurderingUuid)
+            ?.toAktivitetkravVarsel()
     }
 
     suspend fun sendForhandsvarsel(
@@ -98,5 +97,18 @@ class AktivitetskravVarselService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = updatedAktivitetskrav)
 
         return nyttForhandsvarsel.toAktivitetkravVarsel()
+    }
+
+    suspend fun publishExpiredVarsler(): List<ExpiredVarsel> {
+        val expiredVarslerToBePublished =
+            aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, varsel) ->
+                varsel.toExpiredVarsel(personIdent)
+            }
+        val publishedVarsler = expiredVarslerToBePublished.map { expiredVarsel ->
+            expiredVarselProducer.publishExpiredVarsel(expiredVarsel)
+            aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarsel)
+            expiredVarsel
+        }
+        return publishedVarsler
     }
 }

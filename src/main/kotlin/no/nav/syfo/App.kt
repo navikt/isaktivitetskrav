@@ -97,9 +97,7 @@ fun main() {
     )
     val expiredVarselProducer = ExpiredVarselProducer(
         producer = KafkaProducer(
-            kafkaAivenProducerConfig<ExpiredVarselSerializer>(
-                kafkaEnvironment = environment.kafka
-            )
+            kafkaAivenProducerConfig<ExpiredVarselSerializer>(kafkaEnvironment = environment.kafka)
         )
     )
 
