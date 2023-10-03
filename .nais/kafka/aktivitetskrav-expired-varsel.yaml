@@ -10,7 +10,7 @@ metadata:
   labels:
     team: teamsykefravr
 spec:
-  pool: { { kafkaPool } }
+  pool: {{ kafkaPool }}
   config:
     cleanupPolicy: delete
     minimumInSyncReplicas: 1
