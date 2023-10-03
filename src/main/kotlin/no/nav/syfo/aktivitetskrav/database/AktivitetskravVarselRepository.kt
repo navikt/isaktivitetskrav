@@ -12,12 +12,8 @@ import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
-import java.sql.Connection
+import java.sql.*
 import java.sql.Date
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Types
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 

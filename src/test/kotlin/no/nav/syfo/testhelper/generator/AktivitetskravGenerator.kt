@@ -1,10 +1,8 @@
 package no.nav.syfo.testhelper.generator
 
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import java.time.LocalDate
 
 fun createAktivitetskravNy(

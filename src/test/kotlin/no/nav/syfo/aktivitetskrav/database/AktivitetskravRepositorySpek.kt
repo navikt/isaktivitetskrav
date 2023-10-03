@@ -80,7 +80,7 @@ class AktivitetskravRepositorySpek : Spek({
                     newVarselPdf?.aktivitetskravVarselId shouldBeEqualTo newVarsel.id
                 }
 
-                it("Should retrieve expired varsler correctly") {
+                it("Should retrieve expired varsler when svarfrist is one week ago or more") {
                     val tenWeeksAgo = LocalDate.now().minusWeeks(10)
                     val aktivitetskravList =
                         createNAktivitetskrav(5, tenWeeksAgo)
