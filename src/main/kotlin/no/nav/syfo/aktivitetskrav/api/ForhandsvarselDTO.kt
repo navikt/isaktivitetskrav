@@ -12,6 +12,5 @@ data class ForhandsvarselDTO(
         createdBy = veilederIdent,
         beskrivelse = this.fritekst,
         arsaker = emptyList(),
-        frist = null,
     )
 }
