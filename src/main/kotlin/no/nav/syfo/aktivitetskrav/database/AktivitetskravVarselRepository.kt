@@ -137,7 +137,7 @@ private fun Connection.createAktivitetskravVarsel(
     val varsler = this.prepareStatement(queryCreateAktivitetskravVarsel).use {
         it.setString(1, varsel.uuid.toString())
         it.setObject(2, varsel.createdAt)
-        it.setObject(3, nowUTC())
+        it.setObject(3, varsel.createdAt)
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
