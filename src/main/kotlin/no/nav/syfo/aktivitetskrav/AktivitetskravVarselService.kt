@@ -98,16 +98,13 @@ class AktivitetskravVarselService(
         return nyttForhandsvarsel.toAktivitetkravVarsel()
     }
 
-    suspend fun publishExpiredVarsler(): List<ExpiredVarsel> {
-        val expiredVarslerToBePublished =
-            aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, varsel) ->
-                varsel.toExpiredVarsel(personIdent)
-            }
-        val publishedVarsler = expiredVarslerToBePublished.map { expiredVarsel ->
-            expiredVarselProducer.publishExpiredVarsel(expiredVarsel)
-            aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarsel)
-            expiredVarsel
+    suspend fun getExpiredVarsler(): List<ExpiredVarsel> =
+        aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, varsel) ->
+            varsel.toExpiredVarsel(personIdent)
         }
-        return publishedVarsler
+
+    suspend fun publishExpiredVarsel(expiredVarselToBePublished: ExpiredVarsel) {
+        expiredVarselProducer.publishExpiredVarsel(expiredVarselToBePublished)
+        aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarselToBePublished)
     }
 }

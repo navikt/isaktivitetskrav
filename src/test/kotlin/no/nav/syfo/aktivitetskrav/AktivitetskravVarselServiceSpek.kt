@@ -22,6 +22,7 @@ import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.generator.generateForhandsvarselPdfDTO
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -57,8 +58,7 @@ class AktivitetskravVarselServiceSpek : Spek({
             )
 
             beforeEachTest {
-                clearMocks(vurderingProducerMock)
-                clearMocks(expiredVarselProducerMock)
+                clearMocks(vurderingProducerMock, expiredVarselProducerMock)
                 coEvery {
                     vurderingProducerMock.send(any())
                 } returns mockk<Future<RecordMetadata>>(relaxed = true)
@@ -147,7 +147,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         )
                     }
                 }
-                it("Should publish expired varsler to kafka") {
+                it("Should get expired varsler and publish them") {
                     val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
                     val vurdering = AktivitetskravVurdering.create(
                         status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -164,7 +164,12 @@ class AktivitetskravVarselServiceSpek : Spek({
                         varsel = varsel,
                         pdf = pdf,
                     )
-                    val publishedExpiredVarsler = runBlocking { aktivitetskravVarselService.publishExpiredVarsler() }
+                    val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }
+                    expiredVarslerToBePublished.size shouldBe 1
+
+                    runBlocking {
+                        aktivitetskravVarselService.publishExpiredVarsel(expiredVarslerToBePublished.first())
+                    }
 
                     val producerRecordSlot = slot<ProducerRecord<String, ExpiredVarsel>>()
                     verify(exactly = 1) {
@@ -177,9 +182,9 @@ class AktivitetskravVarselServiceSpek : Spek({
                     expiredVarselRecord.createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
                         .truncatedTo(ChronoUnit.MINUTES)
 
-                    publishedExpiredVarsler.first().varselUuid shouldBeEqualTo varsel.uuid
-                    publishedExpiredVarsler.first().svarfrist shouldBeEqualTo varsel.svarfrist
-                    publishedExpiredVarsler.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
+                    expiredVarslerToBePublished.first().varselUuid shouldBeEqualTo varsel.uuid
+                    expiredVarslerToBePublished.first().svarfrist shouldBeEqualTo varsel.svarfrist
+                    expiredVarslerToBePublished.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
                         .truncatedTo(ChronoUnit.MINUTES)
                 }
             }

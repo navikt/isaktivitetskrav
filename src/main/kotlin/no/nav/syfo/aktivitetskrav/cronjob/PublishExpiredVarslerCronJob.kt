@@ -13,22 +13,31 @@ class PublishExpiredVarslerCronJob(
     override val intervalDelayMinutes: Long = 30
 
     override suspend fun run() {
-        val result = CronjobResult()
-        try {
-            val expiredVarslerPublished = aktivitetskravVarselService.publishExpiredVarsler()
-            result.updated += expiredVarslerPublished.size
-        } catch (e: Exception) {
-            log.error(
-                "Exception caught while attempting publishing of expired varsler",
-                e
-            )
-            result.failed++
-        }
+        val result = runJob()
         log.info(
-            "Completed publishing of expired varsel with result: {}, {}",
+            "Completed publisering of aktivitetskrav-expired-varsel with result: {}, {}",
             StructuredArguments.keyValue("failed", result.failed),
             StructuredArguments.keyValue("updated", result.updated),
         )
+    }
+
+    suspend fun runJob(): CronjobResult {
+        val result = CronjobResult()
+
+        val expiredVarsler = aktivitetskravVarselService.getExpiredVarsler()
+        expiredVarsler.forEach { varsel ->
+            try {
+                aktivitetskravVarselService.publishExpiredVarsel(varsel)
+                result.updated++
+            } catch (e: Exception) {
+                log.error(
+                    "Exception caught while attempting publishing of expired varsler",
+                    e
+                )
+                result.failed++
+            }
+        }
+        return result
     }
 
     companion object {
