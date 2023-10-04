@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.kafka
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -10,5 +11,6 @@ data class KafkaAktivitetskravVarsel(
     val varselUuid: UUID,
     val createdAt: OffsetDateTime,
     val journalpostId: String,
+    val svarfrist: LocalDate,
     val document: List<DocumentComponentDTO>,
 )

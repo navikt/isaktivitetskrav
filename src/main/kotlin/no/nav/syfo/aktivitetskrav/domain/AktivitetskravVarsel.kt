@@ -49,7 +49,7 @@ data class AktivitetskravVarsel internal constructor(
     fun toVarselResponseDTO() = VarselResponseDTO(
         uuid = this.uuid.toString(),
         createdAt = this.createdAt.toLocalDateTime(),
-        svarfrist = this.createdAt.toLocalDate().plusWeeks(3)
+        svarfrist = this.svarfrist,
     )
 }
 

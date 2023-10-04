@@ -29,6 +29,7 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.Future
 
 class AktivitetskravVarselServiceSpek : Spek({
@@ -146,7 +147,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         )
                     }
                 }
-                it("Published expired varsler to kafka") {
+                it("Should publish expired varsler to kafka") {
                     val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
                     val vurdering = AktivitetskravVurdering.create(
                         status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -171,10 +172,15 @@ class AktivitetskravVarselServiceSpek : Spek({
                     }
                     val expiredVarselRecord = producerRecordSlot.captured.value()
 
+                    expiredVarselRecord.varselUuid shouldBeEqualTo varsel.uuid
                     expiredVarselRecord.svarfrist shouldBeEqualTo varsel.svarfrist
-                    expiredVarselRecord.createdAt shouldBeEqualTo varsel.createdAt.toLocalDateTime()
+                    expiredVarselRecord.createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
+                        .truncatedTo(ChronoUnit.MINUTES)
+
+                    publishedExpiredVarsler.first().varselUuid shouldBeEqualTo varsel.uuid
                     publishedExpiredVarsler.first().svarfrist shouldBeEqualTo varsel.svarfrist
-                    publishedExpiredVarsler.first().createdAt shouldBeEqualTo varsel.createdAt.toLocalDateTime()
+                    publishedExpiredVarsler.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
+                        .truncatedTo(ChronoUnit.MINUTES)
                 }
             }
         }

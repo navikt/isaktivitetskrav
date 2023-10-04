@@ -135,6 +135,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
                 kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
                 kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
                 kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
+                kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
             }
             it("Publiserer ikke forhandsvarsel som ikke er journalfort") {
                 createForhandsvarsel(
