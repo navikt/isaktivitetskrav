@@ -59,6 +59,12 @@ fun launchCronjobModule(
     )
     cronjobs.add(publiserAktivitetskravVarselCronjob)
 
+    if (environment.isPublishExpiresVarselCronjobEnabled) {
+        val publishExpiredVarslerCronJob =
+            PublishExpiredVarslerCronJob(aktivitetskravVarselService = aktivitetskravVarselService)
+        cronjobs.add(publishExpiredVarslerCronJob)
+    }
+
     if (environment.outdatedCronJobEnabled) {
         val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
             outdatedCutoff = environment.outdatedCutoff,

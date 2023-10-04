@@ -66,6 +66,7 @@ fun testEnvironment() = Environment(
     electorPath = "electorPath",
     automatiskOppfyltCronJobEnabled = true,
     nyCronjobEnabled = true,
+    isPublishExpiresVarselCronjobEnabled = true,
     outdatedCutoff = LocalDate.now().minusMonths(6),
     outdatedCronJobEnabled = true,
 )
