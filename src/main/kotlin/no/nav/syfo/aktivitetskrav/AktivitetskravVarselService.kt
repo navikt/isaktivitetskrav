@@ -62,10 +62,9 @@ class AktivitetskravVarselService(
         )
     }
 
-    fun getVarsel(vurderingUuid: UUID): AktivitetskravVarsel? {
-        return aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = vurderingUuid)
+    fun getVarsel(vurderingUuid: UUID): AktivitetskravVarsel? =
+        aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = vurderingUuid)
             ?.toAktivitetkravVarsel()
-    }
 
     suspend fun sendForhandsvarsel(
         aktivitetskrav: Aktivitetskrav,

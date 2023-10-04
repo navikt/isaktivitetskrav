@@ -10,7 +10,7 @@ class PublishExpiredVarslerCronJob(
     private val aktivitetskravVarselService: AktivitetskravVarselService
 ) : Cronjob {
     override val initialDelayMinutes: Long = 2
-    override val intervalDelayMinutes: Long = 10
+    override val intervalDelayMinutes: Long = 30
 
     override suspend fun run() {
         val result = CronjobResult()
