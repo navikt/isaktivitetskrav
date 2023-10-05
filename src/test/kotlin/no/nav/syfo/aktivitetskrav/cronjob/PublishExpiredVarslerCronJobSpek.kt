@@ -6,13 +6,14 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.*
+import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
+import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
-import no.nav.syfo.testhelper.generator.createAktivitetskravWithVurdering
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -54,6 +55,41 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             externalMockEnvironment.environment.publishExpiresVarselCronjobIntervalDelayMinutes,
         )
 
+        fun createAktivitetskravWithVurdering(
+            personIdent: PersonIdent
+        ): Aktivitetskrav {
+            val tenWeeksAgo = LocalDate.now().minusWeeks(10)
+            val aktivitetskrav = createAktivitetskravNy(tenWeeksAgo, personIdent = personIdent)
+            val vurdering = AktivitetskravVurdering.create(
+                status = AktivitetskravStatus.FORHANDSVARSEL,
+                createdBy = UserConstants.VEILEDER_IDENT,
+                beskrivelse = "En test vurdering",
+                arsaker = emptyList(),
+                frist = tenWeeksAgo,
+            )
+            database.createAktivitetskrav(aktivitetskrav)
+            return aktivitetskrav.vurder(vurdering)
+        }
+
+        fun createNAktivitetskravWithForhandsvarsel(n: Int): Pair<List<Aktivitetskrav>, List<AktivitetskravVarsel>> {
+            val allAktivitetskrav = mutableListOf<Aktivitetskrav>()
+            val allVarsler = mutableListOf<AktivitetskravVarsel>()
+            for (i in 1..n) {
+                val aktivitetskrav = createAktivitetskravWithVurdering(
+                    PersonIdent(UserConstants.ARBEIDSTAKER_PERSONIDENT.value.dropLast(1).plus("$i"))
+                )
+                val varsel =
+                    AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
+                aktivitetskravVarselRepository.create(
+                    aktivitetskrav = aktivitetskrav,
+                    varsel = varsel,
+                    pdf = pdf,
+                )
+            }
+            return Pair(allAktivitetskrav, allVarsler)
+        }
+
+
         beforeEachTest {
             clearMocks(expiredVarselProducerMock)
             coEvery {
@@ -65,8 +101,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
         }
         describe(PublishExpiredVarslerCronJob::class.java.simpleName) {
             it("Should publish expired varsler to kafka") {
-                val newAktivitetskrav = createAktivitetskravWithVurdering(AktivitetskravStatus.FORHANDSVARSEL)
-                database.createAktivitetskrav(newAktivitetskrav)
+                val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
                     AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
                 aktivitetskravVarselRepository.create(
@@ -93,8 +128,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                     .truncatedTo(ChronoUnit.MINUTES)
             }
             it("Should not publish anything to kafka and cronjob result should not fail or update anything") {
-                val newAktivitetskrav = createAktivitetskravWithVurdering(AktivitetskravStatus.FORHANDSVARSEL)
-                database.createAktivitetskrav(newAktivitetskrav)
+                val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
                     AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().plusWeeks(1))
                 aktivitetskravVarselRepository.create(
@@ -112,6 +146,21 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                 val producerRecordSlot = slot<ProducerRecord<String, ExpiredVarsel>>()
                 verify(exactly = 0) {
                     expiredVarselProducerMock.send(capture(producerRecordSlot))
+                }
+            }
+            it("Should fail publishing to kafka for one expired varsel and succeed for two others") {
+                createNAktivitetskravWithForhandsvarsel(3)
+                coEvery {
+                    expiredVarselProducerMock.send(match<ProducerRecord<String, ExpiredVarsel>> { record ->
+                        record.value().personIdent.value == "12345678911"
+                    })
+                } coAnswers {
+                    throw Exception("Publishing on kafka failed")
+                }
+                runBlocking {
+                    val result = publishExpiredVarslerCronJob.runJob()
+                    result.failed shouldBeEqualTo 1
+                    result.updated shouldBeEqualTo 2
                 }
             }
         }

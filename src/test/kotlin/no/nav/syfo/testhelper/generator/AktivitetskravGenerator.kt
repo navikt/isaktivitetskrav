@@ -1,5 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
+import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
@@ -75,15 +76,12 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
 
 fun createNAktivitetskrav(
     n: Int,
-    tilfelleStart: LocalDate,
     personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
 ): List<Aktivitetskrav> {
+    val tenWeeksAgo = LocalDate.now().minusWeeks(10)
     val allAktivitetskrav = mutableListOf<Aktivitetskrav>()
     for (i in 1..n) {
-        val newAktivitetskrav = Aktivitetskrav.ny(
-            personIdent,
-            tilfelleStart
-        )
+        val newAktivitetskrav = Aktivitetskrav.ny(personIdent, tenWeeksAgo)
         allAktivitetskrav.add(newAktivitetskrav)
     }
     return allAktivitetskrav.toList()
@@ -98,20 +96,4 @@ fun createVarsler(): List<AktivitetskravVarsel> {
         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusDays(1)),
         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusWeeks(1)),
     )
-}
-
-fun createAktivitetskravWithVurdering(
-    vurderingStatus: AktivitetskravStatus,
-    vurderingFrist: LocalDate? = null
-): Aktivitetskrav {
-    val tenWeeksAgo = LocalDate.now().minusWeeks(10)
-    val newAktivitetskrav = createAktivitetskravNy(tenWeeksAgo)
-    val vurdering = AktivitetskravVurdering.create(
-        status = vurderingStatus,
-        createdBy = UserConstants.VEILEDER_IDENT,
-        beskrivelse = "En test vurdering",
-        arsaker = emptyList(),
-        frist = vurderingFrist,
-    )
-    return newAktivitetskrav.vurder(vurdering)
 }

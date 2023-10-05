@@ -83,7 +83,7 @@ class AktivitetskravRepositorySpek : Spek({
 
                 it("Should retrieve expired varsler when svarfrist is one week ago or more") {
                     val aktivitetskravList =
-                        createNAktivitetskrav(5, tenWeeksAgo)
+                        createNAktivitetskrav(5)
                             .map {
                                 val vurdering = AktivitetskravVurdering.create(
                                     status = AktivitetskravStatus.FORHANDSVARSEL,
