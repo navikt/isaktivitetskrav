@@ -15,7 +15,7 @@ class PublishExpiredVarslerCronJob(
     override suspend fun run() {
         val result = runJob()
         log.info(
-            "Completed publisering of aktivitetskrav-expired-varsel with result: {}, {}",
+            "Completed publishing of aktivitetskrav-expired-varsel with result: {}, {}",
             StructuredArguments.keyValue("failed", result.failed),
             StructuredArguments.keyValue("updated", result.updated),
         )

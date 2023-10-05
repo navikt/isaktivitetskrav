@@ -52,7 +52,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
 
         val publishExpiredVarslerCronJob = PublishExpiredVarslerCronJob(
             aktivitetskravVarselService = aktivitetskravVarselService,
-            externalMockEnvironment.environment.publishExpiresVarselCronjobIntervalDelayMinutes,
+            externalMockEnvironment.environment.publishExpiredVarselCronjobIntervalDelayMinutes,
         )
 
         fun createAktivitetskravWithVurdering(
@@ -89,7 +89,6 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             return Pair(allAktivitetskrav, allVarsler)
         }
 
-
         beforeEachTest {
             clearMocks(expiredVarselProducerMock)
             coEvery {
@@ -100,7 +99,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             database.dropData()
         }
         describe(PublishExpiredVarslerCronJob::class.java.simpleName) {
-            it("Should publish expired varsler to kafka") {
+            it("Publishes expired varsel to kafka when svarfrist is today or earlier") {
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
                     AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
@@ -127,7 +126,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                 expiredVarselRecord.createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
                     .truncatedTo(ChronoUnit.MINUTES)
             }
-            it("Should not publish anything to kafka and cronjob result should not fail or update anything") {
+            it("Does not publish anything to kafka when there is no expired varsler") {
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
                     AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().plusWeeks(1))
@@ -148,12 +147,14 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                     expiredVarselProducerMock.send(capture(producerRecordSlot))
                 }
             }
-            it("Should fail publishing to kafka for one expired varsel and succeed for two others") {
+            it("Fails publishing to kafka for one expired varsel and succeed for two others") {
                 createNAktivitetskravWithForhandsvarsel(3)
                 coEvery {
-                    expiredVarselProducerMock.send(match<ProducerRecord<String, ExpiredVarsel>> { record ->
-                        record.value().personIdent.value == "12345678911"
-                    })
+                    expiredVarselProducerMock.send(
+                        match<ProducerRecord<String, ExpiredVarsel>> { record ->
+                            record.value().personIdent.value == "12345678911"
+                        }
+                    )
                 } coAnswers {
                     throw Exception("Publishing on kafka failed")
                 }

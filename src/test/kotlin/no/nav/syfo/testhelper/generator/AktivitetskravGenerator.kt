@@ -1,6 +1,5 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants

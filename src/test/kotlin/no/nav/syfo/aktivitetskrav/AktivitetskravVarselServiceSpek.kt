@@ -147,7 +147,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         )
                     }
                 }
-                it("Should get expired varsler and publish them") {
+                it("Should get varsler which has svarfrist today or earlier and match inserted varsler") {
                     val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
                     val vurdering = AktivitetskravVurdering.create(
                         status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -167,6 +167,30 @@ class AktivitetskravVarselServiceSpek : Spek({
                     val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }
                     expiredVarslerToBePublished.size shouldBe 1
 
+                    expiredVarslerToBePublished.first().varselUuid shouldBeEqualTo varsel.uuid
+                    expiredVarslerToBePublished.first().svarfrist shouldBeEqualTo varsel.svarfrist
+                    expiredVarslerToBePublished.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
+                        .truncatedTo(ChronoUnit.MINUTES)
+                }
+                it("Should publish expired varsler") {
+                    val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
+                    val vurdering = AktivitetskravVurdering.create(
+                        status = AktivitetskravStatus.FORHANDSVARSEL,
+                        createdBy = UserConstants.VEILEDER_IDENT,
+                        beskrivelse = "En test vurdering",
+                        arsaker = emptyList(),
+                        frist = null,
+                    )
+                    val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
+                    database.createAktivitetskrav(updatedAktivitetskrav)
+                    val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                    aktivitetskravVarselRepository.create(
+                        aktivitetskrav = updatedAktivitetskrav,
+                        varsel = varsel,
+                        pdf = pdf,
+                    )
+                    val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }
+
                     runBlocking {
                         aktivitetskravVarselService.publishExpiredVarsel(expiredVarslerToBePublished.first())
                     }
@@ -176,15 +200,9 @@ class AktivitetskravVarselServiceSpek : Spek({
                         expiredVarselProducerMock.send(capture(producerRecordSlot))
                     }
                     val expiredVarselRecord = producerRecordSlot.captured.value()
-
                     expiredVarselRecord.varselUuid shouldBeEqualTo varsel.uuid
                     expiredVarselRecord.svarfrist shouldBeEqualTo varsel.svarfrist
                     expiredVarselRecord.createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
-                        .truncatedTo(ChronoUnit.MINUTES)
-
-                    expiredVarslerToBePublished.first().varselUuid shouldBeEqualTo varsel.uuid
-                    expiredVarslerToBePublished.first().svarfrist shouldBeEqualTo varsel.svarfrist
-                    expiredVarslerToBePublished.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
                         .truncatedTo(ChronoUnit.MINUTES)
                 }
             }
