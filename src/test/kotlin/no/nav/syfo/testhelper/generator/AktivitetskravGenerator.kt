@@ -92,10 +92,10 @@ fun createNAktivitetskrav(
 fun createVarsler(): List<AktivitetskravVarsel> {
     val document = generateDocumentComponentDTO(fritekst = "Et test varsel")
     return listOf(
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1).minusDays(1)),
         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusDays(6)),
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusDays(1)),
         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now()),
         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusDays(1)),
+        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusWeeks(1)),
     )
 }

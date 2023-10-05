@@ -107,9 +107,12 @@ class AktivitetskravRepositorySpek : Spek({
 
                     val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
 
-                    expiredVarsler.size shouldBeEqualTo 2
+                    expiredVarsler.size shouldBeEqualTo 3
                     expiredVarsler.any {
-                        it.svarfrist == LocalDate.now().minusWeeks(1).minusDays(1)
+                        it.svarfrist == LocalDate.now()
+                    } shouldBe true
+                    expiredVarsler.any {
+                        it.svarfrist == LocalDate.now().minusDays(1)
                     } shouldBe true
                     expiredVarsler.any {
                         it.svarfrist == LocalDate.now().minusWeeks(1)
