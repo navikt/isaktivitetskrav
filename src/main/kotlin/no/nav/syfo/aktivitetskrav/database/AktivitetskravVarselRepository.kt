@@ -103,7 +103,7 @@ private object Queries {
                     ON varsel.aktivitetskrav_vurdering_id = vurdering.id
                 INNER JOIN aktivitetskrav a ON a.id = vurdering.aktivitetskrav_id                
             WHERE expired_varsel_published_at IS NULL
-                AND svarfrist <= (NOW() - INTERVAL '1 weeks')
+                AND svarfrist <= NOW()
         """
 
     const val setExpiredVarselPublishedAt =
