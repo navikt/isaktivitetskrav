@@ -50,6 +50,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
 
         val publishExpiredVarslerCronJob = PublishExpiredVarslerCronJob(
             aktivitetskravVarselService = aktivitetskravVarselService,
+            externalMockEnvironment.environment.publishExpiresVarselCronjobIntervalDelayMinutes,
         )
 
         beforeEachTest {

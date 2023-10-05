@@ -7,10 +7,10 @@ import no.nav.syfo.application.cronjob.CronjobResult
 import org.slf4j.LoggerFactory
 
 class PublishExpiredVarslerCronJob(
-    private val aktivitetskravVarselService: AktivitetskravVarselService
+    private val aktivitetskravVarselService: AktivitetskravVarselService,
+    override val intervalDelayMinutes: Long
 ) : Cronjob {
     override val initialDelayMinutes: Long = 2
-    override val intervalDelayMinutes: Long = 30
 
     override suspend fun run() {
         val result = runJob()

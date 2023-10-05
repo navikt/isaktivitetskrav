@@ -46,6 +46,7 @@ data class Environment(
     val automatiskOppfyltCronJobEnabled: Boolean = getEnvVar("AUTOMATISK_OPPFYLT_CRONJOB_ENABLED").toBoolean(),
     val nyCronjobEnabled: Boolean = getEnvVar("NY_CRONJOB_ENABLED").toBoolean(),
     val isPublishExpiresVarselCronjobEnabled: Boolean = getEnvVar("IS_PUBLISH_EXPIRED_VARSEL_CRONJOB_ENABLED").toBoolean(),
+    val publishExpiresVarselCronjobIntervalDelayMinutes: Long = getEnvVar("PUBLISH_EXPIRED_VARSEL_CRONJOB_INTERVAL_DELAY_MINUTES").toLong(),
     val outdatedCutoff: LocalDate = LocalDate.parse(getEnvVar("OUTDATED_AKTIVITETSKRAV_CUTOFF")),
     val outdatedCronJobEnabled: Boolean = getEnvVar("OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),

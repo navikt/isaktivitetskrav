@@ -67,6 +67,7 @@ fun testEnvironment() = Environment(
     automatiskOppfyltCronJobEnabled = true,
     nyCronjobEnabled = true,
     isPublishExpiresVarselCronjobEnabled = true,
+    publishExpiresVarselCronjobIntervalDelayMinutes = 10,
     outdatedCutoff = LocalDate.now().minusMonths(6),
     outdatedCronJobEnabled = true,
 )

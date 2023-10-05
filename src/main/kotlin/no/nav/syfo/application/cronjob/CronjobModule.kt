@@ -61,7 +61,10 @@ fun launchCronjobModule(
 
     if (environment.isPublishExpiresVarselCronjobEnabled) {
         val publishExpiredVarslerCronJob =
-            PublishExpiredVarslerCronJob(aktivitetskravVarselService = aktivitetskravVarselService)
+            PublishExpiredVarslerCronJob(
+                aktivitetskravVarselService = aktivitetskravVarselService,
+                intervalDelayMinutes = environment.publishExpiresVarselCronjobIntervalDelayMinutes
+            )
         cronjobs.add(publishExpiredVarslerCronJob)
     }
 
