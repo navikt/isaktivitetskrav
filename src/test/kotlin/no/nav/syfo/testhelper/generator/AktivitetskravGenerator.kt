@@ -99,3 +99,19 @@ fun createVarsler(): List<AktivitetskravVarsel> {
         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusWeeks(1)),
     )
 }
+
+fun createAktivitetskravWithVurdering(
+    vurderingStatus: AktivitetskravStatus,
+    vurderingFrist: LocalDate? = null
+): Aktivitetskrav {
+    val tenWeeksAgo = LocalDate.now().minusWeeks(10)
+    val newAktivitetskrav = createAktivitetskravNy(tenWeeksAgo)
+    val vurdering = AktivitetskravVurdering.create(
+        status = vurderingStatus,
+        createdBy = UserConstants.VEILEDER_IDENT,
+        beskrivelse = "En test vurdering",
+        arsaker = emptyList(),
+        frist = vurderingFrist,
+    )
+    return newAktivitetskrav.vurder(vurdering)
+}

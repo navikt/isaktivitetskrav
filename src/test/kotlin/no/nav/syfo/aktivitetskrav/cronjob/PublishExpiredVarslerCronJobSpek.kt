@@ -12,6 +12,7 @@ import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.createAktivitetskravWithVurdering
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -64,20 +65,12 @@ class PublishExpiredVarslerCronJobSpek : Spek({
         }
         describe(PublishExpiredVarslerCronJob::class.java.simpleName) {
             it("Should publish expired varsler to kafka") {
-                val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
-                val vurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.FORHANDSVARSEL,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = "En test vurdering",
-                    arsaker = emptyList(),
-                    frist = null,
-                )
-                val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
-                database.createAktivitetskrav(updatedAktivitetskrav)
+                val newAktivitetskrav = createAktivitetskravWithVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                database.createAktivitetskrav(newAktivitetskrav)
                 val varsel =
                     AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
                 aktivitetskravVarselRepository.create(
-                    aktivitetskrav = updatedAktivitetskrav,
+                    aktivitetskrav = newAktivitetskrav,
                     varsel = varsel,
                     pdf = pdf,
                 )
@@ -98,6 +91,28 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                 expiredVarselRecord.svarfrist shouldBeEqualTo varsel.svarfrist
                 expiredVarselRecord.createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
                     .truncatedTo(ChronoUnit.MINUTES)
+            }
+            it("Should not publish anything to kafka and cronjob result should not fail or update anything") {
+                val newAktivitetskrav = createAktivitetskravWithVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                database.createAktivitetskrav(newAktivitetskrav)
+                val varsel =
+                    AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().plusWeeks(1))
+                aktivitetskravVarselRepository.create(
+                    aktivitetskrav = newAktivitetskrav,
+                    varsel = varsel,
+                    pdf = pdf,
+                )
+
+                runBlocking {
+                    val result = publishExpiredVarslerCronJob.runJob()
+                    result.failed shouldBeEqualTo 0
+                    result.updated shouldBeEqualTo 0
+                }
+
+                val producerRecordSlot = slot<ProducerRecord<String, ExpiredVarsel>>()
+                verify(exactly = 0) {
+                    expiredVarselProducerMock.send(capture(producerRecordSlot))
+                }
             }
         }
     }

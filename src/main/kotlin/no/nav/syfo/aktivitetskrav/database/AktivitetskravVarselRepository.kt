@@ -82,7 +82,8 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             database.connection.use { connection ->
                 val rowsAffected = connection.prepareStatement(Queries.setExpiredVarselPublishedAt).use {
                     it.setObject(1, nowUTC())
-                    it.setString(2, publishedExpiredVarsel.varselUuid.toString())
+                    it.setObject(2, nowUTC())
+                    it.setString(3, publishedExpiredVarsel.varselUuid.toString())
                     it.executeUpdate()
                 }
                 if (rowsAffected != 1) {
@@ -109,7 +110,7 @@ private object Queries {
     const val setExpiredVarselPublishedAt =
         """
             UPDATE aktivitetskrav_varsel
-            SET expired_varsel_published_at = ?
+            SET expired_varsel_published_at = ?, updated_at = ?
             WHERE uuid = ?
         """
 }
