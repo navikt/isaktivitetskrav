@@ -83,7 +83,7 @@ class AktivitetskravRepositorySpek : Spek({
 
                 it("Should retrieve expired varsler when svarfrist is one week ago or more") {
                     val aktivitetskravList =
-                        createNAktivitetskrav(5, tenWeeksAgo)
+                        createNAktivitetskrav(5)
                             .map {
                                 val vurdering = AktivitetskravVurdering.create(
                                     status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -106,6 +106,7 @@ class AktivitetskravRepositorySpek : Spek({
                     }
 
                     val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
+                        .map { (_, varsel) -> varsel }
 
                     expiredVarsler.size shouldBeEqualTo 3
                     expiredVarsler.any {
@@ -136,7 +137,10 @@ class AktivitetskravRepositorySpek : Spek({
                         varsel = varsel,
                         pdf = pdf,
                     )
-                    val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
+                    val expiredVarsler =
+                        runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }.map {
+                            it.second.toExpiredVarsel(it.first)
+                        }
                     val rowsUpdated =
                         runBlocking { aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarsler.first()) }
 

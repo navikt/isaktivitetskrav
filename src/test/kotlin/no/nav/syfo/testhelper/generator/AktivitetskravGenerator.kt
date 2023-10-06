@@ -75,15 +75,12 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
 
 fun createNAktivitetskrav(
     n: Int,
-    tilfelleStart: LocalDate,
     personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
 ): List<Aktivitetskrav> {
+    val tenWeeksAgo = LocalDate.now().minusWeeks(10)
     val allAktivitetskrav = mutableListOf<Aktivitetskrav>()
     for (i in 1..n) {
-        val newAktivitetskrav = Aktivitetskrav.ny(
-            personIdent,
-            tilfelleStart
-        )
+        val newAktivitetskrav = Aktivitetskrav.ny(personIdent, tenWeeksAgo)
         allAktivitetskrav.add(newAktivitetskrav)
     }
     return allAktivitetskrav.toList()
