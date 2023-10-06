@@ -105,4 +105,4 @@ spec:
     - name: IS_PUBLISH_EXPIRED_VARSEL_CRONJOB_ENABLED
       value: "false"
     - name: PUBLISH_EXPIRED_VARSEL_CRONJOB_INTERVAL_DELAY_MINUTES
-      value: "720" # Hver 12. time, 60*12
+      value: "360" # Hver 12. time, 60*6
