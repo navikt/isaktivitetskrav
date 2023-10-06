@@ -76,7 +76,8 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             val allVarsler = mutableListOf<AktivitetskravVarsel>()
             for (i in 1..n) {
                 val aktivitetskrav = createAktivitetskravWithVurdering(
-                    PersonIdent(UserConstants.ARBEIDSTAKER_PERSONIDENT.value.dropLast(1).plus("$i"))
+                    if (n >= 10) UserConstants.ARBEIDSTAKER_PERSONIDENT
+                    else PersonIdent(UserConstants.ARBEIDSTAKER_PERSONIDENT.value.dropLast(1).plus("$i"))
                 )
                 val varsel =
                     AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
