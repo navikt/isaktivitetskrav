@@ -2,9 +2,7 @@ package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.client.krr.KRRClient
@@ -19,6 +17,7 @@ class AktivitetskravVarselService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val arbeidstakervarselProducer: ArbeidstakervarselProducer,
     private val aktivitetskravVarselProducer: AktivitetskravVarselProducer,
+    private val expiredVarselProducer: ExpiredVarselProducer,
     private val pdfGenClient: PdfGenClient,
     private val pdlClient: PdlClient,
     private val krrClient: KRRClient,
@@ -63,9 +62,9 @@ class AktivitetskravVarselService(
         )
     }
 
-    fun getVarsel(vurderingUuid: UUID): AktivitetskravVarsel? {
-        return aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = vurderingUuid)?.toAktivitetkravVarsel()
-    }
+    fun getVarsel(vurderingUuid: UUID): AktivitetskravVarsel? =
+        aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = vurderingUuid)
+            ?.toAktivitetkravVarsel()
 
     suspend fun sendForhandsvarsel(
         aktivitetskrav: Aktivitetskrav,
@@ -97,5 +96,15 @@ class AktivitetskravVarselService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = updatedAktivitetskrav)
 
         return nyttForhandsvarsel.toAktivitetkravVarsel()
+    }
+
+    suspend fun getExpiredVarsler(): List<ExpiredVarsel> =
+        aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, varsel) ->
+            varsel.toExpiredVarsel(personIdent)
+        }
+
+    suspend fun publishExpiredVarsel(expiredVarselToBePublished: ExpiredVarsel) {
+        expiredVarselProducer.publishExpiredVarsel(expiredVarselToBePublished)
+        aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarselToBePublished)
     }
 }

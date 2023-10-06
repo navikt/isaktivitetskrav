@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarsel
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
@@ -59,25 +60,30 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
 
-    suspend fun getExpiredVarsler(): List<PAktivitetskravVarsel> =
+    suspend fun getExpiredVarsler(): List<Pair<PersonIdent, PAktivitetskravVarsel>> =
         withContext(Dispatchers.IO) {
-            val expiredVarsler = database.connection.use { connection ->
+            database.connection.use { connection ->
                 connection.prepareStatement(Queries.selectExpiredVarsler).use {
                     it.executeQuery()
-                        .toList { toPAktivitetskravVarsel() }
+                        .toList {
+                            Pair(
+                                PersonIdent(getString("personident")),
+                                toPAktivitetskravVarsel(),
+                            )
+                        }
                 }
             }
-            expiredVarsler
         }
 
     suspend fun updateExpiredVarselPublishedAt(
-        publishedExpiredVarsel: PAktivitetskravVarsel
+        publishedExpiredVarsel: ExpiredVarsel
     ): Int =
         withContext(Dispatchers.IO) {
             database.connection.use { connection ->
                 val rowsAffected = connection.prepareStatement(Queries.setExpiredVarselPublishedAt).use {
                     it.setObject(1, nowUTC())
-                    it.setString(2, publishedExpiredVarsel.uuid.toString())
+                    it.setObject(2, nowUTC())
+                    it.setString(3, publishedExpiredVarsel.varselUuid.toString())
                     it.executeUpdate()
                 }
                 if (rowsAffected != 1) {
@@ -92,8 +98,11 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 private object Queries {
     const val selectExpiredVarsler =
         """
-            SELECT *
-            FROM aktivitetskrav_varsel
+            SELECT a.personident, varsel.*
+            FROM aktivitetskrav_varsel varsel
+                INNER JOIN aktivitetskrav_vurdering vurdering
+                    ON varsel.aktivitetskrav_vurdering_id = vurdering.id
+                INNER JOIN aktivitetskrav a ON a.id = vurdering.aktivitetskrav_id                
             WHERE expired_varsel_published_at IS NULL
                 AND svarfrist <= NOW()
         """
@@ -101,7 +110,7 @@ private object Queries {
     const val setExpiredVarselPublishedAt =
         """
             UPDATE aktivitetskrav_varsel
-            SET expired_varsel_published_at = ?
+            SET expired_varsel_published_at = ?, updated_at = ?
             WHERE uuid = ?
         """
 }

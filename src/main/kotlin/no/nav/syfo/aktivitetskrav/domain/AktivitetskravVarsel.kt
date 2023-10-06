@@ -52,3 +52,7 @@ data class AktivitetskravVarsel internal constructor(
         svarfrist = this.svarfrist,
     )
 }
+
+enum class VarselType {
+    FORHANDSVARSEL_STANS_AV_SYKEPENGER
+}
