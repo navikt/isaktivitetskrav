@@ -147,7 +147,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         )
                     }
                 }
-                it("Should get varsler which has svarfrist today or earlier and match inserted varsler") {
+                it("Retrieves expired varsel which has svarfrist today or earlier and match inserted varsler") {
                     val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
                     val vurdering = AktivitetskravVurdering.create(
                         status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -172,7 +172,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                     expiredVarslerToBePublished.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
                         .truncatedTo(ChronoUnit.MINUTES)
                 }
-                it("Should publish expired varsler") {
+                it("Publishes expired varsel to kafka") {
                     val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
                     val vurdering = AktivitetskravVurdering.create(
                         status = AktivitetskravStatus.FORHANDSVARSEL,
