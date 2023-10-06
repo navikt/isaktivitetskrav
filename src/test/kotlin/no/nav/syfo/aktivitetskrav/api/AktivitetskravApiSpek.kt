@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskravVurderinger
 import no.nav.syfo.aktivitetskrav.domain.*
@@ -61,7 +62,9 @@ class AktivitetskravApiSpek : Spek({
                     kafkaProducerAktivitetskravVurdering = kafkaProducer,
                 ),
             )
+            val aktivitetskravRepository = AktivitetskravRepository(database)
             val aktivitetskravService = AktivitetskravService(
+                aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
@@ -401,7 +404,8 @@ class AktivitetskravApiSpek : Spek({
                             val aktivitetskravResponseDTO = responseDTOList.first()
                             val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
                             varselResponseDTO.shouldNotBeNull()
-                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate().plusWeeks(3)
+                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate()
+                                .plusWeeks(3)
                         }
                     }
                 }

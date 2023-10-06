@@ -24,6 +24,7 @@ class AktivitetskravRepositorySpek : Spek({
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
+            val aktivitetskravRepository = AktivitetskravRepository(database = database)
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
 
             afterEachTest {
@@ -61,7 +62,7 @@ class AktivitetskravRepositorySpek : Spek({
                         pdf = pdf,
                     )
 
-                    val retrievedAktivitetskrav = database.getAktivitetskrav(updatedAktivitetskrav.uuid)
+                    val retrievedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(updatedAktivitetskrav.uuid)
                     val vurderinger = database.getAktivitetskravVurderinger(retrievedAktivitetskrav!!.id)
                     val newVurdering = vurderinger.first()
                     val newVarselPdf = database.getAktivitetskravVarselPdf(newVarsel.id)

@@ -11,6 +11,7 @@ import java.time.LocalDate
 import java.util.*
 
 class AktivitetskravService(
+    private val aktivitetskravRepository: AktivitetskravRepository,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
@@ -68,11 +69,10 @@ class AktivitetskravService(
     }
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
-        database.getAktivitetskrav(uuid = uuid)?.let { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
-        }
+        aktivitetskravRepository.getAktivitetskrav(uuid)
+            ?.let { withVurderinger(it) }
 
-    internal fun getAktivitetskravAfterCutoff(
+    fun getAktivitetskravAfterCutoff(
         personIdent: PersonIdent,
         connection: Connection? = null,
     ): List<Aktivitetskrav> =

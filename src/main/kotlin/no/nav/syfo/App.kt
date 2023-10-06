@@ -7,6 +7,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.application.ApplicationState
@@ -102,6 +103,7 @@ fun main() {
     )
 
     lateinit var aktivitetskravService: AktivitetskravService
+    lateinit var aktivitetskravRepository: AktivitetskravRepository
     lateinit var aktivitetskravVarselRepository: AktivitetskravVarselRepository
     lateinit var aktivitetskravVarselService: AktivitetskravVarselService
 
@@ -115,8 +117,10 @@ fun main() {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
+            aktivitetskravRepository = AktivitetskravRepository(database = applicationDatabase)
             aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
             aktivitetskravService = AktivitetskravService(
+                aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,

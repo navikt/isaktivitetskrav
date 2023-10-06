@@ -3,6 +3,7 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -44,6 +45,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             kafkaProducerAktivitetskravVurdering = kafkaProducer,
         )
         val aktivitetskravService = AktivitetskravService(
+            aktivitetskravRepository = AktivitetskravRepository(database),
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
             arenaCutoff = arenaCutoff,

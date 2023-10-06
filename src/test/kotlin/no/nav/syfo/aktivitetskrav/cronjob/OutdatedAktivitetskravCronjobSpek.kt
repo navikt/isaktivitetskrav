@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -29,6 +30,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
     val outdatedCutoff = externalMockEnvironment.environment.outdatedCutoff
 
     val aktivitetskravService = AktivitetskravService(
+        aktivitetskravRepository = AktivitetskravRepository(database),
         database = database,
         aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer),
         arenaCutoff = arenaCutoff,
