@@ -5,7 +5,6 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
@@ -34,9 +33,9 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
         val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
         val aktivitetskravVurderingProducer =
             AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer)
-
+        val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(
-            aktivitetskravRepository = AktivitetskravRepository(database),
+            aktivitetskravRepository = aktivitetskravRepository,
             database = database,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
@@ -86,7 +85,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 }
 
                 val pAktivitetskravList =
-                    database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val automatiskOppfylteAktivitetskrav =
                     pAktivitetskravList.filter { it.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT.name }
                 automatiskOppfylteAktivitetskrav.size shouldBeEqualTo 1
@@ -128,7 +127,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 }
 
                 val pAktivitetskravList =
-                    database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 pAktivitetskravList.any { it.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT.name } shouldBeEqualTo false
             }
         }

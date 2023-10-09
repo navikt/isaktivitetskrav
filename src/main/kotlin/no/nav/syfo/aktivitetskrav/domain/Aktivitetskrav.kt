@@ -2,7 +2,6 @@ package no.nav.syfo.aktivitetskrav.domain
 
 import no.nav.syfo.aktivitetskrav.api.AktivitetskravResponseDTO
 import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
@@ -27,7 +26,7 @@ enum class AktivitetskravStatus {
     LUKKET,
 }
 
-data class Aktivitetskrav private constructor(
+data class Aktivitetskrav(
     val uuid: UUID,
     val personIdent: PersonIdent,
     val createdAt: OffsetDateTime,
@@ -36,18 +35,6 @@ data class Aktivitetskrav private constructor(
     val vurderinger: List<AktivitetskravVurdering>,
 ) {
     companion object {
-        fun createFromDatabase(
-            pAktivitetskrav: PAktivitetskrav,
-            aktivitetskravVurderinger: List<AktivitetskravVurdering>,
-        ) = Aktivitetskrav(
-            uuid = pAktivitetskrav.uuid,
-            personIdent = pAktivitetskrav.personIdent,
-            createdAt = pAktivitetskrav.createdAt,
-            status = AktivitetskravStatus.valueOf(pAktivitetskrav.status),
-            stoppunktAt = pAktivitetskrav.stoppunktAt,
-            vurderinger = aktivitetskravVurderinger,
-        )
-
         fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): Aktivitetskrav =
             create(
                 personIdent = personIdent,

@@ -12,19 +12,56 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
     fun getAktivitetskrav(uuid: UUID): PAktivitetskrav? =
         database.connection.prepareStatement(getAktivitetskravByUuidQuery).use {
             it.setString(1, uuid.toString())
-            it.executeQuery()
-                .toList { toPAktivitetskrav() }
-                .firstOrNull()
+            it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
+        }?.run {
+            val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = id)
+            copy(vurderinger = vurderinger)
+        }
+
+    fun getAktivitetskrav(
+        personIdent: PersonIdent,
+    ): List<PAktivitetskrav> =
+        database.connection.prepareStatement(getAktivitetskravByPersonidentQuery).use {
+            it.setString(1, personIdent.value)
+            it.executeQuery().toList { toPAktivitetskrav() }
+        }.map {
+            val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = it.id)
+            it.copy(vurderinger = vurderinger)
+        }
+
+    private fun getAktivitetskravVurderinger(
+        aktivitetskravId: Int,
+    ): List<PAktivitetskravVurdering> =
+        database.connection.use { connection ->
+            connection.prepareStatement(getAktivitetskravVurderingerQuery).use {
+                it.setInt(1, aktivitetskravId)
+                it.executeQuery().toList { toPAktivitetskravVurdering() }
+            }
         }
 
     companion object {
 
-        // Add getting vurderinger as well in this query?
         private const val getAktivitetskravByUuidQuery =
             """
             SELECT *
             FROM AKTIVITETSKRAV
             WHERE uuid = ?
+            """
+
+        private const val getAktivitetskravVurderingerQuery =
+            """
+            SELECT *
+            FROM AKTIVITETSKRAV_VURDERING
+            WHERE aktivitetskrav_id = ?
+            ORDER BY created_at DESC
+            """
+
+        private const val getAktivitetskravByPersonidentQuery =
+            """
+            SELECT *
+            FROM AKTIVITETSKRAV
+            WHERE personident = ?
+            ORDER BY created_at DESC;
             """
     }
 }
@@ -38,4 +75,16 @@ private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     status = getString("status"),
     stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
     referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
+)
+
+private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
+    id = getInt("id"),
+    uuid = UUID.fromString(getString("uuid")),
+    aktivitetskravId = getInt("aktivitetskrav_id"),
+    createdAt = getObject("created_at", OffsetDateTime::class.java),
+    createdBy = getString("created_by"),
+    status = getString("status"),
+    beskrivelse = getString("beskrivelse"),
+    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty),
+    frist = getDate("frist")?.toLocalDate(),
 )

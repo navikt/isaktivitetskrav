@@ -15,7 +15,7 @@ data class PAktivitetskravVurdering(
     val beskrivelse: String?,
     val arsaker: List<String>,
     val frist: LocalDate?,
-)
-
-fun List<PAktivitetskravVurdering>.toAktivitetskravVurderingList() = map { it.toAktivitetskravVurdering() }
-fun PAktivitetskravVurdering.toAktivitetskravVurdering() = AktivitetskravVurdering.createFromDatabase(this)
+) {
+    fun toAktivitetskravVurdering() =
+        AktivitetskravVurdering.createFromDatabase(this)
+}
