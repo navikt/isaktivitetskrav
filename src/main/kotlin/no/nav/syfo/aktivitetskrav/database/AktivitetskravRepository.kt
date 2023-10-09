@@ -12,11 +12,11 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
 
     fun getAktivitetskrav(uuid: UUID): PAktivitetskrav? =
         database.connection.use { connection ->
-            connection.prepareStatement(getAktivitetskravByUuidQuery).use {
+            connection.prepareStatement(GET_AKTIVITETSKRAV_BY_UUID_QUERY).use {
                 it.setString(1, uuid.toString())
                 it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
             }?.run {
-                val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = id, connection)
+                val vurderinger = connection.getAktivitetskravVurderinger(aktivitetskravId = id)
                 copy(vurderinger = vurderinger)
             }
         }
@@ -25,34 +25,33 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
         personIdent: PersonIdent,
     ): List<PAktivitetskrav> =
         database.connection.use { connection ->
-            connection.prepareStatement(getAktivitetskravByPersonidentQuery).use {
+            connection.prepareStatement(GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY).use {
                 it.setString(1, personIdent.value)
                 it.executeQuery().toList { toPAktivitetskrav() }
             }.map {
-                val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = it.id, connection)
+                val vurderinger = connection.getAktivitetskravVurderinger(aktivitetskravId = it.id)
                 it.copy(vurderinger = vurderinger)
             }
         }
 
-    private fun getAktivitetskravVurderinger(
-        aktivitetskravId: Int,
-        connection: Connection,
+    private fun Connection.getAktivitetskravVurderinger(
+        aktivitetskravId: Int
     ): List<PAktivitetskravVurdering> =
-        connection.prepareStatement(getAktivitetskravVurderingerQuery).use {
+        prepareStatement(GET_AKTIVIETSKRAV_VURDERINGER_QUERY).use {
             it.setInt(1, aktivitetskravId)
             it.executeQuery().toList { toPAktivitetskravVurdering() }
         }
 
     companion object {
 
-        private const val getAktivitetskravByUuidQuery =
+        private const val GET_AKTIVITETSKRAV_BY_UUID_QUERY =
             """
             SELECT *
             FROM AKTIVITETSKRAV
             WHERE uuid = ?
             """
 
-        private const val getAktivitetskravVurderingerQuery =
+        private const val GET_AKTIVIETSKRAV_VURDERINGER_QUERY =
             """
             SELECT *
             FROM AKTIVITETSKRAV_VURDERING
@@ -60,7 +59,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             ORDER BY created_at DESC
             """
 
-        private const val getAktivitetskravByPersonidentQuery =
+        private const val GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY =
             """
             SELECT *
             FROM AKTIVITETSKRAV

@@ -70,7 +70,7 @@ class AktivitetskravService(
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
         aktivitetskravRepository.getAktivitetskrav(uuid)
-            ?.run { toAktivitetskrav() }
+            ?.toAktivitetskrav()
 
     internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
         database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
