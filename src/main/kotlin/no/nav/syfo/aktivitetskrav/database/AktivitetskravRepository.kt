@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.database
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
+import java.sql.Connection
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.util.*
@@ -10,33 +11,36 @@ import java.util.*
 class AktivitetskravRepository(private val database: DatabaseInterface) {
 
     fun getAktivitetskrav(uuid: UUID): PAktivitetskrav? =
-        database.connection.prepareStatement(getAktivitetskravByUuidQuery).use {
-            it.setString(1, uuid.toString())
-            it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
-        }?.run {
-            val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = id)
-            copy(vurderinger = vurderinger)
+        database.connection.use { connection ->
+            connection.prepareStatement(getAktivitetskravByUuidQuery).use {
+                it.setString(1, uuid.toString())
+                it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
+            }?.run {
+                val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = id, connection)
+                copy(vurderinger = vurderinger)
+            }
         }
 
     fun getAktivitetskrav(
         personIdent: PersonIdent,
     ): List<PAktivitetskrav> =
-        database.connection.prepareStatement(getAktivitetskravByPersonidentQuery).use {
-            it.setString(1, personIdent.value)
-            it.executeQuery().toList { toPAktivitetskrav() }
-        }.map {
-            val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = it.id)
-            it.copy(vurderinger = vurderinger)
+        database.connection.use { connection ->
+            connection.prepareStatement(getAktivitetskravByPersonidentQuery).use {
+                it.setString(1, personIdent.value)
+                it.executeQuery().toList { toPAktivitetskrav() }
+            }.map {
+                val vurderinger = getAktivitetskravVurderinger(aktivitetskravId = it.id, connection)
+                it.copy(vurderinger = vurderinger)
+            }
         }
 
     private fun getAktivitetskravVurderinger(
         aktivitetskravId: Int,
+        connection: Connection,
     ): List<PAktivitetskravVurdering> =
-        database.connection.use { connection ->
-            connection.prepareStatement(getAktivitetskravVurderingerQuery).use {
-                it.setInt(1, aktivitetskravId)
-                it.executeQuery().toList { toPAktivitetskravVurdering() }
-            }
+        connection.prepareStatement(getAktivitetskravVurderingerQuery).use {
+            it.setInt(1, aktivitetskravId)
+            it.executeQuery().toList { toPAktivitetskravVurdering() }
         }
 
     companion object {
