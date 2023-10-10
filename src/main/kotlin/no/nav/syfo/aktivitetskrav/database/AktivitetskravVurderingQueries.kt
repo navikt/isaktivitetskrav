@@ -168,22 +168,6 @@ private fun Connection.getAktivitetskrav(
     it.executeQuery().toList { toPAktivitetskrav() }
 }
 
-const val queryGetAktivitetskravByUuid =
-    """
-        SELECT *
-        FROM AKTIVITETSKRAV
-        WHERE uuid = ?
-    """
-
-fun DatabaseInterface.getAktivitetskrav(
-    uuid: UUID,
-): PAktivitetskrav? = this.connection.use { connection ->
-    connection.prepareStatement(queryGetAktivitetskravByUuid).use {
-        it.setString(1, uuid.toString())
-        it.executeQuery().toList { toPAktivitetskrav() }.firstOrNull()
-    }
-}
-
 const val queryGetOutdatedAktivitetskrav = """
     SELECT * 
     FROM AKTIVITETSKRAV
@@ -193,7 +177,10 @@ const val queryGetOutdatedAktivitetskrav = """
     AND personident NOT IN (SELECT personident FROM AKTIVITETSKRAV WHERE stoppunkt_at >= ?);
 """
 
-fun DatabaseInterface.getOutdatedAktivitetskrav(arenaCutoff: LocalDate, outdatedCutoff: LocalDate): List<PAktivitetskrav> =
+fun DatabaseInterface.getOutdatedAktivitetskrav(
+    arenaCutoff: LocalDate,
+    outdatedCutoff: LocalDate
+): List<PAktivitetskrav> =
     this.connection.use { connection ->
         connection.prepareStatement(queryGetOutdatedAktivitetskrav).use {
             it.setObject(1, arenaCutoff)

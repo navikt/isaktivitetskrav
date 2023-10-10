@@ -3,6 +3,7 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -43,7 +44,9 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
             kafkaProducerAktivitetskravVurdering = kafkaProducer,
         )
+        val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(
+            aktivitetskravRepository = aktivitetskravRepository,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             database = database,
             arenaCutoff = arenaCutoff,
@@ -141,9 +144,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 1
                     val aktivitetskrav = aktivitetskravList.first()
@@ -174,9 +176,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 1
                     val aktivitetskrav = aktivitetskravList.first()
@@ -210,9 +211,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.shouldBeEmpty()
                 }
@@ -232,9 +232,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.shouldBeEmpty()
                 }
@@ -261,9 +260,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.shouldBeEmpty()
                 }
@@ -290,9 +288,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.shouldBeEmpty()
                 }
@@ -353,9 +350,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 it("does not update Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
                     database.createAktivitetskrav(nyAktivitetskrav)
 
-                    var aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    var aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     var aktivitetskrav = aktivitetskravList.first()
                     val updatedAt = aktivitetskrav.updatedAt
 
@@ -375,9 +371,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskrav = aktivitetskravList.first()
                     aktivitetskrav.updatedAt shouldBeEqualTo updatedAt
                 }
@@ -397,9 +392,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 1
                     val latestAktivitetskrav = aktivitetskravList.first()
@@ -431,9 +425,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 1
                     val latestAktivitetskrav = aktivitetskravList.first()
@@ -470,9 +463,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 2
                     val latestAktivitetskrav = aktivitetskravList.first()
@@ -502,9 +494,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 1
                     val latestAktivitetskrav = aktivitetskravList.first()
@@ -524,9 +515,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 it("does not update Aktivitetskrav(AUTOMATISK_OPPFYLT) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
                     database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
-                    var aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    var aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     var aktivitetskrav = aktivitetskravList.first()
                     val updatedAt = aktivitetskrav.updatedAt
 
@@ -546,9 +536,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskrav = aktivitetskravList.first()
                     aktivitetskrav.updatedAt shouldBeEqualTo updatedAt
                 }
@@ -581,9 +570,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                             mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                         }
 
-                        val aktivitetskravList = database.getAktivitetskrav(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                        )
+                        val aktivitetskravList =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                         aktivitetskravList.size shouldBeEqualTo 1
                         val latestAktivitetskrav = aktivitetskravList.first()
@@ -612,9 +600,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                             mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                         }
 
-                        val aktivitetskravList = database.getAktivitetskrav(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                        )
+                        val aktivitetskravList =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                         aktivitetskravList.size shouldBeEqualTo 1
                         val latestAktivitetskrav = aktivitetskravList.first()
@@ -631,9 +618,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     it("does not update Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
                         database.createAktivitetskrav(aktivitetskrav)
 
-                        var aktivitetskravList = database.getAktivitetskrav(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                        )
+                        var aktivitetskravList =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                         var pAktivitetskrav = aktivitetskravList.first()
                         val updatedAt = pAktivitetskrav.updatedAt
 
@@ -653,9 +639,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                             kafkaProducer.send(any())
                         }
 
-                        aktivitetskravList = database.getAktivitetskrav(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                        )
+                        aktivitetskravList =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                         pAktivitetskrav = aktivitetskravList.first()
                         pAktivitetskrav.updatedAt shouldBeEqualTo updatedAt
                     }
@@ -678,9 +663,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.shouldBeEmpty()
                 }
@@ -703,9 +687,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 2
 
@@ -740,9 +723,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
-                        personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                    )
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                     aktivitetskravList.size shouldBeEqualTo 1
                     val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
@@ -777,9 +759,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                             mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                         }
 
-                        val aktivitetskravList = database.getAktivitetskrav(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                        )
+                        val aktivitetskravList =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                         aktivitetskravList.size shouldBeEqualTo 2
                         val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
@@ -804,9 +785,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                             kafkaProducer.send(any())
                         }
 
-                        val aktivitetskravList = database.getAktivitetskrav(
-                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-                        )
+                        val aktivitetskravList =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
                         aktivitetskravList.size shouldBeEqualTo 1
                         val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()

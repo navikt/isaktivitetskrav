@@ -6,8 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskravVurderinger
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
@@ -61,7 +60,9 @@ class AktivitetskravApiSpek : Spek({
                     kafkaProducerAktivitetskravVurdering = kafkaProducer,
                 ),
             )
+            val aktivitetskravRepository = AktivitetskravRepository(database)
             val aktivitetskravService = AktivitetskravService(
+                aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
@@ -279,15 +280,14 @@ class AktivitetskravApiSpek : Spek({
                             }
 
                             val pAktivitetskravList =
-                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                             pAktivitetskravList.size shouldBeEqualTo 1
                             val aktivitetskrav = pAktivitetskravList.first()
                             aktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             aktivitetskrav.stoppunktAt shouldBeEqualTo LocalDate.now()
                             aktivitetskrav.referanseTilfelleBitUuid shouldBeEqualTo null
 
-                            val pAktivitetskravVurderingList =
-                                database.getAktivitetskravVurderinger(aktivitetskravId = aktivitetskrav.id)
+                            val pAktivitetskravVurderingList = aktivitetskrav.vurderinger
                             pAktivitetskravVurderingList.size shouldBeEqualTo 1
                             val aktivitetskravVurdering = pAktivitetskravVurderingList.first()
 
@@ -401,7 +401,8 @@ class AktivitetskravApiSpek : Spek({
                             val aktivitetskravResponseDTO = responseDTOList.first()
                             val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
                             varselResponseDTO.shouldNotBeNull()
-                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate().plusWeeks(3)
+                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate()
+                                .plusWeeks(3)
                         }
                     }
                 }
@@ -463,14 +464,12 @@ class AktivitetskravApiSpek : Spek({
                             }
 
                             val latestAktivitetskrav =
-                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
                             latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
-                            val latestAktivitetskravVurdering =
-                                database.getAktivitetskravVurderinger(aktivitetskravId = latestAktivitetskrav.id)
-                                    .first()
+                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
@@ -511,14 +510,12 @@ class AktivitetskravApiSpek : Spek({
                             }
 
                             val latestAktivitetskrav =
-                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
                             latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
-                            val latestAktivitetskravVurdering =
-                                database.getAktivitetskravVurderinger(aktivitetskravId = latestAktivitetskrav.id)
-                                    .first()
+                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
@@ -553,10 +550,9 @@ class AktivitetskravApiSpek : Spek({
                             }
 
                             val latestAktivitetskrav =
-                                database.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT).first()
-                            val latestAktivitetskravVurdering =
-                                database.getAktivitetskravVurderinger(aktivitetskravId = latestAktivitetskrav.id)
+                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
+                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
                             latestAktivitetskravVurdering.frist shouldBeEqualTo oneWeekFromNow
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()

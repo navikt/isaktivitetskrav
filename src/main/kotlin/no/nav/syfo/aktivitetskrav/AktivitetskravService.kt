@@ -11,6 +11,7 @@ import java.time.LocalDate
 import java.util.*
 
 class AktivitetskravService(
+    private val aktivitetskravRepository: AktivitetskravRepository,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
@@ -68,28 +69,24 @@ class AktivitetskravService(
     }
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
-        database.getAktivitetskrav(uuid = uuid)?.let { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
-        }
-
-    internal fun getAktivitetskravAfterCutoff(
-        personIdent: PersonIdent,
-        connection: Connection? = null,
-    ): List<Aktivitetskrav> =
-        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
-        }.filter { it.stoppunktAt.isAfter(arenaCutoff) }
+        aktivitetskravRepository.getAktivitetskrav(uuid)
+            ?.toAktivitetskrav()
 
     internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
         database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
             withVurderinger(pAktivitetskrav = pAktivitetskrav)
         }
 
+    fun getAktivitetskravAfterCutoff(personIdent: PersonIdent): List<Aktivitetskrav> =
+        aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
+            .map { it.toAktivitetskrav() }
+            .filter { it.stoppunktAt.isAfter(arenaCutoff) }
+
     internal fun getOutdatedAktivitetskrav(outdatedCutoff: LocalDate): List<Aktivitetskrav> {
         return database.getOutdatedAktivitetskrav(
             arenaCutoff = arenaCutoff,
             outdatedCutoff = outdatedCutoff
-        ).map { it.toAktivitetskrav(aktivitetskravVurderinger = emptyList()) }
+        ).map { it.toAktivitetskrav() }
     }
 
     internal fun lukk(aktivitetskrav: Aktivitetskrav) {
@@ -131,8 +128,8 @@ class AktivitetskravService(
     private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
         val aktivitetskravVurderinger =
             database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id)
-                .toAktivitetskravVurderingList()
-        return pAktivitetskrav.toAktivitetskrav(aktivitetskravVurderinger = aktivitetskravVurderinger)
+                .map { it.toAktivitetskravVurdering() }
+        return pAktivitetskrav.toAktivitetskrav(vurderinger = aktivitetskravVurderinger)
     }
 
     internal fun updateAktivitetskrav(
