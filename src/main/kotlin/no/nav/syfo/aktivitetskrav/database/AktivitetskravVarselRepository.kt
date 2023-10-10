@@ -60,14 +60,15 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
     fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
 
-    suspend fun getExpiredVarsler(): List<Pair<PersonIdent, PAktivitetskravVarsel>> =
+    suspend fun getExpiredVarsler(): List<Triple<PersonIdent, UUID, PAktivitetskravVarsel>> =
         withContext(Dispatchers.IO) {
             database.connection.use { connection ->
                 connection.prepareStatement(Queries.selectExpiredVarsler).use {
                     it.executeQuery()
                         .toList {
-                            Pair(
+                            Triple(
                                 PersonIdent(getString("personident")),
+                                UUID.fromString(getString("aktivitetskrav_uuid")),
                                 toPAktivitetskravVarsel(),
                             )
                         }
@@ -98,7 +99,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 private object Queries {
     const val selectExpiredVarsler =
         """
-            SELECT a.personident, varsel.*
+            SELECT a.personident, a.uuid as aktivitetskrav_uuid, varsel.*
             FROM aktivitetskrav_varsel varsel
                 INNER JOIN aktivitetskrav_vurdering vurdering
                     ON varsel.aktivitetskrav_vurdering_id = vurdering.id
