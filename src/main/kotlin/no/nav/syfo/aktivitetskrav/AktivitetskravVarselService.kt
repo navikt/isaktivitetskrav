@@ -99,8 +99,8 @@ class AktivitetskravVarselService(
     }
 
     suspend fun getExpiredVarsler(): List<ExpiredVarsel> =
-        aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, varsel) ->
-            varsel.toExpiredVarsel(personIdent)
+        aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, aktivitetskravUuid, varsel) ->
+            varsel.toExpiredVarsel(personIdent, aktivitetskravUuid)
         }
 
     suspend fun publishExpiredVarsel(expiredVarselToBePublished: ExpiredVarsel) {

@@ -107,7 +107,7 @@ class AktivitetskravRepositorySpek : Spek({
                     }
 
                     val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
-                        .map { (_, varsel) -> varsel }
+                        .map { (_, _, varsel) -> varsel }
 
                     expiredVarsler.size shouldBeEqualTo 3
                     expiredVarsler.any {
@@ -139,8 +139,8 @@ class AktivitetskravRepositorySpek : Spek({
                         pdf = pdf,
                     )
                     val expiredVarsler =
-                        runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }.map {
-                            it.second.toExpiredVarsel(it.first)
+                        runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }.map { (personIdent, aktivitetskravUuid, varsel) ->
+                            varsel.toExpiredVarsel(personIdent, aktivitetskravUuid)
                         }
                     val rowsUpdated =
                         runBlocking { aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarsler.first()) }

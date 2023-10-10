@@ -30,7 +30,8 @@ data class PAktivitetskravVarsel(
         isPublished = publishedAt != null,
     )
 
-    fun toExpiredVarsel(personIdent: PersonIdent) = ExpiredVarsel(
+    fun toExpiredVarsel(personIdent: PersonIdent, aktivitetskravUuid: UUID) = ExpiredVarsel(
+        aktivitetskravUuid = aktivitetskravUuid,
         varselUuid = uuid,
         createdAt = createdAt.toLocalDateTime(),
         personIdent = personIdent,
