@@ -1,6 +1,5 @@
-package no.nav.syfo.aktivitetskrav.kafka
+package no.nav.syfo.aktivitetskrav.domain
 
-import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.LocalDateTime
