@@ -93,6 +93,12 @@ data class AktivitetskravVurdering private constructor(
 
 fun AktivitetskravVurdering.arsakerToString() = this.arsaker.joinToString(",")
 
+fun AktivitetskravVurdering.isFinal() =
+    this.status == AktivitetskravStatus.OPPFYLT ||
+        this.status == AktivitetskravStatus.IKKE_OPPFYLT ||
+        this.status == AktivitetskravStatus.IKKE_AKTUELL ||
+        this.status == AktivitetskravStatus.UNNTAK
+
 fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?): AktivitetskravVurderingResponseDTO =
     AktivitetskravVurderingResponseDTO(
         uuid = this.uuid.toString(),

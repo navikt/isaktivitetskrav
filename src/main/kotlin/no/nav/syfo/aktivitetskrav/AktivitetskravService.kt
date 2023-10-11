@@ -4,6 +4,7 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
@@ -47,6 +48,18 @@ class AktivitetskravService(
         aktivitetskrav: Aktivitetskrav,
         aktivitetskravVurdering: AktivitetskravVurdering,
     ) {
+        val currentVurdering = aktivitetskrav.vurderinger.firstOrNull()
+        if (currentVurdering?.isFinal() == true) {
+            throw ConflictException("Aktivitetskravet har allerede en avsluttende vurdering")
+        }
+        if (
+            aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL ||
+            aktivitetskravVurdering.status == AktivitetskravStatus.NY ||
+            aktivitetskravVurdering.status == AktivitetskravStatus.LUKKET ||
+            aktivitetskravVurdering.status == AktivitetskravStatus.STANS
+        ) {
+            throw ConflictException("Ny status for vurdering er ugyldig")
+        }
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
         database.connection.use { connection ->
@@ -105,7 +118,7 @@ class AktivitetskravService(
     internal fun createAndVurderAktivitetskrav(
         personIdent: PersonIdent,
         aktivitetskravVurdering: AktivitetskravVurdering,
-    ) {
+    ): UUID {
         val aktivitetskrav =
             Aktivitetskrav.fromVurdering(personIdent = personIdent, vurdering = aktivitetskravVurdering)
 
@@ -123,6 +136,7 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = aktivitetskrav,
         )
+        return aktivitetskrav.uuid
     }
 
     private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {

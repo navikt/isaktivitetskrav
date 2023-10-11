@@ -5,6 +5,7 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.*
+import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
@@ -74,6 +75,13 @@ class AktivitetskravVarselService(
         forhandsvarselDTO: ForhandsvarselDTO,
         callId: String,
     ): AktivitetskravVarsel {
+        if (aktivitetskrav.status != AktivitetskravStatus.NY && aktivitetskrav.status != AktivitetskravStatus.AVVENT) {
+            throw ConflictException("Kan bare sende forhåndsvarsel når status er NY eller AVVENT")
+        }
+        if (aktivitetskrav.vurderinger.any { it.status == AktivitetskravStatus.FORHANDSVARSEL }) {
+            throw ConflictException("Forhåndsvarsel allerede sendt")
+        }
+
         val personNavn = pdlClient.navn(personIdent)
         val pdf = pdfGenClient.createForhandsvarselPdf(
             callId,

@@ -67,6 +67,11 @@ class AktivitetskravApiSpek : Spek({
                 database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
             )
+            val validToken = generateJWT(
+                audience = externalMockEnvironment.environment.azure.appClientId,
+                issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
+                navIdent = UserConstants.VEILEDER_IDENT,
+            )
 
             beforeEachTest {
                 clearMocks(kafkaProducer)
@@ -91,11 +96,65 @@ class AktivitetskravApiSpek : Spek({
                 }
             }
 
-            val validToken = generateJWT(
-                audience = externalMockEnvironment.environment.azure.appClientId,
-                issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-                navIdent = UserConstants.VEILEDER_IDENT,
-            )
+            fun postVurdering(
+                vurderingDTO: AktivitetskravVurderingRequestDTO,
+            ) = run {
+                val urlVurderAktivitetskrav = "$aktivitetskravApiBasePath$vurderAktivitetskravPath"
+                handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                    addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                    setBody(objectMapper.writeValueAsString(vurderingDTO))
+                }
+            }
+
+            fun postEndreVurdering(
+                aktivitetskravUuid: UUID,
+                vurderingDTO: AktivitetskravVurderingRequestDTO,
+            ) = run {
+                val urlVurderAktivitetskrav = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                    addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                    setBody(objectMapper.writeValueAsString(vurderingDTO))
+                }
+            }
+
+            fun postForhandsvarsel(
+                aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+                arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                newForhandsvarselDTO: ForhandsvarselDTO,
+            ) = run {
+                val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
+                handleRequest(HttpMethod.Post, url) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                    addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                    setBody(objectMapper.writeValueAsString(newForhandsvarselDTO))
+                }
+            }
+
+            fun postAvvent(
+                aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+                arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            ) = run {
+                val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                handleRequest(HttpMethod.Post, url) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                    addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                    setBody(
+                        objectMapper.writeValueAsString(
+                            AktivitetskravVurderingRequestDTO(
+                                status = AktivitetskravStatus.AVVENT,
+                                beskrivelse = "venter litt",
+                                arsaker = listOf(VurderingArsak.ANNET),
+                            )
+                        )
+                    )
+                }
+            }
 
             describe("Get aktivitetskrav for person") {
                 describe("Happy path") {
@@ -254,9 +313,6 @@ class AktivitetskravApiSpek : Spek({
             }
 
             describe("Create and vurder aktivitetskrav for person") {
-                val urlVurderAktivitetskrav =
-                    "$aktivitetskravApiBasePath/$vurderAktivitetskravPath"
-
                 val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
                     status = AktivitetskravStatus.OPPFYLT,
                     beskrivelse = "Aktivitetskravet er oppfylt",
@@ -265,14 +321,7 @@ class AktivitetskravApiSpek : Spek({
 
                 describe("Happy path") {
                     it("Creates aktivitetskrav with vurdering and stoppunkt today and produces to Kafka if request is succesful") {
-                        with(
-                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
-                            }
-                        ) {
+                        with(postVurdering(vurderingDTO = vurderingOppfyltRequestDTO)) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
                             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
                             verify(exactly = 1) {
@@ -303,6 +352,7 @@ class AktivitetskravApiSpek : Spek({
                     }
                 }
                 describe("Unhappy path") {
+                    val urlVurderAktivitetskrav = "$aktivitetskravApiBasePath/$vurderAktivitetskravPath"
                     it("Returns status Unauthorized if no token is supplied") {
                         testMissingToken(urlVurderAktivitetskrav, HttpMethod.Post)
                     }
@@ -322,14 +372,7 @@ class AktivitetskravApiSpek : Spek({
                             arsaker = emptyList(),
                         )
 
-                        with(
-                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(vurderingMissingArsakRequestDTO))
-                            }
-                        ) {
+                        with(postVurdering(vurderingDTO = vurderingMissingArsakRequestDTO)) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
@@ -340,13 +383,104 @@ class AktivitetskravApiSpek : Spek({
                             arsaker = listOf(VurderingArsak.TILTAK),
                         )
 
+                        with(postVurdering(vurderingDTO = vurderingInvalidArsakRequestDTO)) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if already oppfylt") {
+                        val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.OPPFYLT,
+                            beskrivelse = "Aktivitetskravet er oppfylt",
+                            arsaker = listOf(VurderingArsak.FRISKMELDT),
+                        )
+                        val vurderingUnntakRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Unntak",
+                            arsaker = listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                        )
+                        val aktivitetskravUuid = aktivitetskravService.createAndVurderAktivitetskrav(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            aktivitetskravVurdering = vurderingOppfyltRequestDTO.toAktivitetskravVurdering("X999999"),
+                        )
+
                         with(
-                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(vurderingInvalidArsakRequestDTO))
-                            }
+                            postEndreVurdering(
+                                aktivitetskravUuid = aktivitetskravUuid,
+                                vurderingDTO = vurderingUnntakRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if already unntak") {
+                        val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.OPPFYLT,
+                            beskrivelse = "Aktivitetskravet er oppfylt",
+                            arsaker = listOf(VurderingArsak.FRISKMELDT),
+                        )
+                        val vurderingUnntakRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Unntak",
+                            arsaker = listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                        )
+                        val aktivitetskravUuid = aktivitetskravService.createAndVurderAktivitetskrav(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            aktivitetskravVurdering = vurderingUnntakRequestDTO.toAktivitetskravVurdering("X999999"),
+                        )
+
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = aktivitetskravUuid,
+                                vurderingDTO = vurderingOppfyltRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if already ikke-oppfylt") {
+                        val vurderingIkkeOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.IKKE_OPPFYLT,
+                            beskrivelse = "Aktivitetskravet er ikke oppfylt",
+                            arsaker = emptyList(),
+                        )
+                        val vurderingUnntakRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Unntak",
+                            arsaker = listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                        )
+                        val aktivitetskravUuid = aktivitetskravService.createAndVurderAktivitetskrav(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            aktivitetskravVurdering = vurderingIkkeOppfyltRequestDTO.toAktivitetskravVurdering("X999999"),
+                        )
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = aktivitetskravUuid,
+                                vurderingDTO = vurderingUnntakRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if already ikke-aktuell") {
+                        val vurderingIkkeAktueltRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.IKKE_AKTUELL,
+                            beskrivelse = "Aktivitetskravet er ikke aktuelt",
+                            arsaker = emptyList(),
+                        )
+                        val vurderingUnntakRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Unntak",
+                            arsaker = listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                        )
+                        val aktivitetskravUuid = aktivitetskravService.createAndVurderAktivitetskrav(
+                            personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                            aktivitetskravVurdering = vurderingIkkeAktueltRequestDTO.toAktivitetskravVurdering("X999999"),
+                        )
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = aktivitetskravUuid,
+                                vurderingDTO = vurderingUnntakRequestDTO,
+                            )
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
@@ -364,24 +498,9 @@ class AktivitetskravApiSpek : Spek({
                         header = "Forhåndsvarsel"
                     )
                 )
-
-                fun postForhandsvarsel(
-                    aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
-                    arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                    newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
-                ) = run {
-                    val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
-                    handleRequest(HttpMethod.Post, url) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                        addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
-                        setBody(objectMapper.writeValueAsString(newForhandsvarselDTO))
-                    }
-                }
-
                 describe("Happy path") {
                     it("Successfully creates a new forhandsvarsel") {
-                        with(postForhandsvarsel()) {
+                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                             val createdForhandsvarsel =
                                 objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
@@ -409,7 +528,12 @@ class AktivitetskravApiSpek : Spek({
 
                 describe("Unhappy path") {
                     it("Can't find aktivitetskrav for given uuid") {
-                        with(postForhandsvarsel(aktivitetskravUuid = UUID.randomUUID())) {
+                        with(
+                            postForhandsvarsel(
+                                aktivitetskravUuid = UUID.randomUUID(),
+                                newForhandsvarselDTO = forhandsvarselDTO,
+                            )
+                        ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
@@ -421,10 +545,21 @@ class AktivitetskravApiSpek : Spek({
                         }
                     }
                     it("Fails if already forhandsvarsel") {
-                        with(postForhandsvarsel()) {
+                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                         }
-                        with(postForhandsvarsel()) {
+                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("Fails if already forhandsvarsel before") {
+                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                        }
+                        with(postAvvent()) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                        }
+                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }

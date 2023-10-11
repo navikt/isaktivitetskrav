@@ -7,7 +7,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.toResponseDTO
 import no.nav.syfo.aktivitetskrav.domain.toVurderingResponseDto
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
@@ -96,16 +95,8 @@ fun Route.registerAktivitetskravApi(
                 throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
             }
 
-            val aktivitetskrav =
-                aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
-                    ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
-
-            if (
-                aktivitetskrav.status != AktivitetskravStatus.NY &&
-                aktivitetskrav.status != AktivitetskravStatus.AVVENT
-            ) {
-                throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")
-            }
+            val aktivitetskrav = aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
+                ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
 
             val forhandsvarsel = aktivitetskravVarselService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
