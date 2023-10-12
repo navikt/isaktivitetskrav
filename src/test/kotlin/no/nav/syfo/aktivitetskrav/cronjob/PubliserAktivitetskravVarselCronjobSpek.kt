@@ -11,7 +11,7 @@ import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.EsyfovarselHendelse
-import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.util.sekundOpplosning

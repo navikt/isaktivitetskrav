@@ -1,6 +1,6 @@
 package no.nav.syfo.aktivitetskrav.kafka
 
-import no.nav.syfo.aktivitetskrav.domain.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.util.configuredJacksonMapper
 import org.apache.kafka.common.serialization.Serializer
 

@@ -2,7 +2,7 @@ package no.nav.syfo.aktivitetskrav.kafka
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.syfo.aktivitetskrav.domain.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory

@@ -11,9 +11,9 @@ import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.aktivitetskrav.domain.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.KafkaAktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants

@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.kafka
+package no.nav.syfo.aktivitetskrav.kafka.domain
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
