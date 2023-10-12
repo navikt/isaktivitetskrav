@@ -75,7 +75,7 @@ class AktivitetskravVarselService(
         forhandsvarselDTO: ForhandsvarselDTO,
         callId: String,
     ): AktivitetskravVarsel {
-        if (!aktivitetskrav.status.isAllowedExistingStatusBeforeForhandsvarsel()) {
+        if (!aktivitetskrav.hasAllowedExistingStatusBeforeForhandsvarsel()) {
             throw ConflictException("Kan bare sende forhåndsvarsel når status er NY eller AVVENT, ikke ${aktivitetskrav.status}")
         }
         if (aktivitetskrav.vurderinger.any { it.status == AktivitetskravStatus.FORHANDSVARSEL }) {
