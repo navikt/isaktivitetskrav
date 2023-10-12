@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.kafka
+package no.nav.syfo.aktivitetskrav.kafka.domain
 
 import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.domain.PersonIdent
