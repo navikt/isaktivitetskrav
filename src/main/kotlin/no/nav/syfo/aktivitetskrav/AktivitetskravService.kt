@@ -52,13 +52,10 @@ class AktivitetskravService(
         if (currentVurdering?.isFinal() == true) {
             throw ConflictException("Aktivitetskravet har allerede en avsluttende vurdering")
         }
-        if (
-            aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL ||
-            aktivitetskravVurdering.status == AktivitetskravStatus.NY ||
-            aktivitetskravVurdering.status == AktivitetskravStatus.LUKKET ||
-            aktivitetskravVurdering.status == AktivitetskravStatus.STANS
-        ) {
-            throw ConflictException("Ny status for vurdering er ugyldig")
+
+        aktivitetskravVurdering.validate()
+        if (aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL) {
+            throw ConflictException("Kan ikke sette FORHANDSVARSEL her")
         }
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 

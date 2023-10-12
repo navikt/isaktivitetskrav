@@ -19,18 +19,6 @@ enum class VurderingArsak(val validForStatus: AktivitetskravStatus) {
     TILTAK(AktivitetskravStatus.OPPFYLT);
 }
 
-private fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
-    this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT
-
-private val allowedVurderingStatus = EnumSet.of(
-    AktivitetskravStatus.AVVENT,
-    AktivitetskravStatus.UNNTAK,
-    AktivitetskravStatus.OPPFYLT,
-    AktivitetskravStatus.IKKE_OPPFYLT,
-    AktivitetskravStatus.IKKE_AKTUELL,
-    AktivitetskravStatus.FORHANDSVARSEL,
-)
-
 data class AktivitetskravVurdering private constructor(
     val uuid: UUID,
     val createdAt: OffsetDateTime,
@@ -58,8 +46,6 @@ data class AktivitetskravVurdering private constructor(
             arsaker: List<VurderingArsak>,
             frist: LocalDate? = null,
         ): AktivitetskravVurdering {
-            validate(status, arsaker)
-
             return AktivitetskravVurdering(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),
@@ -68,36 +54,29 @@ data class AktivitetskravVurdering private constructor(
                 beskrivelse = beskrivelse,
                 arsaker = arsaker,
                 frist = frist,
-            )
+            ).also { it.validate() }
         }
+    }
+}
 
-        private fun validate(
-            status: AktivitetskravStatus,
-            arsaker: List<VurderingArsak>,
-        ) {
-            if (status !in allowedVurderingStatus) {
-                throw IllegalArgumentException("Can't create vurdering with status $status")
-            }
-            if (!status.requiresVurderingArsak() && arsaker.isNotEmpty()) {
-                throw IllegalArgumentException("$status should not have arsak")
-            }
-            if (status.requiresVurderingArsak() && arsaker.isEmpty()) {
-                throw IllegalArgumentException("Must have arsak for status $status")
-            }
-            if (arsaker.any { it.validForStatus != status }) {
-                throw IllegalArgumentException("Must have valid arsak for status $status")
-            }
-        }
+fun AktivitetskravVurdering.validate() {
+    if (!status.isAllowedChangedVurderingStatus()) {
+        throw IllegalArgumentException("Can't create vurdering with status $status")
+    }
+    if (!status.requiresVurderingArsak() && arsaker.isNotEmpty()) {
+        throw IllegalArgumentException("$status should not have arsak")
+    }
+    if (status.requiresVurderingArsak() && arsaker.isEmpty()) {
+        throw IllegalArgumentException("Must have arsak for status $status")
+    }
+    if (arsaker.any { it.validForStatus != status }) {
+        throw IllegalArgumentException("Must have valid arsak for status $status")
     }
 }
 
 fun AktivitetskravVurdering.arsakerToString() = this.arsaker.joinToString(",")
 
-fun AktivitetskravVurdering.isFinal() =
-    this.status == AktivitetskravStatus.OPPFYLT ||
-        this.status == AktivitetskravStatus.IKKE_OPPFYLT ||
-        this.status == AktivitetskravStatus.IKKE_AKTUELL ||
-        this.status == AktivitetskravStatus.UNNTAK
+fun AktivitetskravVurdering.isFinal() = this.status.isFinal()
 
 fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?): AktivitetskravVurderingResponseDTO =
     AktivitetskravVurderingResponseDTO(

@@ -1,9 +1,25 @@
 package no.nav.syfo.testhelper.generator
 
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import java.time.LocalDate
+import java.util.UUID
+
+fun AktivitetskravService.createAktivitetskravForTest(vararg aktivitetskrav: Aktivitetskrav) {
+    ExternalMockEnvironment.instance.database.connection.use { connection ->
+        aktivitetskrav.forEach {
+            createAktivitetskrav(
+                connection = connection,
+                aktivitetskrav = it,
+                referanseTilfelleBitUUID = UUID.randomUUID()
+            )
+        }
+        connection.commit()
+    }
+}
 
 fun createAktivitetskravNy(
     tilfelleStart: LocalDate,
