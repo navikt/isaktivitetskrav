@@ -95,7 +95,7 @@ fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
 
 fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 
-fun Aktivitetskrav.hasAllowedExistingStatusBeforeForhandsvarsel() = this.status.isAllowedExistingStatusBeforeForhandsvarsel()
+fun Aktivitetskrav.hasAllowedExistingStatusBeforeForhandsvarsel() = this.status.isAllowedStatusBeforeForhandsvarsel()
 
 fun Aktivitetskrav.toResponseDTO(vurderinger: List<AktivitetskravVurderingResponseDTO>): AktivitetskravResponseDTO =
     AktivitetskravResponseDTO(

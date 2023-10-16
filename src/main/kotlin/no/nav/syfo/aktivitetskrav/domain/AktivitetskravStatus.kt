@@ -26,15 +26,15 @@ private val allowedChangedVurderingStatus = EnumSet.of(
     AktivitetskravStatus.FORHANDSVARSEL,
 )
 
-fun AktivitetskravStatus.isAllowedExistingStatusBeforeForhandsvarsel() =
+fun AktivitetskravStatus.isAllowedStatusBeforeForhandsvarsel() =
     this in EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AVVENT)
 
 fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
     this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT
 
-fun AktivitetskravStatus.isFinal() = this in finalVurderinger
+fun AktivitetskravStatus.isFinal() = this in finalStatuses
 
-private val finalVurderinger = EnumSet.of(
+private val finalStatuses = EnumSet.of(
     AktivitetskravStatus.UNNTAK,
     AktivitetskravStatus.OPPFYLT,
     AktivitetskravStatus.IKKE_OPPFYLT,
