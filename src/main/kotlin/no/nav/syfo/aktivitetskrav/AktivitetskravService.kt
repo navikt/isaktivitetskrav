@@ -110,12 +110,12 @@ class AktivitetskravService(
             Aktivitetskrav.fromVurdering(personIdent = personIdent, vurdering = aktivitetskravVurdering)
 
         database.connection.use { connection ->
-            val aktivitetskravId = connection.createAktivitetskrav(
+            val pAktivitetskrav = connection.createAktivitetskrav(
                 aktivitetskrav = aktivitetskrav,
                 referanseTilfelleBitUUID = null
             )
             connection.createAktivitetskravVurdering(
-                aktivitetskravId = aktivitetskravId,
+                aktivitetskravId = pAktivitetskrav.id,
                 aktivitetskravVurdering = aktivitetskravVurdering
             )
             connection.commit()

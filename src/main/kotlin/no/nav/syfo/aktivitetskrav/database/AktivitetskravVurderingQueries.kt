@@ -22,13 +22,13 @@ const val queryCreateAktivitetskrav =
         stoppunkt_at,
         referanse_tilfelle_bit_uuid
     ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?)
-    RETURNING id
+    RETURNING *
     """
 
 fun Connection.createAktivitetskrav(
     aktivitetskrav: Aktivitetskrav,
     referanseTilfelleBitUUID: UUID?,
-): Int {
+): PAktivitetskrav {
     val idList = this.prepareStatement(queryCreateAktivitetskrav).use {
         it.setString(1, aktivitetskrav.uuid.toString())
         it.setObject(2, aktivitetskrav.createdAt)
@@ -37,7 +37,7 @@ fun Connection.createAktivitetskrav(
         it.setString(5, aktivitetskrav.status.name)
         it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
         it.setString(7, referanseTilfelleBitUUID?.toString())
-        it.executeQuery().toList { getInt("id") }
+        it.executeQuery().toList { toPAktivitetskrav() }
     }
 
     if (idList.size != 1) {
@@ -60,13 +60,13 @@ const val queryCreateAktivitetskravVurdering =
         arsaker,
         frist
     ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
-    RETURNING id
+    RETURNING *
     """
 
 fun Connection.createAktivitetskravVurdering(
     aktivitetskravId: Int,
     aktivitetskravVurdering: AktivitetskravVurdering,
-): Int {
+): PAktivitetskravVurdering {
     val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use {
         it.setString(1, aktivitetskravVurdering.uuid.toString())
         it.setInt(2, aktivitetskravId)
@@ -76,7 +76,7 @@ fun Connection.createAktivitetskravVurdering(
         it.setString(6, aktivitetskravVurdering.beskrivelse)
         it.setString(7, aktivitetskravVurdering.arsakerToString())
         it.setDate(8, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
-        it.executeQuery().toList { getInt("id") }
+        it.executeQuery().toList { toPAktivitetskravVurdering() }
     }
 
     if (idList.size != 1) {

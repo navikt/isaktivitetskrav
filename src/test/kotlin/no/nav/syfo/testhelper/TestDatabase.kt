@@ -1,10 +1,7 @@
 package no.nav.syfo.testhelper
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVarselPdf
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVarsel
-import no.nav.syfo.aktivitetskrav.database.createAktivitetskrav
-import no.nav.syfo.aktivitetskrav.database.toPAktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.toList
@@ -88,14 +85,14 @@ fun DatabaseInterface.dropData() {
     }
 }
 
-fun DatabaseInterface.createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav) {
+fun DatabaseInterface.createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav): List<PAktivitetskrav> =
     this.connection.use { connection ->
-        aktivitetskrav.forEach {
+        val createdAktivitetskrav = aktivitetskrav.map {
             connection.createAktivitetskrav(aktivitetskrav = it, referanseTilfelleBitUUID = UUID.randomUUID())
         }
         connection.commit()
+        createdAktivitetskrav
     }
-}
 
 const val queryGetVarslerForPerson = """
     SELECT av.* 
@@ -120,7 +117,4 @@ class TestDatabaseNotResponding : DatabaseInterface {
 
     override val connection: Connection
         get() = throw Exception("Not working")
-
-    fun stop() {
-    }
 }

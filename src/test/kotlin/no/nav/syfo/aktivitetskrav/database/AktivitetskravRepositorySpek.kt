@@ -6,10 +6,7 @@ import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.testhelper.*
-import no.nav.syfo.testhelper.generator.createAktivitetskravNy
-import no.nav.syfo.testhelper.generator.createNAktivitetskrav
-import no.nav.syfo.testhelper.generator.createVarsler
-import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
+import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
@@ -119,6 +116,51 @@ class AktivitetskravRepositorySpek : Spek({
                     expiredVarsler.any {
                         it.svarfrist == LocalDate.now().minusWeeks(1)
                     } shouldBe true
+                }
+
+                it("Is not retrieving expired varsler which has OPPFYLT or UNNTAK status after they are created") {
+                    val createdAktivitetskravList =
+                        createNAktivitetskrav(3)
+                            .map {
+                                val vurdering = AktivitetskravVurdering.create(
+                                    status = AktivitetskravStatus.FORHANDSVARSEL,
+                                    createdBy = UserConstants.VEILEDER_IDENT,
+                                    beskrivelse = "En test vurdering",
+                                    arsaker = emptyList(),
+                                    frist = null,
+                                )
+                                val updatedAktivitetskrav = it.vurder(vurdering)
+                                database.createAktivitetskrav(updatedAktivitetskrav)
+                                updatedAktivitetskrav
+                            }
+                    val varsler = listOf(
+                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
+                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
+                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                    )
+                    for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
+                        aktivitetskravVarselRepository.create(
+                            aktivitetskrav = aktivitetkrav,
+                            varsel = varsel,
+                            pdf = pdf,
+                        )
+                    }
+                    val aktivitetskravOppfylt =
+                        createAktivitetskravOppfylt(createdAktivitetskravList[0])
+                    val aktivitetskravUnntak =
+                        createAktivitetskravUnntak(createdAktivitetskravList[1])
+                    database.connection.use { connection ->
+                        val oppfyltId = connection.updateAktivitetskrav(aktivitetskravOppfylt)
+                        val unntakId = connection.updateAktivitetskrav(aktivitetskravUnntak)
+                        connection.createAktivitetskravVurdering(oppfyltId, aktivitetskravOppfylt.vurderinger.first())
+                        connection.createAktivitetskravVurdering(unntakId, aktivitetskravUnntak.vurderinger.first())
+                        connection.commit()
+                    }
+
+                    val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
+                        .map { (_, _, varsel) -> varsel }
+
+                    expiredVarsler.size shouldBeEqualTo 1
                 }
 
                 it("Should update varsel") {
