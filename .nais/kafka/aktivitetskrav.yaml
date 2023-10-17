@@ -34,3 +34,6 @@ spec:
     - team: teamsykefravr
       application: iskafkamanager
       access: read
+    - team: team-esyfo
+      application: aktivitetskrav-backend
+      access: read
