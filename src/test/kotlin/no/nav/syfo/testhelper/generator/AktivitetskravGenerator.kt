@@ -36,7 +36,12 @@ fun createAktivitetskravAvvent(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         status = AktivitetskravStatus.AVVENT,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Avvent",
-        arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER, VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
+        arsaker = listOf(
+            VurderingArsak.INFORMASJON_BEHANDLER,
+            VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+            VurderingArsak.FORELEGGES_ROL,
+            VurderingArsak.SAKSDROFTINGSVERKSTED
+        ),
     )
     return nyAktivitetskrav.vurder(avventVurdering)
 }

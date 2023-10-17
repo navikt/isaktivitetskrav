@@ -142,7 +142,9 @@ class AktivitetskravApiSpek : Spek({
                             beskrivelse = "Avvent",
                             arsaker = listOf(
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-                                VurderingArsak.INFORMASJON_BEHANDLER
+                                VurderingArsak.INFORMASJON_BEHANDLER,
+                                VurderingArsak.FORELEGGES_ROL,
+                                VurderingArsak.SAKSDROFTINGSVERKSTED,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
@@ -191,7 +193,9 @@ class AktivitetskravApiSpek : Spek({
                             oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             oldestVurdering.arsaker shouldBeEqualTo listOf(
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-                                VurderingArsak.INFORMASJON_BEHANDLER
+                                VurderingArsak.INFORMASJON_BEHANDLER,
+                                VurderingArsak.FORELEGGES_ROL,
+                                VurderingArsak.SAKSDROFTINGSVERKSTED,
                             )
                             oldestVurdering.varsel.shouldBeNull()
                         }
@@ -487,7 +491,9 @@ class AktivitetskravApiSpek : Spek({
                             beskrivelse = "Avvent",
                             arsaker = listOf(
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-                                VurderingArsak.INFORMASJON_BEHANDLER
+                                VurderingArsak.INFORMASJON_BEHANDLER,
+                                VurderingArsak.FORELEGGES_ROL,
+                                VurderingArsak.SAKSDROFTINGSVERKSTED,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
