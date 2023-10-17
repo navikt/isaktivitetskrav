@@ -21,7 +21,6 @@ object Versions {
     const val postgres = "42.5.1"
     val postgresEmbedded = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
     const val redisEmbedded = "0.7.3"
-    const val scala = "2.13.9"
     const val spek = "2.0.19"
 }
 
@@ -96,11 +95,6 @@ dependencies {
             version {
                 require("32.1.3-jre")
             }
-        }
-    }
-    implementation("org.scala-lang:scala-library") {
-        version {
-            strictly(Versions.scala)
         }
     }
 
