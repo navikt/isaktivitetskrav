@@ -120,7 +120,7 @@ class AktivitetskravRepositorySpek : Spek({
 
                 it("Is not retrieving expired varsler which has OPPFYLT or UNNTAK status after they are created") {
                     val createdAktivitetskravList =
-                        createNAktivitetskrav(3)
+                        createNAktivitetskrav(4)
                             .map {
                                 val vurdering = AktivitetskravVurdering.create(
                                     status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -136,6 +136,7 @@ class AktivitetskravRepositorySpek : Spek({
                     val varsler = listOf(
                         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
                         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
+                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
                         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
                     )
                     for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
@@ -149,18 +150,23 @@ class AktivitetskravRepositorySpek : Spek({
                         createAktivitetskravOppfylt(createdAktivitetskravList[0])
                     val aktivitetskravUnntak =
                         createAktivitetskravUnntak(createdAktivitetskravList[1])
+                    val aktivitetskravAvvent =
+                        createAktivitetskravAvvent(createdAktivitetskravList[2])
+
                     database.connection.use { connection ->
                         val oppfyltId = connection.updateAktivitetskrav(aktivitetskravOppfylt)
                         val unntakId = connection.updateAktivitetskrav(aktivitetskravUnntak)
+                        val avventId = connection.updateAktivitetskrav(aktivitetskravAvvent)
                         connection.createAktivitetskravVurdering(oppfyltId, aktivitetskravOppfylt.vurderinger.first())
                         connection.createAktivitetskravVurdering(unntakId, aktivitetskravUnntak.vurderinger.first())
+                        connection.createAktivitetskravVurdering(avventId, aktivitetskravAvvent.vurderinger.first())
                         connection.commit()
                     }
 
                     val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
                         .map { (_, _, varsel) -> varsel }
 
-                    expiredVarsler.size shouldBeEqualTo 1
+                    expiredVarsler.size shouldBeEqualTo 2
                 }
 
                 it("Should update varsel") {
