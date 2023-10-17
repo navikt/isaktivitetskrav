@@ -12,7 +12,7 @@ object Versions {
     const val jedis = "5.0.0"
     const val kafka = "3.4.0"
     const val kluent = "1.73"
-    const val ktor = "2.3.2"
+    const val ktor = "2.3.5"
     const val logback = "1.4.7"
     const val logstashEncoder = "7.3"
     const val micrometerRegistry = "1.11.0"
@@ -21,12 +21,11 @@ object Versions {
     const val postgres = "42.5.1"
     val postgresEmbedded = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
     const val redisEmbedded = "0.7.3"
-    const val scala = "2.13.9"
     const val spek = "2.0.19"
 }
 
 plugins {
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "1.9.10"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jlleitschuh.gradle.ktlint") version "11.4.2"
 }
@@ -84,9 +83,18 @@ dependencies {
     }
     implementation("org.apache.kafka:kafka_2.13:${Versions.kafka}", excludeLog4j)
     implementation("io.confluent:kafka-avro-serializer:${Versions.confluent}", excludeLog4j)
-    implementation("org.scala-lang:scala-library") {
-        version {
-            strictly(Versions.scala)
+    constraints {
+        implementation("org.apache.avro:avro") {
+            because("org.apache.avro:avro:1.11.0 -> https://www.cve.org/CVERecord?id=CVE-2023-39410")
+            version {
+                require("1.11.3")
+            }
+        }
+        implementation("com.google.guava:guava") {
+            because("com.google.guava:guava:30.1.1-jre -> https://www.cve.org/CVERecord?id=CVE-2020-8908")
+            version {
+                require("32.1.3-jre")
+            }
         }
     }
 
