@@ -120,7 +120,7 @@ class AktivitetskravRepositorySpek : Spek({
 
                 it("Is not retrieving expired varsler which has OPPFYLT or UNNTAK status after they are created") {
                     val createdAktivitetskravList =
-                        createNAktivitetskrav(4)
+                        createNAktivitetskrav(5)
                             .map {
                                 val vurdering = AktivitetskravVurdering.create(
                                     status = AktivitetskravStatus.FORHANDSVARSEL,
@@ -137,7 +137,8 @@ class AktivitetskravRepositorySpek : Spek({
                         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
                         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
                         AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
+                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
                     )
                     for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
                         aktivitetskravVarselRepository.create(
@@ -150,15 +151,22 @@ class AktivitetskravRepositorySpek : Spek({
                         createAktivitetskravOppfylt(createdAktivitetskravList[0])
                     val aktivitetskravUnntak =
                         createAktivitetskravUnntak(createdAktivitetskravList[1])
+                    val aktivitetskravIkkeAktuell =
+                        createAktivitetskravUnntak(createdAktivitetskravList[2])
                     val aktivitetskravAvvent =
-                        createAktivitetskravAvvent(createdAktivitetskravList[2])
+                        createAktivitetskravAvvent(createdAktivitetskravList[3])
 
                     database.connection.use { connection ->
                         val oppfyltId = connection.updateAktivitetskrav(aktivitetskravOppfylt)
                         val unntakId = connection.updateAktivitetskrav(aktivitetskravUnntak)
+                        val ikkeAktuellId = connection.updateAktivitetskrav(aktivitetskravIkkeAktuell)
                         val avventId = connection.updateAktivitetskrav(aktivitetskravAvvent)
                         connection.createAktivitetskravVurdering(oppfyltId, aktivitetskravOppfylt.vurderinger.first())
                         connection.createAktivitetskravVurdering(unntakId, aktivitetskravUnntak.vurderinger.first())
+                        connection.createAktivitetskravVurdering(
+                            ikkeAktuellId,
+                            aktivitetskravIkkeAktuell.vurderinger.first()
+                        )
                         connection.createAktivitetskravVurdering(avventId, aktivitetskravAvvent.vurderinger.first())
                         connection.commit()
                     }

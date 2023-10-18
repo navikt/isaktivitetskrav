@@ -98,15 +98,6 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
         }
 
     companion object {
-        private const val AKTIVITETSKRAV_WITH_HANDLED_VARSEL =
-            """
-            SELECT a.id
-            FROM aktivitetskrav_vurdering vurdering
-            WHERE vurdering.aktivitetskrav_id = a.id
-                AND vurdering.created_at > varsel.created_at
-                AND varsel.created_at + (INTERVAL '3 weeks') > vurdering.created_at
-                AND vurdering.status IN ('UNNTAK', 'OPPFYLT')
-            """
         private const val SELECT_EXPIRED_VARSLER =
             """
             SELECT a.personident, a.uuid as aktivitetskrav_uuid, a.id as aktivitetskrav_id, varsel.*
@@ -116,7 +107,14 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
                 INNER JOIN aktivitetskrav a ON a.id = vurdering.aktivitetskrav_id                
             WHERE expired_varsel_published_at IS NULL
                 AND svarfrist <= NOW()
-                AND NOT EXISTS ($AKTIVITETSKRAV_WITH_HANDLED_VARSEL)
+                AND NOT EXISTS (
+                    SELECT a.id
+                    FROM aktivitetskrav_vurdering vurdering
+                    WHERE vurdering.aktivitetskrav_id = a.id
+                        AND vurdering.created_at > varsel.created_at
+                        AND varsel.created_at + (INTERVAL '3 weeks') > vurdering.created_at
+                        AND vurdering.status IN ('UNNTAK', 'OPPFYLT', 'IKKE_AKTUELL')
+                )
             """
         private const val SET_EXPIRED_VARSEL_PUBLISHED_AT =
             """
