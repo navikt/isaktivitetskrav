@@ -10,8 +10,8 @@ import java.util.*
 enum class VurderingArsak(val validForStatus: AktivitetskravStatus) {
     OPPFOLGINGSPLAN_ARBEIDSGIVER(AktivitetskravStatus.AVVENT),
     INFORMASJON_BEHANDLER(AktivitetskravStatus.AVVENT),
-    FORELEGGES_ROL(AktivitetskravStatus.AVVENT),
-    SAKSDROFTINGSVERKSTED(AktivitetskravStatus.AVVENT),
+    DROFTES_MED_ROL(AktivitetskravStatus.AVVENT),
+    DROFTES_INTERNT(AktivitetskravStatus.AVVENT),
     ANNET(AktivitetskravStatus.AVVENT),
     MEDISINSKE_GRUNNER(AktivitetskravStatus.UNNTAK),
     TILRETTELEGGING_IKKE_MULIG(AktivitetskravStatus.UNNTAK),

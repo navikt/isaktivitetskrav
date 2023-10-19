@@ -143,8 +143,8 @@ class AktivitetskravApiSpek : Spek({
                             arsaker = listOf(
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
                                 VurderingArsak.INFORMASJON_BEHANDLER,
-                                VurderingArsak.FORELEGGES_ROL,
-                                VurderingArsak.SAKSDROFTINGSVERKSTED,
+                                VurderingArsak.DROFTES_MED_ROL,
+                                VurderingArsak.DROFTES_INTERNT,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
@@ -194,8 +194,8 @@ class AktivitetskravApiSpek : Spek({
                             oldestVurdering.arsaker shouldBeEqualTo listOf(
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
                                 VurderingArsak.INFORMASJON_BEHANDLER,
-                                VurderingArsak.FORELEGGES_ROL,
-                                VurderingArsak.SAKSDROFTINGSVERKSTED,
+                                VurderingArsak.DROFTES_MED_ROL,
+                                VurderingArsak.DROFTES_INTERNT,
                             )
                             oldestVurdering.varsel.shouldBeNull()
                         }
@@ -492,8 +492,8 @@ class AktivitetskravApiSpek : Spek({
                             arsaker = listOf(
                                 VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
                                 VurderingArsak.INFORMASJON_BEHANDLER,
-                                VurderingArsak.FORELEGGES_ROL,
-                                VurderingArsak.SAKSDROFTINGSVERKSTED,
+                                VurderingArsak.DROFTES_MED_ROL,
+                                VurderingArsak.DROFTES_INTERNT,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
