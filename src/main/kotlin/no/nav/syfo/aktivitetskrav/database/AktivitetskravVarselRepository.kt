@@ -108,7 +108,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             WHERE expired_varsel_published_at IS NULL
                 AND svarfrist <= NOW()
                 AND NOT EXISTS (
-                    SELECT a.id
+                    SELECT 1
                     FROM aktivitetskrav_vurdering vurdering
                     WHERE vurdering.aktivitetskrav_id = a.id
                         AND vurdering.created_at > varsel.created_at

@@ -118,7 +118,7 @@ class AktivitetskravRepositorySpek : Spek({
                     } shouldBe true
                 }
 
-                it("Is not retrieving expired varsler which has OPPFYLT or UNNTAK status after they are created") {
+                it("Is not retrieving expired varsler which has OPPFYLT, UNNTAK or IKKE_AKTUELL status after they are created") {
                     val createdAktivitetskravList =
                         createNAktivitetskrav(5)
                             .map {
