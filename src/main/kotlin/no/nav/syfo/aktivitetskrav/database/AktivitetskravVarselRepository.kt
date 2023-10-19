@@ -112,7 +112,6 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
                     FROM aktivitetskrav_vurdering vurdering
                     WHERE vurdering.aktivitetskrav_id = a.id
                         AND vurdering.created_at > varsel.created_at
-                        AND varsel.created_at + (INTERVAL '3 weeks') > vurdering.created_at
                         AND vurdering.status IN ('UNNTAK', 'OPPFYLT', 'IKKE_AKTUELL')
                 )
             """
