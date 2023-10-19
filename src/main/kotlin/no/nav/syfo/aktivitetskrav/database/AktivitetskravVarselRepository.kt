@@ -30,12 +30,12 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
         database.connection.use { connection ->
             val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav)
             val newestVurdering = aktivitetskrav.vurderinger.first()
-            val vurderingId = connection.createAktivitetskravVurdering(
+            val vurdering = connection.createAktivitetskravVurdering(
                 aktivitetskravId = aktivitetskravId,
                 aktivitetskravVurdering = newestVurdering,
             )
             val nyttVarsel = connection.createAktivitetskravVarsel(
-                vurderingId = vurderingId,
+                vurderingId = vurdering.id,
                 varsel = varsel,
             )
             connection.createAktivitetskravVarselPdf(
@@ -63,16 +63,17 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     suspend fun getExpiredVarsler(): List<Triple<PersonIdent, UUID, PAktivitetskravVarsel>> =
         withContext(Dispatchers.IO) {
             database.connection.use { connection ->
-                connection.prepareStatement(Queries.selectExpiredVarsler).use {
-                    it.executeQuery()
-                        .toList {
-                            Triple(
-                                PersonIdent(getString("personident")),
-                                UUID.fromString(getString("aktivitetskrav_uuid")),
-                                toPAktivitetskravVarsel(),
-                            )
-                        }
-                }
+                connection.prepareStatement(SELECT_EXPIRED_VARSLER)
+                    .use {
+                        it.executeQuery()
+                            .toList {
+                                Triple(
+                                    PersonIdent(getString("personident")),
+                                    UUID.fromString(getString("aktivitetskrav_uuid")),
+                                    toPAktivitetskravVarsel(),
+                                )
+                            }
+                    }
             }
         }
 
@@ -81,12 +82,13 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     ): Int =
         withContext(Dispatchers.IO) {
             database.connection.use { connection ->
-                val rowsAffected = connection.prepareStatement(Queries.setExpiredVarselPublishedAt).use {
-                    it.setObject(1, nowUTC())
-                    it.setObject(2, nowUTC())
-                    it.setString(3, publishedExpiredVarsel.varselUuid.toString())
-                    it.executeUpdate()
-                }
+                val rowsAffected =
+                    connection.prepareStatement(SET_EXPIRED_VARSEL_PUBLISHED_AT).use {
+                        it.setObject(1, nowUTC())
+                        it.setObject(2, nowUTC())
+                        it.setString(3, publishedExpiredVarsel.varselUuid.toString())
+                        it.executeUpdate()
+                    }
                 if (rowsAffected != 1) {
                     throw SQLException("Expected one row to be updated, got update count $rowsAffected")
                 }
@@ -94,11 +96,10 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
                 rowsAffected
             }
         }
-}
 
-private object Queries {
-    const val selectExpiredVarsler =
-        """
+    companion object {
+        private const val SELECT_EXPIRED_VARSLER =
+            """
             SELECT a.personident, a.uuid as aktivitetskrav_uuid, varsel.*
             FROM aktivitetskrav_varsel varsel
                 INNER JOIN aktivitetskrav_vurdering vurdering
@@ -106,14 +107,21 @@ private object Queries {
                 INNER JOIN aktivitetskrav a ON a.id = vurdering.aktivitetskrav_id                
             WHERE expired_varsel_published_at IS NULL
                 AND svarfrist <= NOW()
-        """
-
-    const val setExpiredVarselPublishedAt =
-        """
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM aktivitetskrav_vurdering vurdering
+                    WHERE vurdering.aktivitetskrav_id = a.id
+                        AND vurdering.created_at > varsel.created_at
+                        AND vurdering.status IN ('UNNTAK', 'OPPFYLT', 'IKKE_AKTUELL')
+                )
+            """
+        private const val SET_EXPIRED_VARSEL_PUBLISHED_AT =
+            """
             UPDATE aktivitetskrav_varsel
             SET expired_varsel_published_at = ?, updated_at = ?
             WHERE uuid = ?
         """
+    }
 }
 
 private const val queryCreateAktivitetskravVarsel =
