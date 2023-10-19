@@ -100,7 +100,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     companion object {
         private const val SELECT_EXPIRED_VARSLER =
             """
-            SELECT a.personident, a.uuid as aktivitetskrav_uuid, a.id as aktivitetskrav_id, varsel.*
+            SELECT a.personident, a.uuid as aktivitetskrav_uuid, varsel.*
             FROM aktivitetskrav_varsel varsel
                 INNER JOIN aktivitetskrav_vurdering vurdering
                     ON varsel.aktivitetskrav_vurdering_id = vurdering.id

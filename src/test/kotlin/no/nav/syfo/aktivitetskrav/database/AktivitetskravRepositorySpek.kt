@@ -133,13 +133,8 @@ class AktivitetskravRepositorySpek : Spek({
                                 database.createAktivitetskrav(updatedAktivitetskrav)
                                 updatedAktivitetskrav
                             }
-                    val varsler = listOf(
-                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-                        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-                    )
+                    val varsler =
+                        List(5) { AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)) }
                     for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
                         aktivitetskravVarselRepository.create(
                             aktivitetskrav = aktivitetkrav,
