@@ -39,8 +39,8 @@ fun createAktivitetskravAvvent(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         arsaker = listOf(
             VurderingArsak.INFORMASJON_BEHANDLER,
             VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-            VurderingArsak.FORELEGGES_ROL,
-            VurderingArsak.SAKSDROFTINGSVERKSTED
+            VurderingArsak.DROFTES_MED_ROL,
+            VurderingArsak.DROFTES_INTERNT,
         ),
     )
     return nyAktivitetskrav.vurder(avventVurdering)
