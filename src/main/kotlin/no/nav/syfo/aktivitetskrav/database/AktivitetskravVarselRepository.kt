@@ -7,6 +7,7 @@ import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
@@ -49,14 +50,14 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
         database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> =
+    fun getIkkePubliserte(): List<Pair<PAktivitetskravVarsel, VarselReferences>> =
         database.getIkkePubliserteVarsler()
 
     fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
 
-    fun setPublished(varsel: AktivitetskravVarsel) =
-        database.setPublished(varsel)
+    fun setPublished(varsel: KafkaAktivitetskravVarsel) =
+        database.setPublished(varsel.varselUuid)
 
     fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
 
@@ -239,7 +240,7 @@ private fun DatabaseInterface.updateVarselJournalpostId(varsel: AktivitetskravVa
 }
 
 private const val queryGetIkkePubliserteVarsler = """
-    SELECT av.*, a.personident as personident, a.uuid as aktivitetskravUuid 
+    SELECT av.*, a.personident as personident, a.uuid as aktivitetskravUuid, avu.uuid as vurderingUuid 
     FROM aktivitetskrav_varsel av 
     INNER JOIN aktivitetskrav_vurdering avu
     ON av.aktivitetskrav_vurdering_id = avu.id
@@ -248,14 +249,17 @@ private const val queryGetIkkePubliserteVarsler = """
     WHERE av.journalpost_id IS NOT NULL and av.published_at IS NULL
 """
 
-private fun DatabaseInterface.getIkkePubliserteVarsler(): List<Triple<PersonIdent, PAktivitetskravVarsel, UUID>> {
+private fun DatabaseInterface.getIkkePubliserteVarsler(): List<Pair<PAktivitetskravVarsel, VarselReferences>> {
     return this.connection.use { connection ->
         connection.prepareStatement(queryGetIkkePubliserteVarsler).use {
             it.executeQuery().toList {
-                Triple(
-                    PersonIdent(getString("personident")),
+                Pair(
                     toPAktivitetskravVarsel(),
-                    UUID.fromString(getString("aktivitetskravUuid")),
+                    VarselReferences(
+                        personIdent = PersonIdent(getString("personident")),
+                        aktivitetskravUuid = UUID.fromString(getString("aktivitetskravUuid")),
+                        vurderingUuid = UUID.fromString(getString("vurderingUuid")),
+                    )
                 )
             }
         }
@@ -268,13 +272,13 @@ private const val querySetPublished = """
     WHERE uuid = ?
 """
 
-private fun DatabaseInterface.setPublished(varsel: AktivitetskravVarsel) {
+private fun DatabaseInterface.setPublished(varselUuid: UUID) {
     val now = nowUTC()
     this.connection.use { connection ->
         connection.prepareStatement(querySetPublished).use {
             it.setObject(1, now)
             it.setObject(2, now)
-            it.setString(3, varsel.uuid.toString())
+            it.setString(3, varselUuid.toString())
             val updated = it.executeUpdate()
             if (updated != 1) {
                 throw SQLException("Expected a single row to be updated, got update count $updated")

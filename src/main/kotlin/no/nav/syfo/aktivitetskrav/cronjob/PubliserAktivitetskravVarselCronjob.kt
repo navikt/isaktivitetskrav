@@ -23,13 +23,9 @@ class PubliserAktivitetskravVarselCronjob(
 
     fun runJob(): CronjobResult {
         val result = CronjobResult()
-        aktivitetskravVarselService.getIkkePubliserte().forEach { (personIdent, varsel, aktivitetskravUuid) ->
+        aktivitetskravVarselService.getIkkePubliserte().forEach { varsel ->
             try {
-                aktivitetskravVarselService.publiser(
-                    personIdent = personIdent,
-                    aktivitetskravUuid = aktivitetskravUuid,
-                    varsel = varsel,
-                )
+                aktivitetskravVarselService.publiser(varsel = varsel)
                 result.updated++
             } catch (e: Exception) {
                 log.error("Exception caught while attempting publisering of aktivitetskrav-varsel", e)
