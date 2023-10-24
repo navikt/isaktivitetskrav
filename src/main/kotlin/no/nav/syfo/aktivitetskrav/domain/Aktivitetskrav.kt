@@ -93,6 +93,7 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
         stoppunktAt = this.stoppunktAt,
         updatedBy = latestVurdering?.createdBy,
         arsaker = latestVurdering?.arsaker?.map { it.name } ?: emptyList(),
+        sisteVurderingUuid = latestVurdering?.uuid?.toString(),
         sistVurdert = latestVurdering?.createdAt,
         frist = latestVurdering?.frist,
     )

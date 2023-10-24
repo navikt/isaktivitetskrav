@@ -7,6 +7,7 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
@@ -69,7 +70,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             aktivitetskrav: Aktivitetskrav,
             pdf: ByteArray,
             journalpostId: String? = defaultJournalpostId,
-        ): AktivitetskravVarsel {
+        ): Pair<AktivitetskravVarsel, AktivitetskravVurdering> {
             database.createAktivitetskrav(aktivitetskrav)
 
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
@@ -83,7 +84,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             if (journalpostId != null) {
                 aktivitetskravVarselRepository.updateJournalpostId(forhandsvarsel, journalpostId)
             }
-            return forhandsvarsel
+            return Pair(forhandsvarsel, vurdering)
         }
 
         beforeEachTest {
@@ -101,7 +102,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
 
         describe("${PubliserAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
             it("Publiserer journalfort forhandsvarsel") {
-                createForhandsvarsel(
+                val (_, vurdering) = createForhandsvarsel(
                     aktivitetskrav = aktivitetskrav,
                     pdf = pdf,
                 )
@@ -136,6 +137,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
                 kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
                 kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
                 kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
+                kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
             }
             it("Publiserer ikke forhandsvarsel som ikke er journalfort") {
                 createForhandsvarsel(

@@ -6,6 +6,7 @@ import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
+import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
@@ -28,25 +29,23 @@ class AktivitetskravVarselService(
             .map { Triple(it.first, it.second.toAktivitetkravVarsel(), it.third) }
     }
 
-    fun getIkkePubliserte(): List<Triple<PersonIdent, AktivitetskravVarsel, UUID>> {
+    fun getIkkePubliserte(): List<KafkaAktivitetskravVarsel> {
         return aktivitetskravVarselRepository.getIkkePubliserte()
-            .map { Triple(it.first, it.second.toAktivitetkravVarsel(), it.third) }
+            .map { it.first.toKafkaAktivitetskravVarsel(it.second) }
     }
 
-    fun publiser(varsel: AktivitetskravVarsel, personIdent: PersonIdent, aktivitetskravUuid: UUID) {
+    fun publiser(varsel: KafkaAktivitetskravVarsel) {
         aktivitetskravVarselProducer.sendAktivitetskravVarsel(
-            personIdent = personIdent,
-            aktivitetskravUuid = aktivitetskravUuid,
             varsel = varsel,
         )
         // TODO: Koden under kan fjernes når eSyfo konsumerer varselet over og sender til esyfovarsel
         arbeidstakervarselProducer.sendArbeidstakervarsel(
             varselHendelse = ArbeidstakerHendelse(
                 type = HendelseType.SM_FORHANDSVARSEL_STANS,
-                arbeidstakerFnr = personIdent.value,
+                arbeidstakerFnr = varsel.personIdent,
                 data = VarselData(
                     journalpost = VarselDataJournalpost(
-                        uuid = varsel.uuid.toString(),
+                        uuid = varsel.varselUuid.toString(),
                         id = varsel.journalpostId,
                     ),
                 ),
