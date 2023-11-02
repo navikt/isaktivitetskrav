@@ -50,9 +50,9 @@ data class Environment(
     val outdatedCronJobEnabled: Boolean = getEnvVar("OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
     val clients: ClientsEnvironment = ClientsEnvironment(
-        syfotilgangskontroll = ClientEnvironment(
-            baseUrl = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
-            clientId = getEnvVar("SYFOTILGANGSKONTROLL_CLIENT_ID"),
+        istilgangskontroll = ClientEnvironment(
+            baseUrl = getEnvVar("ISTILGANGSKONTROLL_URL"),
+            clientId = getEnvVar("ISTILGANGSKONTROLL_CLIENT_ID"),
         ),
         pdl = ClientEnvironment(
             baseUrl = getEnvVar("PDL_URL"),

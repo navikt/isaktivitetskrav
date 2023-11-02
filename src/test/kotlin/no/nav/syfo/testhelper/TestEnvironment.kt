@@ -42,9 +42,9 @@ fun testEnvironment() = Environment(
         ssl = false,
     ),
     clients = ClientsEnvironment(
-        syfotilgangskontroll = ClientEnvironment(
-            baseUrl = "syfoTilgangskontrollUrl",
-            clientId = "dev-fss.teamsykefravr.syfotilgangskontroll",
+        istilgangskontroll = ClientEnvironment(
+            baseUrl = "isTilgangskontrollUrl",
+            clientId = "dev-fss.teamsykefravr.istilgangskontroll",
         ),
         pdl = ClientEnvironment(
             baseUrl = "pdlUrl",
