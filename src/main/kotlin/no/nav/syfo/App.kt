@@ -71,7 +71,7 @@ fun main() {
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
-        clientEnvironment = environment.clients.syfotilgangskontroll,
+        clientEnvironment = environment.clients.istilgangskontroll,
     )
     val pdfGenClient = PdfGenClient(
         pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,

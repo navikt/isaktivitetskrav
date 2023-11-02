@@ -46,15 +46,13 @@ spec:
     inbound:
       rules:
         - application: syfomodiaperson
-          namespace: teamsykefravr
-          cluster: dev-gcp
     outbound:
       external:
         - host: "login.microsoftonline.com"
         - host: "pdl-api.dev-fss-pub.nais.io"
         - host: "dokarkiv.dev-fss-pub.nais.io"
       rules:
-        - application: syfo-tilgangskontroll
+        - application: istilgangskontroll
         - application: isaktivitetskravpdfgen
         - application: digdir-krr-proxy
           namespace: team-rocket
@@ -76,10 +74,10 @@ spec:
   env:
     - name: KTOR_ENV
       value: "production"
-    - name: SYFOTILGANGSKONTROLL_CLIENT_ID
-      value: "dev-gcp.teamsykefravr.syfo-tilgangskontroll"
-    - name: SYFOTILGANGSKONTROLL_URL
-      value: "http://syfo-tilgangskontroll"
+    - name: ISTILGANGSKONTROLL_CLIENT_ID
+      value: "dev-gcp.teamsykefravr.istilgangskontroll"
+    - name: ISTILGANGSKONTROLL_URL
+      value: "http://istilgangskontroll"
     - name: PDL_CLIENT_ID
       value: "dev-fss.pdl.pdl-api"
     - name: PDL_URL
