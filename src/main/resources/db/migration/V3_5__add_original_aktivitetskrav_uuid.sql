@@ -1,0 +1,2 @@
+ALTER TABLE AKTIVITETSKRAV
+ADD COLUMN original_aktivitetskrav_uuid UUID;
