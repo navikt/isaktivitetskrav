@@ -52,6 +52,16 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(responseDTOList)
         }
+        // Needs to support when there is an original aktivitetskrav, and when it is manually created first time
+        post {
+            val personIdent = call.personIdent()
+            val requestDTO = call.receiveNullable<NewAktivitetskravDTO>()
+
+            val createdAktivitetskrav =
+                aktivitetskravService.createAktivitetskrav(personIdent, requestDTO?.previousAktivitetskrav)
+
+            call.respond(HttpStatusCode.Created, createdAktivitetskrav)
+        }
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
             val personIdent = call.personIdent()
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])

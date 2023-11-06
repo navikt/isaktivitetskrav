@@ -15,6 +15,7 @@ const val AKTIVITETSKRAV_STOPPUNKT_WEEKS = 8L
 
 enum class AktivitetskravStatus {
     NY,
+    NY_VURDERING,
     AVVENT,
     UNNTAK,
     OPPFYLT,
@@ -40,6 +41,13 @@ data class Aktivitetskrav(
                 personIdent = personIdent,
                 status = AktivitetskravStatus.NY,
                 stoppunktAt = stoppunktDato(tilfelleStart),
+            )
+
+        fun newManuallyCreated(personIdent: PersonIdent): Aktivitetskrav =
+            create(
+                personIdent = personIdent,
+                status = AktivitetskravStatus.NY_VURDERING,
+                stoppunktAt = LocalDate.now(),
             )
 
         fun automatiskOppfylt(

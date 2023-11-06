@@ -1,9 +1,12 @@
 package no.nav.syfo.aktivitetskrav.database
 
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
 import java.sql.Connection
+import java.sql.Date
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.util.*
@@ -34,6 +37,27 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             }
         }
 
+    fun createAktivitetskrav(newAktivitetskrav: Aktivitetskrav, previousAktivitetskrav: UUID?): PAktivitetskrav {
+        // Which fields from the original aktivitetskrav do we have to add here?
+        val aktivitetskravRecord = database.connection.use { connection ->
+            connection.prepareStatement(CREATE_AKTIVITETSKRAV_NY_VURDERING).use {
+                it.setString(1, newAktivitetskrav.uuid.toString())
+                it.setObject(2, newAktivitetskrav.createdAt)
+                it.setObject(3, newAktivitetskrav.createdAt)
+                it.setString(4, newAktivitetskrav.personIdent.value)
+                it.setString(5, newAktivitetskrav.status.name)
+                it.setDate(6, Date.valueOf(newAktivitetskrav.stoppunktAt))
+                it.setString(7, null)
+                it.setString(8, previousAktivitetskrav.toString())
+                it.executeQuery().toList { toPAktivitetskrav() }
+            }
+        }
+        if (aktivitetskravRecord.size != 1) {
+            throw NoElementInsertedException("Creating AKTIVITETSKRAV failed, no rows affected.")
+        }
+        return aktivitetskravRecord.first()
+    }
+
     private fun Connection.getAktivitetskravVurderinger(
         aktivitetskravId: Int
     ): List<PAktivitetskravVurdering> =
@@ -58,6 +82,22 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             WHERE aktivitetskrav_id = ?
             ORDER BY created_at DESC
             """
+
+        private const val CREATE_AKTIVITETSKRAV_NY_VURDERING =
+            """
+            INSERT INTO AKTIVITETSKRAV (
+                id,
+                uuid,
+                created_at,
+                updated_at,
+                personident,
+                status,
+                stoppunkt_at,
+                referanse_tilfelle_bit_uuid,
+                previous_aktivitetskrav_uuid
+            ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING *
+    """
 
         private const val GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY =
             """
