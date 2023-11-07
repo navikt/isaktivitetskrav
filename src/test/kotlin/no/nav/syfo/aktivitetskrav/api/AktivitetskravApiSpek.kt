@@ -408,6 +408,7 @@ class AktivitetskravApiSpek : Spek({
                             varselResponseDTO.shouldNotBeNull()
                             varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate()
                                 .plusWeeks(3)
+                            varselResponseDTO.document shouldBeEqualTo forhandsvarselDTO.document
                         }
                     }
                 }

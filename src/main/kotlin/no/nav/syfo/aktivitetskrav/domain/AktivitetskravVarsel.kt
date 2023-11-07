@@ -50,6 +50,7 @@ data class AktivitetskravVarsel internal constructor(
         uuid = this.uuid.toString(),
         createdAt = this.createdAt.toLocalDateTime(),
         svarfrist = this.svarfrist,
+        document = this.document,
     )
 }
 
