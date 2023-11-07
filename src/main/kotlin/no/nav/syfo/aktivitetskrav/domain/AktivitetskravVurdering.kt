@@ -101,6 +101,7 @@ fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?
         createdAt = this.createdAt.toLocalDateTime(),
         createdBy = this.createdBy,
         status = this.status,
+        isStatusFinal = this.status.isFinal(),
         beskrivelse = this.beskrivelse,
         arsaker = this.arsaker,
         frist = this.frist,

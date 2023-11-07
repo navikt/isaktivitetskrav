@@ -18,6 +18,7 @@ data class AktivitetskravVurderingResponseDTO(
     val createdAt: LocalDateTime,
     val createdBy: String,
     val status: AktivitetskravStatus,
+    val isStatusFinal: Boolean,
     val beskrivelse: String?,
     val arsaker: List<VurderingArsak>,
     val frist: LocalDate?,

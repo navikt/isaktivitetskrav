@@ -187,6 +187,7 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.GRADERT)
                             latestVurdering.varsel.shouldBeNull()
+                            latestVurdering.isStatusFinal.shouldBeTrue()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
@@ -198,6 +199,7 @@ class AktivitetskravApiSpek : Spek({
                                 VurderingArsak.DROFTES_INTERNT,
                             )
                             oldestVurdering.varsel.shouldBeNull()
+                            oldestVurdering.isStatusFinal.shouldBeFalse()
                         }
                     }
 
