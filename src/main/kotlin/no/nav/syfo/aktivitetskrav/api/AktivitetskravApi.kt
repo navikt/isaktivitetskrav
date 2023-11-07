@@ -52,7 +52,6 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(responseDTOList)
         }
-        // Needs to support when there is an original aktivitetskrav, and when it is manually created first time
         post {
             val personIdent = call.personIdent()
             val requestDTO = call.receiveNullable<NewAktivitetskravDTO>()

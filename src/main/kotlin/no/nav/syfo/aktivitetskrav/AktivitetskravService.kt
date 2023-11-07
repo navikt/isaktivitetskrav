@@ -32,7 +32,7 @@ class AktivitetskravService(
     }
 
     fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskrav: UUID?): PAktivitetskrav {
-        val newAktivitetskrav = Aktivitetskrav.newManuallyCreated(personIdent)
+        val newAktivitetskrav = Aktivitetskrav.create(personIdent)
         return aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav, previousAktivitetskrav)
     }
 
@@ -66,8 +66,6 @@ class AktivitetskravService(
             aktivitetskrav = updatedAktivitetskrav
         )
     }
-
-    // Add function for making a new vurdering `NY_VURDERING` or create new aktivitetskrav
 
     internal fun oppfyllAutomatisk(connection: Connection, aktivitetskrav: Aktivitetskrav) {
         val updatedAktivitetskrav = aktivitetskrav.oppfyllAutomatisk()

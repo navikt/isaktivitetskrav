@@ -37,9 +37,11 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             }
         }
 
-    fun createAktivitetskrav(newAktivitetskrav: Aktivitetskrav, previousAktivitetskrav: UUID?): PAktivitetskrav {
-        // Which fields from the original aktivitetskrav do we have to add here?
-        val aktivitetskravRecord = database.connection.use { connection ->
+    fun createAktivitetskrav(
+        newAktivitetskrav: Aktivitetskrav,
+        previousAktivitetskrav: UUID?,
+    ): PAktivitetskrav {
+        val createdRecord = database.connection.use { connection ->
             connection.prepareStatement(CREATE_AKTIVITETSKRAV_NY_VURDERING).use {
                 it.setString(1, newAktivitetskrav.uuid.toString())
                 it.setObject(2, newAktivitetskrav.createdAt)
@@ -52,10 +54,10 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
                 it.executeQuery().toList { toPAktivitetskrav() }
             }
         }
-        if (aktivitetskravRecord.size != 1) {
+        if (createdRecord.size != 1) {
             throw NoElementInsertedException("Creating AKTIVITETSKRAV failed, no rows affected.")
         }
-        return aktivitetskravRecord.first()
+        return createdRecord.first()
     }
 
     private fun Connection.getAktivitetskravVurderinger(
@@ -94,10 +96,10 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
                 status,
                 stoppunkt_at,
                 referanse_tilfelle_bit_uuid,
-                previous_aktivitetskrav_uuid
+                previous_aktivitetskrav_uuid,
             ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING *
-    """
+            """
 
         private const val GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY =
             """

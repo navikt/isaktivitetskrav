@@ -1,2 +1,2 @@
 ALTER TABLE AKTIVITETSKRAV
-ADD COLUMN original_aktivitetskrav_uuid UUID;
+    ADD COLUMN previous_aktivitetskrav_uuid UUID;

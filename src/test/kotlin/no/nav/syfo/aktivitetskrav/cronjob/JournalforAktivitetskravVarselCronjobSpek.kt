@@ -35,14 +35,14 @@ val anyJournalpostResponse = JournalpostResponse(
 val pdf = byteArrayOf(23)
 
 val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-val aktivitetskrav = Aktivitetskrav.ny(
+val aktivitetskrav = Aktivitetskrav.create(
     personIdent = personIdent,
-    tilfelleStart = LocalDate.now()
+    oppfolgningstilfelleStart = LocalDate.now(),
 )
 val personIdentManglerNavn = UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME
-val aktivitetskravPersonManglerNavn = Aktivitetskrav.ny(
+val aktivitetskravPersonManglerNavn = Aktivitetskrav.create(
     personIdent = personIdentManglerNavn,
-    tilfelleStart = LocalDate.now()
+    oppfolgningstilfelleStart = LocalDate.now(),
 )
 
 val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")

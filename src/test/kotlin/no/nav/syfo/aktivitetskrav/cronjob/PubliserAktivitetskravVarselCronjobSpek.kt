@@ -27,9 +27,9 @@ import java.util.concurrent.Future
 
 class PubliserAktivitetskravVarselCronjobSpek : Spek({
     val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-    val aktivitetskrav = Aktivitetskrav.ny(
+    val aktivitetskrav = Aktivitetskrav.create(
         personIdent = personIdent,
-        tilfelleStart = LocalDate.now()
+        oppfolgningstilfelleStart = LocalDate.now(),
     )
     val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")
     val pdf = byteArrayOf(23)

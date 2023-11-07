@@ -36,28 +36,27 @@ data class Aktivitetskrav(
     val vurderinger: List<AktivitetskravVurdering>,
 ) {
     companion object {
-        fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): Aktivitetskrav =
-            create(
-                personIdent = personIdent,
-                status = AktivitetskravStatus.NY,
-                stoppunktAt = stoppunktDato(tilfelleStart),
-            )
 
-        fun newManuallyCreated(personIdent: PersonIdent): Aktivitetskrav =
-            create(
-                personIdent = personIdent,
-                status = AktivitetskravStatus.NY_VURDERING,
-                stoppunktAt = LocalDate.now(),
-            )
-
-        fun automatiskOppfylt(
+        fun create(
             personIdent: PersonIdent,
-            tilfelleStart: LocalDate,
-        ): Aktivitetskrav = create(
-            personIdent = personIdent,
-            status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
-            stoppunktAt = stoppunktDato(tilfelleStart),
-        )
+            oppfolgningstilfelleStart: LocalDate? = null,
+            isAutomatiskOppfylt: Boolean = false,
+        ): Aktivitetskrav {
+            val isGeneratedAsOppfolgningstilfelle = oppfolgningstilfelleStart != null
+            val status =
+                if (isAutomatiskOppfylt) {
+                    AktivitetskravStatus.AUTOMATISK_OPPFYLT
+                } else if (isGeneratedAsOppfolgningstilfelle) {
+                    AktivitetskravStatus.NY
+                } else {
+                    AktivitetskravStatus.NY_VURDERING
+                }
+            return create(
+                personIdent = personIdent,
+                status = status,
+                stoppunktAt = oppfolgningstilfelleStart?.let { stoppunktDato(it) } ?: run { LocalDate.now() },
+            )
+        }
 
         fun fromVurdering(
             personIdent: PersonIdent,
