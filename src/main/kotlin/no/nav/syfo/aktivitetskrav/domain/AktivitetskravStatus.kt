@@ -18,6 +18,7 @@ enum class AktivitetskravStatus {
 fun AktivitetskravStatus.isFinal() = this in finalStatuses
 
 private val finalStatuses = EnumSet.of(
+    AktivitetskravStatus.LUKKET,
     AktivitetskravStatus.UNNTAK,
     AktivitetskravStatus.OPPFYLT,
     AktivitetskravStatus.IKKE_OPPFYLT,

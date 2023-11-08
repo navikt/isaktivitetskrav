@@ -101,6 +101,7 @@ fun Aktivitetskrav.toResponseDTO(vurderinger: List<AktivitetskravVurderingRespon
         uuid = uuid.toString(),
         createdAt = createdAt.toLocalDateTime(),
         status = status,
+        inFinalState = status.isFinal(),
         stoppunktAt = stoppunktAt,
         vurderinger = vurderinger
     )

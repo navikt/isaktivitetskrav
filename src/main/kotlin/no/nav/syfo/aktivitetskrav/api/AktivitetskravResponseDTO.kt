@@ -9,6 +9,7 @@ data class AktivitetskravResponseDTO(
     val uuid: String,
     val createdAt: LocalDateTime,
     val status: AktivitetskravStatus,
+    val inFinalState: Boolean,
     val stoppunktAt: LocalDate,
     val vurderinger: List<AktivitetskravVurderingResponseDTO>,
 )
@@ -18,7 +19,6 @@ data class AktivitetskravVurderingResponseDTO(
     val createdAt: LocalDateTime,
     val createdBy: String,
     val status: AktivitetskravStatus,
-    val isStatusFinal: Boolean,
     val beskrivelse: String?,
     val arsaker: List<VurderingArsak>,
     val frist: LocalDate?,

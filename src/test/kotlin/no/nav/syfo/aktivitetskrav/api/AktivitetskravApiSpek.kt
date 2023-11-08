@@ -120,12 +120,14 @@ class AktivitetskravApiSpek : Spek({
 
                             val first = responseDTOList.first()
                             first.status shouldBeEqualTo AktivitetskravStatus.NY
+                            first.inFinalState.shouldBeFalse()
                             first.vurderinger.size shouldBeEqualTo 0
                             first.createdAt shouldNotBeEqualTo null
                             first.uuid shouldNotBeEqualTo null
 
                             val last = responseDTOList.last()
                             last.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
+                            last.inFinalState.shouldBeTrue()
                             last.vurderinger.size shouldBeEqualTo 0
                             last.createdAt shouldNotBeEqualTo null
                             last.uuid shouldNotBeEqualTo null
@@ -176,6 +178,7 @@ class AktivitetskravApiSpek : Spek({
 
                             val aktivitetskravResponseDTO = responseDTOList.first()
                             aktivitetskravResponseDTO.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
+                            aktivitetskravResponseDTO.inFinalState.shouldBeTrue()
                             aktivitetskravResponseDTO.vurderinger.size shouldBeEqualTo 2
 
                             val latestVurdering = aktivitetskravResponseDTO.vurderinger.first()
@@ -187,7 +190,6 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.GRADERT)
                             latestVurdering.varsel.shouldBeNull()
-                            latestVurdering.isStatusFinal.shouldBeTrue()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
@@ -199,7 +201,6 @@ class AktivitetskravApiSpek : Spek({
                                 VurderingArsak.DROFTES_INTERNT,
                             )
                             oldestVurdering.varsel.shouldBeNull()
-                            oldestVurdering.isStatusFinal.shouldBeFalse()
                         }
                     }
 
@@ -235,6 +236,7 @@ class AktivitetskravApiSpek : Spek({
 
                             val aktivitetskrav = responseDTOList.first()
                             aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                            aktivitetskrav.inFinalState.shouldBeFalse()
                             aktivitetskrav.vurderinger.size shouldBeEqualTo 0
                             aktivitetskrav.createdAt shouldNotBeEqualTo null
                             aktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid.toString()
