@@ -10,7 +10,7 @@ fun createAktivitetskravNy(
     personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
 ): Aktivitetskrav = Aktivitetskrav.create(
     personIdent = personIdent,
-    oppfolgningstilfelleStart = tilfelleStart,
+    oppfolgingstilfelleStart = tilfelleStart,
 )
 
 fun createAktivitetskravAutomatiskOppfylt(
@@ -18,7 +18,7 @@ fun createAktivitetskravAutomatiskOppfylt(
     personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
 ): Aktivitetskrav = Aktivitetskrav.create(
     personIdent = personIdent,
-    oppfolgningstilfelleStart = tilfelleStart,
+    oppfolgingstilfelleStart = tilfelleStart,
     isAutomatiskOppfylt = true,
 )
 

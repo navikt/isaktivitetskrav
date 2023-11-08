@@ -39,7 +39,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
 
     fun createAktivitetskrav(
         newAktivitetskrav: Aktivitetskrav,
-        previousAktivitetskrav: UUID?,
+        previousAktivitetskravUuid: UUID?,
     ): PAktivitetskrav {
         val createdRecord = database.connection.use { connection ->
             connection.prepareStatement(CREATE_AKTIVITETSKRAV_NY_VURDERING).use {
@@ -50,7 +50,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
                 it.setString(5, newAktivitetskrav.status.name)
                 it.setDate(6, Date.valueOf(newAktivitetskrav.stoppunktAt))
                 it.setString(7, null)
-                it.setString(8, previousAktivitetskrav.toString())
+                it.setString(8, previousAktivitetskravUuid.toString())
                 it.executeQuery().toList { toPAktivitetskrav() }
             }
         }

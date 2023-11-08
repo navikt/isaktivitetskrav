@@ -50,7 +50,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
 
     fun createNyttAktivitetskrav(stoppunktAt: LocalDate): Aktivitetskrav = Aktivitetskrav.create(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-        oppfolgningstilfelleStart = stoppunktAt.minusWeeks(8),
+        oppfolgingstilfelleStart = stoppunktAt.minusWeeks(8),
     )
 
     describe("${OutdatedAktivitetskravCronjob::class.java.simpleName}: run job") {

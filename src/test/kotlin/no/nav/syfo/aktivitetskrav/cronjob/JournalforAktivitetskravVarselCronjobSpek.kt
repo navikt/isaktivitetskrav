@@ -37,12 +37,12 @@ val pdf = byteArrayOf(23)
 val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
 val aktivitetskrav = Aktivitetskrav.create(
     personIdent = personIdent,
-    oppfolgningstilfelleStart = LocalDate.now(),
+    oppfolgingstilfelleStart = LocalDate.now(),
 )
 val personIdentManglerNavn = UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME
 val aktivitetskravPersonManglerNavn = Aktivitetskrav.create(
     personIdent = personIdentManglerNavn,
-    oppfolgningstilfelleStart = LocalDate.now(),
+    oppfolgingstilfelleStart = LocalDate.now(),
 )
 
 val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")

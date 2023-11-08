@@ -117,7 +117,7 @@ class KafkaOppfolgingstilfellePersonService(
     ) {
         val aktivitetskrav = Aktivitetskrav.create(
             personIdent = oppfolgingstilfelle.personIdent,
-            oppfolgningstilfelleStart = oppfolgingstilfelle.tilfelleStart,
+            oppfolgingstilfelleStart = oppfolgingstilfelle.tilfelleStart,
             isAutomatiskOppfylt = oppfolgingstilfelle.isGradertAtTilfelleEnd(),
         )
         aktivitetskravService.createAktivitetskrav(

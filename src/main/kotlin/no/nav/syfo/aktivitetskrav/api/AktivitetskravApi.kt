@@ -54,10 +54,10 @@ fun Route.registerAktivitetskravApi(
         }
         post {
             val personIdent = call.personIdent()
-            val requestDTO = call.receiveNullable<NewAktivitetskravDTO>()
+            val requestDTO: NewAktivitetskravDTO? = call.receiveNullable<NewAktivitetskravDTO>()
 
             val createdAktivitetskrav =
-                aktivitetskravService.createAktivitetskrav(personIdent, requestDTO?.previousAktivitetskrav)
+                aktivitetskravService.createAktivitetskrav(personIdent, requestDTO?.previousAktivitetskravUuid)
 
             call.respond(HttpStatusCode.Created, createdAktivitetskrav)
         }

@@ -39,14 +39,14 @@ data class Aktivitetskrav(
 
         fun create(
             personIdent: PersonIdent,
-            oppfolgningstilfelleStart: LocalDate? = null,
+            oppfolgingstilfelleStart: LocalDate? = null,
             isAutomatiskOppfylt: Boolean = false,
         ): Aktivitetskrav {
-            val isGeneratedAsOppfolgningstilfelle = oppfolgningstilfelleStart != null
+            val isGeneratedFromOppfolgingstilfelle = oppfolgingstilfelleStart != null
             val status =
                 if (isAutomatiskOppfylt) {
                     AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                } else if (isGeneratedAsOppfolgningstilfelle) {
+                } else if (isGeneratedFromOppfolgingstilfelle) {
                     AktivitetskravStatus.NY
                 } else {
                     AktivitetskravStatus.NY_VURDERING
@@ -54,7 +54,7 @@ data class Aktivitetskrav(
             return create(
                 personIdent = personIdent,
                 status = status,
-                stoppunktAt = oppfolgningstilfelleStart?.let { stoppunktDato(it) } ?: run { LocalDate.now() },
+                stoppunktAt = oppfolgingstilfelleStart?.let { stoppunktDato(it) } ?: LocalDate.now(),
             )
         }
 
