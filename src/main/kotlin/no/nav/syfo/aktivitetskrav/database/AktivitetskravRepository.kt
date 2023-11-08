@@ -42,7 +42,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
         previousAktivitetskravUuid: UUID?,
     ): PAktivitetskrav {
         val createdRecord = database.connection.use { connection ->
-            connection.prepareStatement(CREATE_AKTIVITETSKRAV_NY_VURDERING).use {
+            connection.prepareStatement(CREATE_AKTIVITETSKRAV).use {
                 it.setString(1, newAktivitetskrav.uuid.toString())
                 it.setObject(2, newAktivitetskrav.createdAt)
                 it.setObject(3, newAktivitetskrav.createdAt)
@@ -50,7 +50,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
                 it.setString(5, newAktivitetskrav.status.name)
                 it.setDate(6, Date.valueOf(newAktivitetskrav.stoppunktAt))
                 it.setString(7, null)
-                it.setString(8, previousAktivitetskravUuid.toString())
+                it.setObject(8, previousAktivitetskravUuid)
                 it.executeQuery().toList { toPAktivitetskrav() }
             }
         }
@@ -85,7 +85,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             ORDER BY created_at DESC
             """
 
-        private const val CREATE_AKTIVITETSKRAV_NY_VURDERING =
+        private const val CREATE_AKTIVITETSKRAV =
             """
             INSERT INTO AKTIVITETSKRAV (
                 id,
@@ -96,7 +96,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
                 status,
                 stoppunkt_at,
                 referanse_tilfelle_bit_uuid,
-                previous_aktivitetskrav_uuid,
+                previous_aktivitetskrav_uuid
             ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING *
             """
