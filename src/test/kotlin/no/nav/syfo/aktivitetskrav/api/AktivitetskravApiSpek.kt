@@ -7,6 +7,7 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
+import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
@@ -267,6 +268,8 @@ class AktivitetskravApiSpek : Spek({
                     arsaker = listOf(VurderingArsak.FRISKMELDT),
                 )
 
+                val newAktivitetskravDto = NewAktivitetskravDTO(UUID.randomUUID())
+
                 describe("Happy path") {
                     it("Creates aktivitetskrav with vurdering and stoppunkt today and produces to Kafka if request is succesful") {
                         with(
@@ -306,7 +309,51 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
                         }
                     }
+                    it("Creates aktivitetskrav from API request with previous aktivitetskrav") {
+                        with(
+                            handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(newAktivitetskravDto))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                            val responseDTO = objectMapper.readValue<PAktivitetskrav>(response.content!!)
+                            responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        }
+                    }
+                    it("Creates aktivitetskrav from API request without previous aktivitetskrav") {
+                        with(
+                            handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                            val responseDTO = objectMapper.readValue<PAktivitetskrav>(response.content!!)
+                            responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        }
+                    }
+                    it("creates aktivitetskrav with previous aktivitetskrav from service") {
+                        val previousAktivitetskravUuid = UUID.randomUUID()
+                        val createdAktivitetskrav =
+                            aktivitetskravService.createAktivitetskrav(
+                                UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                                previousAktivitetskravUuid = previousAktivitetskravUuid
+                            )
+                        createdAktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        createdAktivitetskrav.previousAktivitetskravUuid shouldBeEqualTo previousAktivitetskravUuid
+                    }
+                    it("creates aktivitetskrav without previous aktivitetskrav from service") {
+                        val createdAktivitetskrav =
+                            aktivitetskravService.createAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                        createdAktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        createdAktivitetskrav.previousAktivitetskravUuid shouldBeEqualTo null
+                    }
                 }
+
                 describe("Unhappy path") {
                     it("Returns status Unauthorized if no token is supplied") {
                         testMissingToken(urlVurderAktivitetskrav, HttpMethod.Post)

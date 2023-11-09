@@ -120,6 +120,7 @@ private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     status = getString("status"),
     stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
     referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
+    previousAktivitetskravUuid = getObject("previous_aktivitetskrav_uuid", UUID::class.java),
 )
 
 private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(

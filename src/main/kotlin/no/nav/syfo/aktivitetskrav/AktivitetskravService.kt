@@ -31,7 +31,7 @@ class AktivitetskravService(
         )
     }
 
-    fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskravUuid: UUID?): PAktivitetskrav {
+    fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskravUuid: UUID? = null): PAktivitetskrav {
         val newAktivitetskrav = Aktivitetskrav.create(personIdent)
         return aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav, previousAktivitetskravUuid)
     }
