@@ -2,6 +2,7 @@ package no.nav.syfo.aktivitetskrav.kafka.domain
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.*
 
 data class KafkaAktivitetskravVurdering(
     val uuid: String,
@@ -15,4 +16,5 @@ data class KafkaAktivitetskravVurdering(
     val sisteVurderingUuid: String?,
     val sistVurdert: OffsetDateTime?,
     val frist: LocalDate?,
+    val previousAktivitetskravUuid: UUID?,
 )

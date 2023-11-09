@@ -7,7 +7,6 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
@@ -323,8 +322,16 @@ class AktivitetskravApiSpek : Spek({
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
-                            val responseDTO = objectMapper.readValue<PAktivitetskrav>(response.content!!)
+                            val responseDTO = objectMapper.readValue<Aktivitetskrav>(response.content!!)
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo newAktivitetskravDto.previousAktivitetskravUuid
                         }
                     }
                     it("Creates aktivitetskrav from API request without previous aktivitetskrav") {
@@ -336,25 +343,37 @@ class AktivitetskravApiSpek : Spek({
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
-                            val responseDTO = objectMapper.readValue<PAktivitetskrav>(response.content!!)
+                            val responseDTO = objectMapper.readValue<Aktivitetskrav>(response.content!!)
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo null
                         }
                     }
                     it("creates aktivitetskrav with previous aktivitetskrav from service") {
                         val previousAktivitetskravUuid = UUID.randomUUID()
-                        val createdAktivitetskrav =
+                        val aktivitetskrav =
                             aktivitetskravService.createAktivitetskrav(
                                 UserConstants.ARBEIDSTAKER_PERSONIDENT,
                                 previousAktivitetskravUuid = previousAktivitetskravUuid
                             )
-                        createdAktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                        createdAktivitetskrav.previousAktivitetskravUuid shouldBeEqualTo previousAktivitetskravUuid
+                        val savedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(aktivitetskrav.uuid)
+
+                        aktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        savedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo previousAktivitetskravUuid
                     }
                     it("creates aktivitetskrav without previous aktivitetskrav from service") {
-                        val createdAktivitetskrav =
+                        val aktivitetskrav =
                             aktivitetskravService.createAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                        createdAktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                        createdAktivitetskrav.previousAktivitetskravUuid shouldBeEqualTo null
+                        val savedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(aktivitetskrav.uuid)
+
+                        aktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        savedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo null
                     }
                 }
 
@@ -490,9 +509,7 @@ class AktivitetskravApiSpek : Spek({
 
             describe("Vurder existing aktivitetskrav for person") {
                 beforeEachTest {
-                    createAktivitetskrav(
-                        nyAktivitetskrav,
-                    )
+                    createAktivitetskrav(nyAktivitetskrav)
                 }
 
                 val urlVurderExistingAktivitetskrav =

@@ -17,8 +17,10 @@ class AktivitetskravVurderingProducer(
 ) {
     fun sendAktivitetskravVurdering(
         aktivitetskrav: Aktivitetskrav,
+        previousAktivitetskravUuid: UUID? = null,
     ) {
-        val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
+        val kafkaAktivitetskravVurdering =
+            aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid = previousAktivitetskravUuid)
         val key = UUID.nameUUIDFromBytes(kafkaAktivitetskravVurdering.personIdent.toByteArray()).toString()
         try {
             producer.send(

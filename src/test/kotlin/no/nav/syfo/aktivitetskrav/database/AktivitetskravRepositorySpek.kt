@@ -32,9 +32,11 @@ class AktivitetskravRepositorySpek : Spek({
             describe("Successfully creates an aktivitetskrav with previous aktivitetskrav") {
                 val newAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val previousAktivitetskravUuid = UUID.randomUUID()
-                val createdAktivitetskrav =
-                    aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav, previousAktivitetskravUuid)
-                createdAktivitetskrav.personIdent shouldBeEqualTo newAktivitetskrav.personIdent
+                aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav, previousAktivitetskravUuid)
+                val storedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(newAktivitetskrav.uuid)
+
+                storedAktivitetskrav?.personIdent shouldBeEqualTo newAktivitetskrav.personIdent
+                storedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo previousAktivitetskravUuid
             }
 
             describe("Forhåndsvarsel") {

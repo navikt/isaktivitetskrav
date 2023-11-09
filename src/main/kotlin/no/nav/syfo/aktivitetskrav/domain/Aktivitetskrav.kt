@@ -75,7 +75,7 @@ data class Aktivitetskrav(
     }
 }
 
-fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurdering {
+fun Aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid: UUID? = null): KafkaAktivitetskravVurdering {
     val latestVurdering = this.vurderinger.firstOrNull()
     return KafkaAktivitetskravVurdering(
         uuid = this.uuid.toString(),
@@ -89,6 +89,7 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
         sisteVurderingUuid = latestVurdering?.uuid?.toString(),
         sistVurdert = latestVurdering?.createdAt,
         frist = latestVurdering?.frist,
+        previousAktivitetskravUuid = previousAktivitetskravUuid,
     )
 }
 
