@@ -111,6 +111,7 @@ fun Route.registerAktivitetskravApi(
 
             if (
                 aktivitetskrav.status != AktivitetskravStatus.NY &&
+                aktivitetskrav.status != AktivitetskravStatus.NY_VURDERING &&
                 aktivitetskrav.status != AktivitetskravStatus.AVVENT
             ) {
                 throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")
