@@ -27,7 +27,7 @@ val COUNT_UNNTAK: Counter =
 
 val COUNT_NY_VURDERING: Counter =
     Counter.builder(NY_VURDERING)
-        .description("Counts the number vurderinger with status AVVENT created")
+        .description("Counts the number vurderinger with status NY_VURDERING created")
         .register(METRICS_REGISTRY)
 
 val COUNT_AVVENT: Counter =
