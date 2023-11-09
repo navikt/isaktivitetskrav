@@ -58,7 +58,7 @@ class AktivitetskravApiSpek : Spek({
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,
                 aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
-                    kafkaProducerAktivitetskravVurdering = kafkaProducer,
+                    producer = kafkaProducer,
                 ),
             )
             val aktivitetskravRepository = AktivitetskravRepository(database)

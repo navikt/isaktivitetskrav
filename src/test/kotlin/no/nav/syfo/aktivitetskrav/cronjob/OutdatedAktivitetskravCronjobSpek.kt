@@ -31,7 +31,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
     val aktivitetskravService = AktivitetskravService(
         aktivitetskravRepository = aktivitetskravRepository,
         database = database,
-        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer),
+        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(producer = kafkaProducer),
         arenaCutoff = arenaCutoff,
     )
     val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(

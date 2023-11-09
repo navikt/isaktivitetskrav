@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class AktivitetskravVurderingProducer(
-    private val kafkaProducerAktivitetskravVurdering: KafkaProducer<String, KafkaAktivitetskravVurdering>,
+    private val producer: KafkaProducer<String, KafkaAktivitetskravVurdering>,
 ) {
     fun sendAktivitetskravVurdering(
         aktivitetskrav: Aktivitetskrav,
@@ -21,7 +21,7 @@ class AktivitetskravVurderingProducer(
         val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
         val key = UUID.nameUUIDFromBytes(kafkaAktivitetskravVurdering.personIdent.toByteArray()).toString()
         try {
-            kafkaProducerAktivitetskravVurdering.send(
+            producer.send(
                 ProducerRecord(
                     AKTIVITETSKRAV_VURDERING_TOPIC,
                     key,
@@ -34,6 +34,7 @@ class AktivitetskravVurderingProducer(
                 kafkaAktivitetskravVurdering.uuid
             )
             when (kafkaAktivitetskravVurdering.status) {
+                AktivitetskravStatus.NY_VURDERING.name -> COUNT_NY_VURDERING.increment()
                 AktivitetskravStatus.AVVENT.name -> COUNT_AVVENT.increment()
                 AktivitetskravStatus.UNNTAK.name -> COUNT_UNNTAK.increment()
                 AktivitetskravStatus.OPPFYLT.name -> COUNT_OPPFYLT.increment()

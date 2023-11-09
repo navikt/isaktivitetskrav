@@ -32,7 +32,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
 
         val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
         val aktivitetskravVurderingProducer =
-            AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer)
+            AktivitetskravVurderingProducer(producer = kafkaProducer)
         val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravRepository = aktivitetskravRepository,

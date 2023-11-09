@@ -31,9 +31,14 @@ class AktivitetskravService(
         )
     }
 
-    fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskravUuid: UUID? = null): PAktivitetskrav {
+    fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskravUuid: UUID? = null): Aktivitetskrav {
         val aktivitetskrav = Aktivitetskrav.create(personIdent)
-        return aktivitetskravRepository.createAktivitetskrav(aktivitetskrav, previousAktivitetskravUuid)
+        val createdAktivitetskrav =
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav, previousAktivitetskravUuid).toAktivitetskrav()
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
+            aktivitetskrav = createdAktivitetskrav,
+        )
+        return createdAktivitetskrav
     }
 
     internal fun updateAktivitetskravStoppunkt(
