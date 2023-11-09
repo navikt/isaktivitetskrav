@@ -13,19 +13,6 @@ import java.util.*
 
 const val AKTIVITETSKRAV_STOPPUNKT_WEEKS = 8L
 
-enum class AktivitetskravStatus {
-    NY,
-    AVVENT,
-    UNNTAK,
-    OPPFYLT,
-    AUTOMATISK_OPPFYLT,
-    FORHANDSVARSEL,
-    STANS,
-    IKKE_OPPFYLT,
-    IKKE_AKTUELL,
-    LUKKET,
-}
-
 data class Aktivitetskrav(
     val uuid: UUID,
     val personIdent: PersonIdent,
@@ -114,6 +101,7 @@ fun Aktivitetskrav.toResponseDTO(vurderinger: List<AktivitetskravVurderingRespon
         uuid = uuid.toString(),
         createdAt = createdAt.toLocalDateTime(),
         status = status,
+        inFinalState = status.isFinal,
         stoppunktAt = stoppunktAt,
         vurderinger = vurderinger
     )
