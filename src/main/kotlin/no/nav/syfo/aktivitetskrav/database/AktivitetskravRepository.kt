@@ -41,8 +41,8 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
         aktivitetskrav: Aktivitetskrav,
         previousAktivitetskravUuid: UUID?,
     ): PAktivitetskrav {
-        val createdRecord = database.connection.use { connection ->
-            val newRecord = connection.prepareStatement(CREATE_AKTIVITETSKRAV).use {
+        val createdRecords = database.connection.use { connection ->
+            val newRecords = connection.prepareStatement(CREATE_AKTIVITETSKRAV).use {
                 it.setString(1, aktivitetskrav.uuid.toString())
                 it.setObject(2, aktivitetskrav.createdAt)
                 it.setObject(3, aktivitetskrav.createdAt)
@@ -54,12 +54,12 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
                 it.executeQuery().toList { toPAktivitetskrav() }
             }
             connection.commit()
-            newRecord
+            newRecords
         }
-        if (createdRecord.size != 1) {
+        if (createdRecords.size != 1) {
             throw NoElementInsertedException("Creating AKTIVITETSKRAV failed, no rows affected.")
         }
-        return createdRecord.first()
+        return createdRecords.first()
     }
 
     private fun Connection.getAktivitetskravVurderinger(
