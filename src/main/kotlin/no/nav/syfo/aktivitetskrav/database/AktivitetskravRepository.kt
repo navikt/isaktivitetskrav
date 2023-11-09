@@ -38,17 +38,17 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
         }
 
     fun createAktivitetskrav(
-        newAktivitetskrav: Aktivitetskrav,
+        aktivitetskrav: Aktivitetskrav,
         previousAktivitetskravUuid: UUID?,
     ): PAktivitetskrav {
         val createdRecord = database.connection.use { connection ->
             connection.prepareStatement(CREATE_AKTIVITETSKRAV).use {
-                it.setString(1, newAktivitetskrav.uuid.toString())
-                it.setObject(2, newAktivitetskrav.createdAt)
-                it.setObject(3, newAktivitetskrav.createdAt)
-                it.setString(4, newAktivitetskrav.personIdent.value)
-                it.setString(5, newAktivitetskrav.status.name)
-                it.setDate(6, Date.valueOf(newAktivitetskrav.stoppunktAt))
+                it.setString(1, aktivitetskrav.uuid.toString())
+                it.setObject(2, aktivitetskrav.createdAt)
+                it.setObject(3, aktivitetskrav.createdAt)
+                it.setString(4, aktivitetskrav.personIdent.value)
+                it.setString(5, aktivitetskrav.status.name)
+                it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
                 it.setString(7, null)
                 it.setObject(8, previousAktivitetskravUuid)
                 it.executeQuery().toList { toPAktivitetskrav() }
