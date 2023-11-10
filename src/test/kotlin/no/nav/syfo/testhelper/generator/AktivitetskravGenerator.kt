@@ -8,17 +8,18 @@ import java.time.LocalDate
 fun createAktivitetskravNy(
     tilfelleStart: LocalDate,
     personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-): Aktivitetskrav = Aktivitetskrav.ny(
+): Aktivitetskrav = Aktivitetskrav.create(
     personIdent = personIdent,
-    tilfelleStart = tilfelleStart,
+    oppfolgingstilfelleStart = tilfelleStart,
 )
 
 fun createAktivitetskravAutomatiskOppfylt(
     tilfelleStart: LocalDate,
     personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-): Aktivitetskrav = Aktivitetskrav.automatiskOppfylt(
+): Aktivitetskrav = Aktivitetskrav.create(
     personIdent = personIdent,
-    tilfelleStart = tilfelleStart,
+    oppfolgingstilfelleStart = tilfelleStart,
+    isAutomatiskOppfylt = true,
 )
 
 fun createAktivitetskravOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
@@ -85,7 +86,8 @@ fun createNAktivitetskrav(
     val tenWeeksAgo = LocalDate.now().minusWeeks(10)
     val allAktivitetskrav = mutableListOf<Aktivitetskrav>()
     for (i in 1..n) {
-        val newAktivitetskrav = Aktivitetskrav.ny(personIdent, tenWeeksAgo)
+        val newAktivitetskrav =
+            Aktivitetskrav.create(personIdent, tenWeeksAgo)
         allAktivitetskrav.add(newAktivitetskrav)
     }
     return allAktivitetskrav.toList()

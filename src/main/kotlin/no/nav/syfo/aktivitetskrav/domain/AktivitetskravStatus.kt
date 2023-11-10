@@ -2,6 +2,7 @@ package no.nav.syfo.aktivitetskrav.domain
 
 enum class AktivitetskravStatus(val isFinal: Boolean) {
     NY(false),
+    NY_VURDERING(false),
     AVVENT(false),
     UNNTAK(true),
     OPPFYLT(true),

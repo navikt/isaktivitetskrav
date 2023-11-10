@@ -31,7 +31,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
     val aktivitetskravService = AktivitetskravService(
         aktivitetskravRepository = aktivitetskravRepository,
         database = database,
-        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(kafkaProducerAktivitetskravVurdering = kafkaProducer),
+        aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(producer = kafkaProducer),
         arenaCutoff = arenaCutoff,
     )
     val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
@@ -48,9 +48,9 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
         } returns mockk<Future<RecordMetadata>>(relaxed = true)
     }
 
-    fun createNyttAktivitetskrav(stoppunktAt: LocalDate): Aktivitetskrav = Aktivitetskrav.ny(
+    fun createNyttAktivitetskrav(stoppunktAt: LocalDate): Aktivitetskrav = Aktivitetskrav.create(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-        tilfelleStart = stoppunktAt.minusWeeks(8),
+        oppfolgingstilfelleStart = stoppunktAt.minusWeeks(8),
     )
 
     describe("${OutdatedAktivitetskravCronjob::class.java.simpleName}: run job") {

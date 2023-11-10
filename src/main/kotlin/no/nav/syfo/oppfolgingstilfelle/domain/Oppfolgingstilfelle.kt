@@ -1,7 +1,6 @@
 package no.nav.syfo.oppfolgingstilfelle.domain
 
 import no.nav.syfo.aktivitetskrav.domain.AKTIVITETSKRAV_STOPPUNKT_WEEKS
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
 import java.time.*
 import java.time.temporal.ChronoUnit
@@ -22,20 +21,6 @@ data class Oppfolgingstilfelle(
 
 fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
     durationInWeeks() >= AKTIVITETSKRAV_STOPPUNKT_WEEKS
-
-fun Oppfolgingstilfelle.toAktivitetskrav(): Aktivitetskrav {
-    return if (isGradertAtTilfelleEnd()) {
-        Aktivitetskrav.automatiskOppfylt(
-            personIdent = this.personIdent,
-            tilfelleStart = this.tilfelleStart,
-        )
-    } else {
-        Aktivitetskrav.ny(
-            personIdent = this.personIdent,
-            tilfelleStart = this.tilfelleStart,
-        )
-    }
-}
 
 fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
 

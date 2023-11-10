@@ -57,7 +57,7 @@ class AktivitetskravApiSpek : Spek({
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,
                 aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
-                    kafkaProducerAktivitetskravVurdering = kafkaProducer,
+                    producer = kafkaProducer,
                 ),
             )
             val aktivitetskravRepository = AktivitetskravRepository(database)
@@ -271,6 +271,8 @@ class AktivitetskravApiSpek : Spek({
                     arsaker = listOf(VurderingArsak.FRISKMELDT),
                 )
 
+                val newAktivitetskravDto = NewAktivitetskravDTO(UUID.randomUUID())
+
                 describe("Happy path") {
                     it("Creates aktivitetskrav with vurdering and stoppunkt today and produces to Kafka if request is succesful") {
                         with(
@@ -306,11 +308,55 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo aktivitetskravVurdering.createdAt.millisekundOpplosning()
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo aktivitetskravVurdering.uuid.toString()
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo aktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
                         }
                     }
+                    it("Creates aktivitetskrav from API request with previous aktivitetskrav") {
+                        with(
+                            handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(newAktivitetskravDto))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                            val responseDTO = objectMapper.readValue<Aktivitetskrav>(response.content!!)
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                            responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo newAktivitetskravDto.previousAktivitetskravUuid
+                        }
+                    }
+                    it("Creates aktivitetskrav from API request without previous aktivitetskrav") {
+                        with(
+                            handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.Created
+                            val responseDTO = objectMapper.readValue<Aktivitetskrav>(response.content!!)
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                            responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo null
+                        }
+                    }
                 }
+
                 describe("Unhappy path") {
                     it("Returns status Unauthorized if no token is supplied") {
                         testMissingToken(urlVurderAktivitetskrav, HttpMethod.Post)
@@ -443,9 +489,7 @@ class AktivitetskravApiSpek : Spek({
 
             describe("Vurder existing aktivitetskrav for person") {
                 beforeEachTest {
-                    createAktivitetskrav(
-                        nyAktivitetskrav,
-                    )
+                    createAktivitetskrav(nyAktivitetskrav)
                 }
 
                 val urlVurderExistingAktivitetskrav =
@@ -487,7 +531,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid.toString()
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                         }
                     }
@@ -536,7 +580,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid.toString()
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                         }
                     }

@@ -42,7 +42,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
         val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
-            kafkaProducerAktivitetskravVurdering = kafkaProducer,
+            producer = kafkaProducer,
         )
         val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(

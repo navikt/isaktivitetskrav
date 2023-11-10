@@ -7,6 +7,7 @@ import no.nav.syfo.application.metric.METRICS_REGISTRY
 const val AKTIVITETSKRAV_KAFKA_METRIC_BASE = "${METRICS_NS}_kafka_producer"
 const val AKTIVITETSKRAV_VURDERING_KAFKA = "${AKTIVITETSKRAV_KAFKA_METRIC_BASE}_vurdering"
 const val UNNTAK = "${AKTIVITETSKRAV_VURDERING_KAFKA}_unntak"
+const val NY_VURDERING = "${AKTIVITETSKRAV_VURDERING_KAFKA}_ny_vurdering"
 const val AVVENT = "${AKTIVITETSKRAV_VURDERING_KAFKA}_avvent"
 const val OPPFYLT = "${AKTIVITETSKRAV_VURDERING_KAFKA}_oppfylt"
 const val STANS = "${AKTIVITETSKRAV_VURDERING_KAFKA}_stans"
@@ -22,6 +23,11 @@ val COUNT_FORHANDSVARSEL: Counter =
 val COUNT_UNNTAK: Counter =
     Counter.builder(UNNTAK)
         .description("Counts the number vurderinger with status UNNTAK created")
+        .register(METRICS_REGISTRY)
+
+val COUNT_NY_VURDERING: Counter =
+    Counter.builder(NY_VURDERING)
+        .description("Counts the number vurderinger with status NY_VURDERING created")
         .register(METRICS_REGISTRY)
 
 val COUNT_AVVENT: Counter =

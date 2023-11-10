@@ -78,7 +78,7 @@ fun main() {
     )
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
-        kafkaProducerAktivitetskravVurdering = KafkaProducer(
+        producer = KafkaProducer(
             aktivitetskravVurderingProducerConfig(kafkaEnvironment = environment.kafka)
         )
     )

@@ -17,6 +17,7 @@ data class PAktivitetskrav(
     val status: String,
     val stoppunktAt: LocalDate,
     val referanseTilfelleBitUuid: UUID?,
+    val previousAktivitetskravUuid: UUID?,
     val vurderinger: List<PAktivitetskravVurdering> = emptyList(),
 ) {
 

@@ -13,6 +13,7 @@ import org.amshove.kluent.shouldBeGreaterThan
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.util.UUID
 
 class AktivitetskravRepositorySpek : Spek({
 
@@ -26,6 +27,16 @@ class AktivitetskravRepositorySpek : Spek({
 
             afterEachTest {
                 database.dropData()
+            }
+
+            describe("Successfully creates an aktivitetskrav with previous aktivitetskrav") {
+                val newAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                val previousAktivitetskravUuid = UUID.randomUUID()
+                aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav, previousAktivitetskravUuid)
+                val storedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(newAktivitetskrav.uuid)
+
+                storedAktivitetskrav?.personIdent shouldBeEqualTo newAktivitetskrav.personIdent
+                storedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo previousAktivitetskravUuid
             }
 
             describe("Forhåndsvarsel") {

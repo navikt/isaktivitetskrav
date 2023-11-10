@@ -115,9 +115,14 @@ class KafkaOppfolgingstilfellePersonService(
         connection: Connection,
         oppfolgingstilfelle: Oppfolgingstilfelle,
     ) {
+        val aktivitetskrav = Aktivitetskrav.create(
+            personIdent = oppfolgingstilfelle.personIdent,
+            oppfolgingstilfelleStart = oppfolgingstilfelle.tilfelleStart,
+            isAutomatiskOppfylt = oppfolgingstilfelle.isGradertAtTilfelleEnd(),
+        )
         aktivitetskravService.createAktivitetskrav(
             connection = connection,
-            aktivitetskrav = oppfolgingstilfelle.toAktivitetskrav(),
+            aktivitetskrav = aktivitetskrav,
             referanseTilfelleBitUUID = oppfolgingstilfelle.referanseTilfelleBitUuid,
         )
     }

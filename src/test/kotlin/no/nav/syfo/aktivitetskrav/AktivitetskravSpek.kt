@@ -168,7 +168,7 @@ class AktivitetskravSpek : Spek({
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
             kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
-            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid.toString()
+            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
             kafkaAktivitetskravVurdering.frist shouldBeEqualTo null
         }
         it("updatedBy, sisteVurderingUuid, sistVurdert, frist and beskrivelse is null when not vurdert") {

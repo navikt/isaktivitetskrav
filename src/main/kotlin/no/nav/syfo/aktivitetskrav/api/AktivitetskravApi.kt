@@ -52,6 +52,15 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(responseDTOList)
         }
+        post {
+            val personIdent = call.personIdent()
+            val requestDTO: NewAktivitetskravDTO? =
+                runCatching { call.receiveNullable<NewAktivitetskravDTO>() }.getOrNull()
+            val createdAktivitetskrav =
+                aktivitetskravService.createAktivitetskrav(personIdent, requestDTO?.previousAktivitetskravUuid)
+
+            call.respond(HttpStatusCode.Created, createdAktivitetskrav)
+        }
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
             val personIdent = call.personIdent()
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
@@ -102,6 +111,7 @@ fun Route.registerAktivitetskravApi(
 
             if (
                 aktivitetskrav.status != AktivitetskravStatus.NY &&
+                aktivitetskrav.status != AktivitetskravStatus.NY_VURDERING &&
                 aktivitetskrav.status != AktivitetskravStatus.AVVENT
             ) {
                 throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")

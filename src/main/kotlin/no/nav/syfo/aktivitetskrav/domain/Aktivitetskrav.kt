@@ -22,21 +22,27 @@ data class Aktivitetskrav(
     val vurderinger: List<AktivitetskravVurdering>,
 ) {
     companion object {
-        fun ny(personIdent: PersonIdent, tilfelleStart: LocalDate): Aktivitetskrav =
-            create(
-                personIdent = personIdent,
-                status = AktivitetskravStatus.NY,
-                stoppunktAt = stoppunktDato(tilfelleStart),
-            )
 
-        fun automatiskOppfylt(
+        fun create(
             personIdent: PersonIdent,
-            tilfelleStart: LocalDate,
-        ): Aktivitetskrav = create(
-            personIdent = personIdent,
-            status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,
-            stoppunktAt = stoppunktDato(tilfelleStart),
-        )
+            oppfolgingstilfelleStart: LocalDate? = null,
+            isAutomatiskOppfylt: Boolean = false,
+        ): Aktivitetskrav {
+            val isGeneratedFromOppfolgingstilfelle = oppfolgingstilfelleStart != null
+            val status =
+                if (isAutomatiskOppfylt) {
+                    AktivitetskravStatus.AUTOMATISK_OPPFYLT
+                } else if (isGeneratedFromOppfolgingstilfelle) {
+                    AktivitetskravStatus.NY
+                } else {
+                    AktivitetskravStatus.NY_VURDERING
+                }
+            return create(
+                personIdent = personIdent,
+                status = status,
+                stoppunktAt = oppfolgingstilfelleStart?.let { stoppunktDato(it) } ?: LocalDate.now(),
+            )
+        }
 
         fun fromVurdering(
             personIdent: PersonIdent,
@@ -69,10 +75,10 @@ data class Aktivitetskrav(
     }
 }
 
-fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurdering {
+fun Aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid: UUID? = null): KafkaAktivitetskravVurdering {
     val latestVurdering = this.vurderinger.firstOrNull()
     return KafkaAktivitetskravVurdering(
-        uuid = this.uuid.toString(),
+        uuid = this.uuid,
         personIdent = this.personIdent.value,
         createdAt = this.createdAt,
         status = this.status.name,
@@ -80,9 +86,10 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(): KafkaAktivitetskravVurderin
         stoppunktAt = this.stoppunktAt,
         updatedBy = latestVurdering?.createdBy,
         arsaker = latestVurdering?.arsaker?.map { it.name } ?: emptyList(),
-        sisteVurderingUuid = latestVurdering?.uuid?.toString(),
+        sisteVurderingUuid = latestVurdering?.uuid,
         sistVurdert = latestVurdering?.createdAt,
         frist = latestVurdering?.frist,
+        previousAktivitetskravUuid = previousAktivitetskravUuid,
     )
 }
 
