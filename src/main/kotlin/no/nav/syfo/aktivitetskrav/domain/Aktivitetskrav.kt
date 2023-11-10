@@ -1,8 +1,5 @@
 package no.nav.syfo.aktivitetskrav.domain
 
-import no.nav.syfo.aktivitetskrav.api.AktivitetskravResponseDTO
-import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import no.nav.syfo.util.isAfterOrEqual
@@ -75,24 +72,6 @@ data class Aktivitetskrav(
     }
 }
 
-fun Aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid: UUID? = null): KafkaAktivitetskravVurdering {
-    val latestVurdering = this.vurderinger.firstOrNull()
-    return KafkaAktivitetskravVurdering(
-        uuid = this.uuid,
-        personIdent = this.personIdent.value,
-        createdAt = this.createdAt,
-        status = this.status.name,
-        beskrivelse = latestVurdering?.beskrivelse,
-        stoppunktAt = this.stoppunktAt,
-        updatedBy = latestVurdering?.createdBy,
-        arsaker = latestVurdering?.arsaker?.map { it.name } ?: emptyList(),
-        sisteVurderingUuid = latestVurdering?.uuid,
-        sistVurdert = latestVurdering?.createdAt,
-        frist = latestVurdering?.frist,
-        previousAktivitetskravUuid = previousAktivitetskravUuid,
-    )
-}
-
 infix fun Aktivitetskrav.gjelder(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
     this.personIdent == oppfolgingstilfelle.personIdent && this.stoppunktAt.isAfter(oppfolgingstilfelle.tilfelleStart) && oppfolgingstilfelle.tilfelleEnd.isAfterOrEqual(
         stoppunktAt
@@ -102,16 +81,6 @@ fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
     this.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT
 
 fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
-
-fun Aktivitetskrav.toResponseDTO(vurderinger: List<AktivitetskravVurderingResponseDTO>): AktivitetskravResponseDTO =
-    AktivitetskravResponseDTO(
-        uuid = uuid.toString(),
-        createdAt = createdAt.toLocalDateTime(),
-        status = status,
-        inFinalState = status.isFinal,
-        stoppunktAt = stoppunktAt,
-        vurderinger = vurderinger
-    )
 
 internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean {
     val updatedStoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)

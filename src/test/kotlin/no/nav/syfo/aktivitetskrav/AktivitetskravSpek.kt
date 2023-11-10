@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -155,14 +156,14 @@ class AktivitetskravSpek : Spek({
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
-            var kafkaAktivitetskravVurdering = updatedAktivitetskrav.toKafkaAktivitetskravVurdering()
+            var kafkaAktivitetskravVurdering = KafkaAktivitetskravVurdering.from(updatedAktivitetskrav)
             kafkaAktivitetskravVurdering.frist shouldBeEqualTo twoWeeksFromNow
 
             updatedAktivitetskrav = updatedAktivitetskrav.vurder(
                 aktivitetskravVurdering = oppfyltVurdering
             )
 
-            kafkaAktivitetskravVurdering = updatedAktivitetskrav.toKafkaAktivitetskravVurdering()
+            kafkaAktivitetskravVurdering = KafkaAktivitetskravVurdering.from(updatedAktivitetskrav)
 
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
@@ -174,7 +175,7 @@ class AktivitetskravSpek : Spek({
         it("updatedBy, sisteVurderingUuid, sistVurdert, frist and beskrivelse is null when not vurdert") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
 
-            val kafkaAktivitetskravVurdering = aktivitetskrav.toKafkaAktivitetskravVurdering()
+            val kafkaAktivitetskravVurdering = KafkaAktivitetskravVurdering.from(aktivitetskrav)
 
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null

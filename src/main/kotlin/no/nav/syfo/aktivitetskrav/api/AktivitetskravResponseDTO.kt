@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.api
 
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
 import java.time.LocalDate
@@ -12,7 +13,19 @@ data class AktivitetskravResponseDTO(
     val inFinalState: Boolean,
     val stoppunktAt: LocalDate,
     val vurderinger: List<AktivitetskravVurderingResponseDTO>,
-)
+) {
+    companion object {
+        fun from(aktivitetskrav: Aktivitetskrav, vurderinger: List<AktivitetskravVurderingResponseDTO>) =
+            AktivitetskravResponseDTO(
+                uuid = aktivitetskrav.uuid.toString(),
+                createdAt = aktivitetskrav.createdAt.toLocalDateTime(),
+                status = aktivitetskrav.status,
+                inFinalState = aktivitetskrav.status.isFinal,
+                stoppunktAt = aktivitetskrav.stoppunktAt,
+                vurderinger = vurderinger
+            )
+    }
+}
 
 data class AktivitetskravVurderingResponseDTO(
     val uuid: String,

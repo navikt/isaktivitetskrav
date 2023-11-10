@@ -2,7 +2,6 @@ package no.nav.syfo.aktivitetskrav.kafka
 
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.toKafkaAktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.application.kafka.KafkaEnvironment
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
@@ -20,7 +19,10 @@ class AktivitetskravVurderingProducer(
         previousAktivitetskravUuid: UUID? = null,
     ) {
         val kafkaAktivitetskravVurdering =
-            aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid = previousAktivitetskravUuid)
+            KafkaAktivitetskravVurdering.from(
+                aktivitetskrav,
+                previousAktivitetskravUuid = previousAktivitetskravUuid
+            )
         val key = UUID.nameUUIDFromBytes(kafkaAktivitetskravVurdering.personIdent.toByteArray()).toString()
         try {
             producer.send(
