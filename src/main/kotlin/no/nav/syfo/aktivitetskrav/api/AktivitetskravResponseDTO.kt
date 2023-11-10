@@ -5,9 +5,10 @@ import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 data class AktivitetskravResponseDTO(
-    val uuid: String,
+    val uuid: UUID,
     val createdAt: LocalDateTime,
     val status: AktivitetskravStatus,
     val inFinalState: Boolean,
@@ -15,9 +16,9 @@ data class AktivitetskravResponseDTO(
     val vurderinger: List<AktivitetskravVurderingResponseDTO>,
 ) {
     companion object {
-        fun from(aktivitetskrav: Aktivitetskrav, vurderinger: List<AktivitetskravVurderingResponseDTO>) =
+        fun from(aktivitetskrav: Aktivitetskrav, vurderinger: List<AktivitetskravVurderingResponseDTO> = emptyList()) =
             AktivitetskravResponseDTO(
-                uuid = aktivitetskrav.uuid.toString(),
+                uuid = aktivitetskrav.uuid,
                 createdAt = aktivitetskrav.createdAt.toLocalDateTime(),
                 status = aktivitetskrav.status,
                 inFinalState = aktivitetskrav.status.isFinal,

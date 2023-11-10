@@ -58,7 +58,10 @@ fun Route.registerAktivitetskravApi(
             val createdAktivitetskrav =
                 aktivitetskravService.createAktivitetskrav(personIdent, requestDTO?.previousAktivitetskravUuid)
 
-            call.respond(HttpStatusCode.Created, createdAktivitetskrav)
+            call.respond(
+                HttpStatusCode.Created,
+                AktivitetskravResponseDTO.from(createdAktivitetskrav)
+            )
         }
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
             val personIdent = call.personIdent()
