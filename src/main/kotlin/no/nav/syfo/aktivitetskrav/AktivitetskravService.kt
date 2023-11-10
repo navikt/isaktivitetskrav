@@ -113,29 +113,6 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = updatedAktivitetskrav)
     }
 
-    internal fun createAndVurderAktivitetskrav(
-        personIdent: PersonIdent,
-        aktivitetskravVurdering: AktivitetskravVurdering,
-    ) {
-        val aktivitetskrav =
-            Aktivitetskrav.fromVurdering(personIdent = personIdent, vurdering = aktivitetskravVurdering)
-
-        database.connection.use { connection ->
-            val pAktivitetskrav = connection.createAktivitetskrav(
-                aktivitetskrav = aktivitetskrav,
-                referanseTilfelleBitUUID = null
-            )
-            connection.createAktivitetskravVurdering(
-                aktivitetskravId = pAktivitetskrav.id,
-                aktivitetskravVurdering = aktivitetskravVurdering
-            )
-            connection.commit()
-        }
-        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
-            aktivitetskrav = aktivitetskrav,
-        )
-    }
-
     private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
         val aktivitetskravVurderinger =
             database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id)
