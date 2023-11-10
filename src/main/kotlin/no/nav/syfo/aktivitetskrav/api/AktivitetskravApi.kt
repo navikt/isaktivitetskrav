@@ -86,20 +86,6 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(HttpStatusCode.OK)
         }
-        post(vurderAktivitetskravPath) {
-            val personIdent = call.personIdent()
-            val requestDTO = call.receive<AktivitetskravVurderingRequestDTO>()
-
-            val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(
-                createdByIdent = call.getNAVIdent(),
-            )
-            aktivitetskravService.createAndVurderAktivitetskrav(
-                personIdent = personIdent,
-                aktivitetskravVurdering = aktivitetskravVurdering
-            )
-
-            call.respond(HttpStatusCode.OK)
-        }
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
             val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
             val requestDTO = call.receive<ForhandsvarselDTO>()

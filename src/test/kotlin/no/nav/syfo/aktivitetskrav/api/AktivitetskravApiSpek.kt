@@ -261,57 +261,10 @@ class AktivitetskravApiSpek : Spek({
                 }
             }
 
-            describe("Create and vurder aktivitetskrav for person") {
-                val urlVurderAktivitetskrav =
-                    "$aktivitetskravApiBasePath/$vurderAktivitetskravPath"
-
-                val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
-                    status = AktivitetskravStatus.OPPFYLT,
-                    beskrivelse = "Aktivitetskravet er oppfylt",
-                    arsaker = listOf(VurderingArsak.FRISKMELDT),
-                )
-
+            describe("Create aktivitetskrav for person") {
                 val newAktivitetskravDto = NewAktivitetskravDTO(UUID.randomUUID())
 
                 describe("Happy path") {
-                    it("Creates aktivitetskrav with vurdering and stoppunkt today and produces to Kafka if request is succesful") {
-                        with(
-                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(vurderingOppfyltRequestDTO))
-                            }
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
-                            verify(exactly = 1) {
-                                kafkaProducer.send(capture(producerRecordSlot))
-                            }
-
-                            val pAktivitetskravList =
-                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                            pAktivitetskravList.size shouldBeEqualTo 1
-                            val aktivitetskrav = pAktivitetskravList.first()
-                            aktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
-                            aktivitetskrav.stoppunktAt shouldBeEqualTo LocalDate.now()
-                            aktivitetskrav.referanseTilfelleBitUuid shouldBeEqualTo null
-
-                            val pAktivitetskravVurderingList = aktivitetskrav.vurderinger
-                            pAktivitetskravVurderingList.size shouldBeEqualTo 1
-                            val aktivitetskravVurdering = pAktivitetskravVurderingList.first()
-
-                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                            kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                            kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status
-                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
-                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo aktivitetskravVurdering.createdAt.millisekundOpplosning()
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo aktivitetskravVurdering.uuid
-                            kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
-                        }
-                    }
                     it("Creates aktivitetskrav from API request with previous aktivitetskrav") {
                         with(
                             handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
@@ -359,52 +312,16 @@ class AktivitetskravApiSpek : Spek({
 
                 describe("Unhappy path") {
                     it("Returns status Unauthorized if no token is supplied") {
-                        testMissingToken(urlVurderAktivitetskrav, HttpMethod.Post)
+                        testMissingToken(aktivitetskravApiBasePath, HttpMethod.Post)
                     }
                     it("returns status Forbidden if denied access to person") {
-                        testDeniedPersonAccess(urlVurderAktivitetskrav, validToken, HttpMethod.Post)
+                        testDeniedPersonAccess(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
                     }
                     it("returns status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
-                        testMissingPersonIdent(urlVurderAktivitetskrav, validToken, HttpMethod.Post)
+                        testMissingPersonIdent(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
                     }
                     it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
-                        testInvalidPersonIdent(urlVurderAktivitetskrav, validToken, HttpMethod.Post)
-                    }
-                    it("returns status BadRequest if vurdering is missing arsak") {
-                        val vurderingMissingArsakRequestDTO = AktivitetskravVurderingRequestDTO(
-                            status = AktivitetskravStatus.OPPFYLT,
-                            beskrivelse = "Aktivitetskravet er oppfylt",
-                            arsaker = emptyList(),
-                        )
-
-                        with(
-                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(vurderingMissingArsakRequestDTO))
-                            }
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
-                    }
-                    it("returns status BadRequest if vurdering has invalid arsak") {
-                        val vurderingInvalidArsakRequestDTO = AktivitetskravVurderingRequestDTO(
-                            status = AktivitetskravStatus.UNNTAK,
-                            beskrivelse = "Aktivitetskravet er oppfylt",
-                            arsaker = listOf(VurderingArsak.TILTAK),
-                        )
-
-                        with(
-                            handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-                                setBody(objectMapper.writeValueAsString(vurderingInvalidArsakRequestDTO))
-                            }
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                        testInvalidPersonIdent(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
                     }
                 }
             }
@@ -487,7 +404,7 @@ class AktivitetskravApiSpek : Spek({
                 }
             }
 
-            describe("Vurder existing aktivitetskrav for person") {
+            describe("Vurder aktivitetskrav for person") {
                 beforeEachTest {
                     createAktivitetskrav(nyAktivitetskrav)
                 }
