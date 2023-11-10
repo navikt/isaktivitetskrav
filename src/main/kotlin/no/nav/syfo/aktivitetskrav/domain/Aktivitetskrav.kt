@@ -78,7 +78,7 @@ data class Aktivitetskrav(
 fun Aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid: UUID? = null): KafkaAktivitetskravVurdering {
     val latestVurdering = this.vurderinger.firstOrNull()
     return KafkaAktivitetskravVurdering(
-        uuid = this.uuid.toString(),
+        uuid = this.uuid,
         personIdent = this.personIdent.value,
         createdAt = this.createdAt,
         status = this.status.name,
@@ -86,7 +86,7 @@ fun Aktivitetskrav.toKafkaAktivitetskravVurdering(previousAktivitetskravUuid: UU
         stoppunktAt = this.stoppunktAt,
         updatedBy = latestVurdering?.createdBy,
         arsaker = latestVurdering?.arsaker?.map { it.name } ?: emptyList(),
-        sisteVurderingUuid = latestVurdering?.uuid?.toString(),
+        sisteVurderingUuid = latestVurdering?.uuid,
         sistVurdert = latestVurdering?.createdAt,
         frist = latestVurdering?.frist,
         previousAktivitetskravUuid = previousAktivitetskravUuid,

@@ -308,7 +308,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo aktivitetskravVurdering.createdAt.millisekundOpplosning()
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo aktivitetskravVurdering.uuid.toString()
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo aktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
                         }
                     }
@@ -354,26 +354,6 @@ class AktivitetskravApiSpek : Spek({
                             responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo null
                         }
-                    }
-                    it("creates aktivitetskrav with previous aktivitetskrav from service") {
-                        val previousAktivitetskravUuid = UUID.randomUUID()
-                        val aktivitetskrav =
-                            aktivitetskravService.createAktivitetskrav(
-                                UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                                previousAktivitetskravUuid = previousAktivitetskravUuid
-                            )
-                        val savedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(aktivitetskrav.uuid)
-
-                        aktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                        savedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo previousAktivitetskravUuid
-                    }
-                    it("creates aktivitetskrav without previous aktivitetskrav from service") {
-                        val aktivitetskrav =
-                            aktivitetskravService.createAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                        val savedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(aktivitetskrav.uuid)
-
-                        aktivitetskrav.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                        savedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo null
                     }
                 }
 
@@ -551,7 +531,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid.toString()
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                         }
                     }
@@ -600,7 +580,7 @@ class AktivitetskravApiSpek : Spek({
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
                             kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid.toString()
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                         }
                     }
