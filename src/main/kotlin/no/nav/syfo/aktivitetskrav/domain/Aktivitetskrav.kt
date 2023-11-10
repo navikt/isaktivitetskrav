@@ -44,19 +44,6 @@ data class Aktivitetskrav(
             )
         }
 
-        fun fromVurdering(
-            personIdent: PersonIdent,
-            vurdering: AktivitetskravVurdering,
-        ): Aktivitetskrav {
-            val aktivitetskravNy = create(
-                personIdent = personIdent,
-                status = AktivitetskravStatus.NY,
-                stoppunktAt = LocalDate.now(),
-            )
-
-            return aktivitetskravNy.vurder(vurdering)
-        }
-
         private fun create(
             personIdent: PersonIdent,
             status: AktivitetskravStatus,
