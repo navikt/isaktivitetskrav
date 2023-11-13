@@ -2,10 +2,10 @@ package no.nav.syfo.identhendelse
 
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -28,6 +28,7 @@ class IdenthendelseServiceSpek : Spek({
 
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
+            val aktivitetskravRepository = AktivitetskravRepository(database)
 
             val identhendelseService = IdenthendelseService(
                 database = database,
@@ -49,7 +50,8 @@ class IdenthendelseServiceSpek : Spek({
                         tilfelleStart = LocalDate.now().minusDays(400),
                     )
                 beforeEachTest {
-                    database.createAktivitetskrav(aktivitetskravNy, aktivitetskravAutomatiskOppfylt)
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskravNy)
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskravAutomatiskOppfylt)
                 }
 
                 it("Oppdaterer aktivitetskrav når person har fått ny ident") {

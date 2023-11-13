@@ -7,6 +7,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -56,6 +57,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
 
         val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
         val dokarkivClient = mockk<DokarkivClient>()
+        val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
         val aktivitetskravVarselService = AktivitetskravVarselService(
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
@@ -75,7 +77,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         )
 
         fun createForhandsvarsel(aktivitetskrav: Aktivitetskrav, pdf: ByteArray): AktivitetskravVarsel {
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)

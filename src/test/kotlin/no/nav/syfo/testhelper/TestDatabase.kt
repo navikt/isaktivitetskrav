@@ -2,7 +2,6 @@ package no.nav.syfo.testhelper
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import no.nav.syfo.aktivitetskrav.database.*
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
@@ -84,15 +83,6 @@ fun DatabaseInterface.dropData() {
         connection.commit()
     }
 }
-
-fun DatabaseInterface.createAktivitetskrav(vararg aktivitetskrav: Aktivitetskrav): List<PAktivitetskrav> =
-    this.connection.use { connection ->
-        val createdAktivitetskrav = aktivitetskrav.map {
-            connection.createAktivitetskrav(aktivitetskrav = it, referanseTilfelleBitUUID = UUID.randomUUID())
-        }
-        connection.commit()
-        createdAktivitetskrav
-    }
 
 const val queryGetVarslerForPerson = """
     SELECT av.* 

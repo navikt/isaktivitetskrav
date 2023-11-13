@@ -4,6 +4,7 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
@@ -11,7 +12,6 @@ import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
@@ -33,6 +33,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
 
         val externalMockEnvironment = ExternalMockEnvironment.instance
         val database = externalMockEnvironment.database
+        val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
         val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
 
@@ -67,7 +68,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                 arsaker = emptyList(),
                 frist = tenWeeksAgo,
             )
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
             return aktivitetskrav.vurder(vurdering)
         }
 

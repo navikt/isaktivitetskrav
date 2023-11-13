@@ -22,9 +22,10 @@ class AktivitetskravService(
         aktivitetskrav: Aktivitetskrav,
         referanseTilfelleBitUUID: UUID,
     ) {
-        connection.createAktivitetskrav(
+        aktivitetskravRepository.createAktivitetskrav(
+            connection = connection,
             aktivitetskrav = aktivitetskrav,
-            referanseTilfelleBitUUID = referanseTilfelleBitUUID
+            referanseTilfelleBitUuid = referanseTilfelleBitUUID,
         )
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = aktivitetskrav
@@ -34,7 +35,10 @@ class AktivitetskravService(
     fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskravUuid: UUID? = null): Aktivitetskrav {
         val aktivitetskrav = Aktivitetskrav.create(personIdent)
         val createdAktivitetskrav =
-            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav, previousAktivitetskravUuid).toAktivitetskrav()
+            aktivitetskravRepository.createAktivitetskrav(
+                aktivitetskrav = aktivitetskrav,
+                previousAktivitetskravUuid = previousAktivitetskravUuid,
+            ).toAktivitetskrav()
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = createdAktivitetskrav,
             previousAktivitetskravUuid = previousAktivitetskravUuid,

@@ -10,7 +10,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -68,7 +67,8 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
             )
 
             it("Setter aktivitetskrav med uuid til AUTOMATISK_OPPFYLT") {
-                database.createAktivitetskrav(aktivitetskrav1, aktivitetskrav2)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav1)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav2)
 
                 runBlocking {
                     val aktivitetskravUuids = listOf(aktivitetskrav1.uuid)
@@ -96,7 +96,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 kafkaAktivitetskravVurdering.status shouldBeEqualTo automatiskOppfyltAktivitetskrav.status
             }
             it("Setter bare aktivitetskrav NY til AUTOMATISK_OPPFYLT") {
-                database.createAktivitetskrav(automatiskOppfylt)
+                aktivitetskravRepository.createAktivitetskrav(automatiskOppfylt)
 
                 runBlocking {
                     val aktivitetskravUuids = listOf(automatiskOppfylt.uuid)
@@ -112,7 +112,8 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 }
             }
             it("Setter ingen aktivitetskrav til AUTOMATISK_OPPFYLT når tom liste med uuider") {
-                database.createAktivitetskrav(aktivitetskrav1, aktivitetskrav2)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav1)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav2)
 
                 runBlocking {
                     val result =

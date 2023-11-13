@@ -39,26 +39,47 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
 
     fun createAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
-        previousAktivitetskravUuid: UUID?,
+        previousAktivitetskravUuid: UUID? = null,
+        referanseTilfelleBitUuid: UUID? = null,
+        connection: Connection? = null,
     ): PAktivitetskrav {
-        val createdRecords = database.connection.use { connection ->
-            val newRecords = connection.prepareStatement(CREATE_AKTIVITETSKRAV).use {
-                it.setString(1, aktivitetskrav.uuid.toString())
-                it.setObject(2, aktivitetskrav.createdAt)
-                it.setObject(3, aktivitetskrav.createdAt)
-                it.setString(4, aktivitetskrav.personIdent.value)
-                it.setString(5, aktivitetskrav.status.name)
-                it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
-                it.setString(7, null)
-                it.setObject(8, previousAktivitetskravUuid)
-                it.executeQuery().toList { toPAktivitetskrav() }
+        return connection?.createAktivitetskrav(
+            aktivitetskrav = aktivitetskrav,
+            previousAktivitetskravUuid = previousAktivitetskravUuid,
+            referanseTilfelleBitUuid = referanseTilfelleBitUuid,
+        )
+            ?: database.connection.use {
+                val created = it.createAktivitetskrav(
+                    aktivitetskrav = aktivitetskrav,
+                    previousAktivitetskravUuid = previousAktivitetskravUuid,
+                    referanseTilfelleBitUuid = referanseTilfelleBitUuid,
+                )
+                it.commit()
+
+                return created
             }
-            connection.commit()
-            newRecords
+    }
+
+    private fun Connection.createAktivitetskrav(
+        aktivitetskrav: Aktivitetskrav,
+        previousAktivitetskravUuid: UUID? = null,
+        referanseTilfelleBitUuid: UUID? = null,
+    ): PAktivitetskrav {
+        val createdRecords = prepareStatement(CREATE_AKTIVITETSKRAV).use {
+            it.setString(1, aktivitetskrav.uuid.toString())
+            it.setObject(2, aktivitetskrav.createdAt)
+            it.setObject(3, aktivitetskrav.createdAt)
+            it.setString(4, aktivitetskrav.personIdent.value)
+            it.setString(5, aktivitetskrav.status.name)
+            it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
+            it.setObject(7, referanseTilfelleBitUuid)
+            it.setObject(8, previousAktivitetskravUuid)
+            it.executeQuery().toList { toPAktivitetskrav() }
         }
         if (createdRecords.size != 1) {
             throw NoElementInsertedException("Creating AKTIVITETSKRAV failed, no rows affected.")
         }
+
         return createdRecords.first()
     }
 
