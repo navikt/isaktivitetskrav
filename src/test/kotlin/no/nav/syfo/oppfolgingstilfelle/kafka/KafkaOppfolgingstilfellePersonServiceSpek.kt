@@ -10,7 +10,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.shouldBeEmpty
@@ -348,7 +347,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     tilfelleStart = nineWeeksAgo,
                 )
                 it("does not update Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
-                    database.createAktivitetskrav(nyAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     var aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
@@ -378,7 +377,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 }
 
                 it("updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert and start changed") {
-                    database.createAktivitetskrav(nyAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfelleTenWeeksGradert
@@ -411,7 +410,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
                 it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert and start changed") {
-                    database.createAktivitetskrav(nyAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfelleTenWeeksNotGradert
@@ -449,7 +448,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     createAktivitetskravAutomatiskOppfylt(tilfelleStart = nineWeeksAgo)
 
                 it("creates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
-                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfelleNineWeeksNotGradert
@@ -480,7 +479,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
                 it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert and start changed") {
-                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfelleTenWeeksGradert
@@ -513,7 +512,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
                 }
                 it("does not update Aktivitetskrav(AUTOMATISK_OPPFYLT) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
-                    database.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                     var aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
@@ -556,7 +555,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status
                     it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle not gradert and start changed") {
-                        database.createAktivitetskrav(aktivitetskrav)
+                        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
                             kafkaOppfolgingstilfelleTenWeeksNotGradert
@@ -586,7 +585,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     }
                     it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle gradert and start changed") {
-                        database.createAktivitetskrav(aktivitetskrav)
+                        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
                             kafkaOppfolgingstilfelleTenWeeksGradert,
@@ -616,7 +615,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
                     }
                     it("does not update Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
-                        database.createAktivitetskrav(aktivitetskrav)
+                        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                         var aktivitetskravList =
                             aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
@@ -673,7 +672,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
 
                 it("updates aktivitetskrav for earlier oppfolgingstilfelle to AUTOMATISK_OPPFYLT when latest oppfolgingstilfelle lasting 9 weeks (not gradert)") {
-                    database.createAktivitetskrav(nyAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfelleNineWeeksNotGradert
@@ -706,7 +705,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaRecordSlot1.captured.value().status shouldBeEqualTo aktivitetskravEarlierOppfolgingstilfelle.status
                 }
                 it("do not update aktivitetskrav for earlier oppfolgingstilfelle when latest oppfolgingstilfelle lasting 7 weeks") {
-                    database.createAktivitetskrav(nyAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
@@ -745,7 +744,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 testcases.forEach { aktivitetskrav ->
                     val aktivitetskravStatus = aktivitetskrav.status
                     it("do not update aktivitetskrav($aktivitetskravStatus) for earlier oppfolgingstilfelle when latest oppfolgingstilfelle lasting 9 weeks") {
-                        database.createAktivitetskrav(aktivitetskrav)
+                        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
                             kafkaOppfolgingstilfelleNineWeeksNotGradert
@@ -768,7 +767,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo aktivitetskrav.uuid
                     }
                     it("do not update aktivitetskrav($aktivitetskravStatus) for earlier oppfolgingstilfelle when latest oppfolgingstilfelle lasting 7 weeks") {
-                        database.createAktivitetskrav(aktivitetskrav)
+                        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                         mockKafkaConsumerOppfolgingstilfellePerson(
                             kafkaOppfolgingstilfellePersonSevenWeeksNotGradert

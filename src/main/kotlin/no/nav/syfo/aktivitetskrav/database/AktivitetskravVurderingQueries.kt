@@ -10,43 +10,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
-const val queryCreateAktivitetskrav =
-    """
-    INSERT INTO AKTIVITETSKRAV (
-        id,
-        uuid,
-        created_at,
-        updated_at,
-        personident,
-        status,
-        stoppunkt_at,
-        referanse_tilfelle_bit_uuid
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?)
-    RETURNING *
-    """
-
-fun Connection.createAktivitetskrav(
-    aktivitetskrav: Aktivitetskrav,
-    referanseTilfelleBitUUID: UUID?,
-): PAktivitetskrav {
-    val idList = this.prepareStatement(queryCreateAktivitetskrav).use {
-        it.setString(1, aktivitetskrav.uuid.toString())
-        it.setObject(2, aktivitetskrav.createdAt)
-        it.setObject(3, nowUTC())
-        it.setString(4, aktivitetskrav.personIdent.value)
-        it.setString(5, aktivitetskrav.status.name)
-        it.setDate(6, Date.valueOf(aktivitetskrav.stoppunktAt))
-        it.setString(7, referanseTilfelleBitUUID?.toString())
-        it.executeQuery().toList { toPAktivitetskrav() }
-    }
-
-    if (idList.size != 1) {
-        throw NoElementInsertedException("Creating AKTIVITETSKRAV failed, no rows affected.")
-    }
-
-    return idList.first()
-}
-
 const val queryCreateAktivitetskravVurdering =
     """
     INSERT INTO AKTIVITETSKRAV_VURDERING (

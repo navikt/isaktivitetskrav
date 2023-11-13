@@ -4,6 +4,7 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -42,6 +43,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         val database = externalMockEnvironment.database
 
         val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+        val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
         val esyfoVarselKafkaProducer = mockk<KafkaProducer<String, EsyfovarselHendelse>>()
         val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
@@ -71,7 +73,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             pdf: ByteArray,
             journalpostId: String? = defaultJournalpostId,
         ): Pair<AktivitetskravVarsel, AktivitetskravVurdering> {
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)

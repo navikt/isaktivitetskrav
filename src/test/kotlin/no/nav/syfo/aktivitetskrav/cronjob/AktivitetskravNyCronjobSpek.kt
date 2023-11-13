@@ -10,7 +10,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -68,7 +67,8 @@ class AktivitetskravNyCronjobSpek : Spek({
             )
 
             it("Setter aktivitetskrav med uuid til NY") {
-                database.createAktivitetskrav(aktivitetskrav1, aktivitetskrav2)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav1)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav2)
 
                 runBlocking {
                     val aktivitetskravUuids = listOf(aktivitetskrav1.uuid)
@@ -96,7 +96,7 @@ class AktivitetskravNyCronjobSpek : Spek({
                 kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status
             }
             it("Setter bare aktivitetskrav AUTOMATISK_OPPFYLT til NY") {
-                database.createAktivitetskrav(aktivitetskravNy)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskravNy)
 
                 runBlocking {
                     val aktivitetskravUuids = listOf(aktivitetskravNy.uuid)
@@ -112,7 +112,8 @@ class AktivitetskravNyCronjobSpek : Spek({
                 }
             }
             it("Setter ingen aktivitetskrav til NY når tom liste med uuider") {
-                database.createAktivitetskrav(aktivitetskrav1, aktivitetskrav2)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav1)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav2)
 
                 runBlocking {
                     val result =

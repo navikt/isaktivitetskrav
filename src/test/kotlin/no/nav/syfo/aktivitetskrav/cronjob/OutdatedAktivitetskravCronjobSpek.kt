@@ -9,7 +9,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -66,7 +65,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             val aktivitetskrav = createNyttAktivitetskrav(
                 stoppunktAt = arenaCutoff.plusDays(1)
             )
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             runBlocking {
                 val result = outdatedAktivitetskravCronjob.runJob()
@@ -100,7 +99,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                         listOf(VurderingArsak.MEDISINSKE_GRUNNER),
                     )
                 )
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             runBlocking {
                 val result = outdatedAktivitetskravCronjob.runJob()
@@ -120,7 +119,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             val aktivitetskrav = createNyttAktivitetskrav(
                 stoppunktAt = arenaCutoff.minusDays(1)
             )
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             runBlocking {
                 val result = outdatedAktivitetskravCronjob.runJob()
@@ -140,7 +139,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             val aktivitetskrav = createNyttAktivitetskrav(
                 stoppunktAt = outdatedCutoff.plusDays(1)
             )
-            database.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             runBlocking {
                 val result = outdatedAktivitetskravCronjob.runJob()
@@ -163,7 +162,8 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             val nyttAktivitetskrav = createNyttAktivitetskrav(
                 stoppunktAt = outdatedCutoff.plusDays(1)
             )
-            database.createAktivitetskrav(aktivitetskrav, nyttAktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+            aktivitetskravRepository.createAktivitetskrav(nyttAktivitetskrav)
 
             runBlocking {
                 val result = outdatedAktivitetskravCronjob.runJob()

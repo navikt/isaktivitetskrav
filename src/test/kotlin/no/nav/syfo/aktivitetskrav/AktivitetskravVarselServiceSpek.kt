@@ -5,6 +5,7 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.cronjob.pdf
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
@@ -17,7 +18,6 @@ import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import no.nav.syfo.testhelper.createAktivitetskrav
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
@@ -45,6 +45,7 @@ class AktivitetskravVarselServiceSpek : Spek({
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(vurderingProducerMock)
             val expiredVarselProducer = ExpiredVarselProducer(expiredVarselProducerMock)
+            val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
             val aktivitetskravVarselService = AktivitetskravVarselService(
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
@@ -84,7 +85,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                     document = document,
                 )
                 it("Updates aktivitetskrav, creates aktivitetskravVurdering, creates aktivitetskravVarsel, creates aktivitetskravVarselPdf and send on kafka") {
-                    database.createAktivitetskrav(aktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                     runBlocking {
                         val varsel = aktivitetskravVarselService.sendForhandsvarsel(
@@ -111,7 +112,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                 it("Sends expected requestBody to pdfgenclient") {
                     val mockedPdfGenClient = mockk<PdfGenClient>()
                     val expectedForhandsvarselPdfRequestBody = generateForhandsvarselPdfDTO(forhandsvarselDTO)
-                    database.createAktivitetskrav(aktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
                     val aktivitetskravVarselServiceWithMockedPdfGenClient = AktivitetskravVarselService(
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                         arbeidstakervarselProducer = mockk(),
@@ -157,7 +158,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         frist = null,
                     )
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
-                    database.createAktivitetskrav(updatedAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                     val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
                     aktivitetskravVarselRepository.create(
                         aktivitetskrav = updatedAktivitetskrav,
@@ -182,7 +183,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         frist = null,
                     )
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
-                    database.createAktivitetskrav(updatedAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                     val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
                     aktivitetskravVarselRepository.create(
                         aktivitetskrav = updatedAktivitetskrav,

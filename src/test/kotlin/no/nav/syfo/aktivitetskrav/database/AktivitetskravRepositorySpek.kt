@@ -32,7 +32,10 @@ class AktivitetskravRepositorySpek : Spek({
             describe("Successfully creates an aktivitetskrav with previous aktivitetskrav") {
                 val newAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val previousAktivitetskravUuid = UUID.randomUUID()
-                aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav, previousAktivitetskravUuid)
+                aktivitetskravRepository.createAktivitetskrav(
+                    newAktivitetskrav,
+                    previousAktivitetskravUuid,
+                )
                 val storedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(newAktivitetskrav.uuid)
 
                 storedAktivitetskrav?.personIdent shouldBeEqualTo newAktivitetskrav.personIdent
@@ -54,7 +57,7 @@ class AktivitetskravRepositorySpek : Spek({
                 )
 
                 beforeEachTest {
-                    database.createAktivitetskrav(newAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(newAktivitetskrav)
                 }
 
                 it("Should create forhåndsvarsel in db") {
@@ -102,7 +105,7 @@ class AktivitetskravRepositorySpek : Spek({
                                     frist = null,
                                 )
                                 val updatedAktivitetskrav = it.vurder(vurdering)
-                                database.createAktivitetskrav(updatedAktivitetskrav)
+                                aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                                 updatedAktivitetskrav
                             }
                     val varsler = createVarsler()
@@ -141,7 +144,7 @@ class AktivitetskravRepositorySpek : Spek({
                                     frist = null,
                                 )
                                 val updatedAktivitetskrav = it.vurder(vurdering)
-                                database.createAktivitetskrav(updatedAktivitetskrav)
+                                aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                                 updatedAktivitetskrav
                             }
                     val varsler =
@@ -193,7 +196,7 @@ class AktivitetskravRepositorySpek : Spek({
                         frist = null,
                     )
                     val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                    database.createAktivitetskrav(updatedAktivitetskrav)
+                    aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                     val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
                     aktivitetskravVarselRepository.create(
                         aktivitetskrav = updatedAktivitetskrav,
