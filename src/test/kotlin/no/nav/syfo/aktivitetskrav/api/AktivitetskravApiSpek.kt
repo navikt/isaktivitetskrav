@@ -239,7 +239,7 @@ class AktivitetskravApiSpek : Spek({
                             aktivitetskrav.inFinalState.shouldBeFalse()
                             aktivitetskrav.vurderinger.size shouldBeEqualTo 0
                             aktivitetskrav.createdAt shouldNotBeEqualTo null
-                            aktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid.toString()
+                            aktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
                             aktivitetskrav.stoppunktAt shouldBeEqualTo nyAktivitetskrav.stoppunktAt
                         }
                     }
@@ -275,7 +275,7 @@ class AktivitetskravApiSpek : Spek({
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
-                            val responseDTO = objectMapper.readValue<Aktivitetskrav>(response.content!!)
+                            val responseDTO = objectMapper.readValue<AktivitetskravResponseDTO>(response.content!!)
                             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
 
                             verify(exactly = 1) {
@@ -283,7 +283,7 @@ class AktivitetskravApiSpek : Spek({
                             }
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                            responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            responseDTO.uuid shouldBeEqualTo kafkaAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo newAktivitetskravDto.previousAktivitetskravUuid
                         }
                     }
@@ -296,7 +296,7 @@ class AktivitetskravApiSpek : Spek({
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
-                            val responseDTO = objectMapper.readValue<Aktivitetskrav>(response.content!!)
+                            val responseDTO = objectMapper.readValue<AktivitetskravResponseDTO>(response.content!!)
                             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
 
                             verify(exactly = 1) {
@@ -304,7 +304,7 @@ class AktivitetskravApiSpek : Spek({
                             }
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                            responseDTO.personIdent.value shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            responseDTO.uuid shouldBeEqualTo kafkaAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.previousAktivitetskravUuid shouldBeEqualTo null
                         }
                     }
