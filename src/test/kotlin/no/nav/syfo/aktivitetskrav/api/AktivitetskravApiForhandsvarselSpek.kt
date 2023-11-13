@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.cronjob.forhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -60,6 +61,14 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                 issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
                 navIdent = UserConstants.VEILEDER_IDENT,
             )
+            val fritekst = "Dette er et forhåndsvarsel"
+            val forhandsvarselDTO = ForhandsvarselDTO(
+                fritekst = fritekst,
+                document = generateDocumentComponentDTO(
+                    fritekst = fritekst,
+                    header = "Forhåndsvarsel"
+                )
+            )
 
             beforeEachTest {
                 clearMocks(kafkaProducer)
@@ -74,7 +83,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
             fun postForhandsvarsel(
                 aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
                 arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                newForhandsvarselDTO: ForhandsvarselDTO,
+                newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
             ) = run {
                 val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
                 handleRequest(HttpMethod.Post, url) {
@@ -107,17 +116,9 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
             }
             describe("Forhåndsvarsel") {
                 beforeEachTest { aktivitetskravService.createAktivitetskravForTest(nyAktivitetskrav) }
-                val fritekst = "Dette er et forhåndsvarsel"
-                val forhandsvarselDTO = ForhandsvarselDTO(
-                    fritekst = fritekst,
-                    document = generateDocumentComponentDTO(
-                        fritekst = fritekst,
-                        header = "Forhåndsvarsel"
-                    )
-                )
                 describe("Happy path") {
                     it("Successfully creates a new forhandsvarsel") {
-                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                        with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                             val createdForhandsvarsel =
                                 objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
@@ -148,7 +149,6 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                         with(
                             postForhandsvarsel(
                                 aktivitetskravUuid = UUID.randomUUID(),
-                                newForhandsvarselDTO = forhandsvarselDTO,
                             )
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -162,21 +162,21 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                         }
                     }
                     it("Fails if already forhandsvarsel") {
-                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                        with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                         }
-                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                        with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
                     it("Fails if already forhandsvarsel before") {
-                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                        with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                         }
                         with(postAvvent()) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
                         }
-                        with(postForhandsvarsel(newForhandsvarselDTO = forhandsvarselDTO)) {
+                        with(postForhandsvarsel()) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created // TODO: Should give Bad Request
                         }
                     }
