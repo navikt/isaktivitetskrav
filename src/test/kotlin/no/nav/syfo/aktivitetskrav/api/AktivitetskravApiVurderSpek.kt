@@ -93,6 +93,37 @@ class AktivitetskravApiVurderSpek : Spek({
                 )
 
                 describe("Happy path") {
+                    it("Updates Aktivitetskrav with vurdering and produces to Kafka if request is succesful") {
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = nyAktivitetskrav.uuid,
+                                vurderingDTO = vurderingOppfyltRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                            verify(exactly = 1) {
+                                kafkaProducer.send(capture(producerRecordSlot))
+                            }
+
+                            val latestAktivitetskrav =
+                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                    .first()
+                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
+                            latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
+
+                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+
+                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                            kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
+                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
+                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
+                            kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
+                        }
+                    }
                     it("Updates Aktivitetskrav already vurdert with new vurdering and produces to Kafka if request is succesful") {
                         val avventVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.AVVENT,
@@ -173,18 +204,18 @@ class AktivitetskravApiVurderSpek : Spek({
                     }
                 }
                 describe("Unhappy path") {
-                    val urlVurderAktivitetskrav = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                    val urlVurderExistingAktivitetskrav = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
                     it("Returns status Unauthorized if no token is supplied") {
-                        testMissingToken(urlVurderAktivitetskrav, HttpMethod.Post)
+                        testMissingToken(urlVurderExistingAktivitetskrav, HttpMethod.Post)
                     }
                     it("returns status Forbidden if denied access to person") {
-                        testDeniedPersonAccess(urlVurderAktivitetskrav, validToken, HttpMethod.Post)
+                        testDeniedPersonAccess(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
                     }
                     it("returns status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
-                        testMissingPersonIdent(urlVurderAktivitetskrav, validToken, HttpMethod.Post)
+                        testMissingPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
                     }
                     it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
-                        testInvalidPersonIdent(urlVurderAktivitetskrav, validToken, HttpMethod.Post)
+                        testInvalidPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
                     }
                     it("returns status BadRequest if no vurdering exists for uuid-param") {
                         with(
