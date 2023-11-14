@@ -1,6 +1,7 @@
 package no.nav.syfo.application.kafka
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.database.DatabaseInterface
@@ -17,6 +18,7 @@ fun launchKafkaModule(
     database: DatabaseInterface,
     pdlClient: PdlClient,
     aktivitetskravService: AktivitetskravService,
+    aktivitetskravRepository: AktivitetskravRepository,
 ) {
     val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
         database = database,
@@ -29,7 +31,10 @@ fun launchKafkaModule(
         kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
     )
 
-    val identhendelseService = IdenthendelseService(database = database, pdlClient = pdlClient)
+    val identhendelseService = IdenthendelseService(
+        aktivitetskravRepository = aktivitetskravRepository,
+        pdlClient = pdlClient
+    )
     val kafkaIdenthendelseService = KafkaIdenthendelseService(identhendelseService = identhendelseService)
     launchKafkaTaskIdenthendelse(
         applicationState = applicationState,

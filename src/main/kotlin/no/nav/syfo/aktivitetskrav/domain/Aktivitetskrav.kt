@@ -18,6 +18,17 @@ data class Aktivitetskrav(
     val stoppunktAt: LocalDate,
     val vurderinger: List<AktivitetskravVurdering>,
 ) {
+
+    fun vurder(
+        aktivitetskravVurdering: AktivitetskravVurdering,
+    ): Aktivitetskrav = this.copy(
+        status = aktivitetskravVurdering.status,
+        vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
+    )
+
+    fun lukk(): Aktivitetskrav =
+        this.copy(status = AktivitetskravStatus.LUKKET)
+
     companion object {
 
         fun create(
@@ -80,13 +91,6 @@ internal fun Aktivitetskrav.updateStoppunkt(oppfolgingstilfelle: Oppfolgingstilf
         stoppunktAt = stoppunktDato,
     )
 }
-
-internal fun Aktivitetskrav.vurder(
-    aktivitetskravVurdering: AktivitetskravVurdering,
-): Aktivitetskrav = this.copy(
-    status = aktivitetskravVurdering.status,
-    vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
-)
 
 internal fun Aktivitetskrav.oppfyllAutomatisk(): Aktivitetskrav = this.copy(
     status = AktivitetskravStatus.AUTOMATISK_OPPFYLT,

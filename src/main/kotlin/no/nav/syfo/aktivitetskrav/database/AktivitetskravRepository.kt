@@ -5,9 +5,12 @@ import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.util.nowUTC
 import java.sql.Connection
 import java.sql.Date
 import java.sql.ResultSet
+import java.sql.SQLException
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -37,6 +40,19 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             }
         }
 
+    fun getOutdatedAktivitetskrav(
+        arenaCutoff: LocalDate,
+        outdatedCutoff: LocalDate
+    ): List<PAktivitetskrav> =
+        database.connection.use { connection ->
+            connection.prepareStatement(GET_AKTIVITETSKRAV_OUTDATED).use {
+                it.setObject(1, arenaCutoff)
+                it.setObject(2, outdatedCutoff)
+                it.setObject(3, outdatedCutoff)
+                it.executeQuery().toList { toPAktivitetskrav() }
+            }
+        }
+
     fun createAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
         previousAktivitetskravUuid: UUID? = null,
@@ -58,6 +74,47 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
 
                 return created
             }
+    }
+
+    fun updateAktivitetskravStatus(
+        aktivitetskrav: Aktivitetskrav
+    ): PAktivitetskrav {
+        val updatedAktivitetskravRecords = database.connection.use { connection ->
+            val aktivitetskravRecords =
+                connection.prepareStatement(UPDATE_AKTIVITETSKRAV_STATUS).use { preparedStatement ->
+                    preparedStatement.setString(1, aktivitetskrav.status.name)
+                    preparedStatement.setDate(2, Date.valueOf(aktivitetskrav.stoppunktAt))
+                    preparedStatement.setObject(3, nowUTC())
+                    preparedStatement.setString(4, aktivitetskrav.uuid.toString())
+                    preparedStatement.executeQuery().toList { toPAktivitetskrav() }
+                }
+            if (aktivitetskravRecords.size != 1) {
+                throw SQLException("Failed to update aktivitetskrav with uuid ${aktivitetskrav.uuid} - Unexpected update count: ${aktivitetskravRecords.size}")
+            }
+            connection.commit()
+            aktivitetskravRecords
+        }
+        return updatedAktivitetskravRecords.first()
+    }
+
+    fun updateAktivitetskravPersonIdent(
+        nyPersonIdent: PersonIdent,
+        inactiveIdenter: List<PersonIdent>,
+    ): Int {
+        var updatedRows = 0
+        database.connection.use { connection ->
+            connection.prepareStatement(UPDATE_AKTIVITETSKRAV_PERSONIDENT).use {
+                inactiveIdenter.forEach { inactiveIdent ->
+                    it.setString(1, nyPersonIdent.value)
+                    it.setObject(2, nowUTC())
+                    it.setString(3, inactiveIdent.value)
+                    it.executeUpdate()
+                    updatedRows++
+                }
+            }
+            connection.commit()
+        }
+        return updatedRows
     }
 
     private fun Connection.createAktivitetskrav(
@@ -108,6 +165,16 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             ORDER BY created_at DESC
             """
 
+        private const val GET_AKTIVITETSKRAV_OUTDATED =
+            """
+            SELECT * 
+            FROM AKTIVITETSKRAV
+            WHERE stoppunkt_at > ?
+                AND stoppunkt_at < ?
+                AND status = 'NY'
+                AND personident NOT IN (SELECT personident FROM AKTIVITETSKRAV WHERE stoppunkt_at >= ?);
+            """
+
         private const val CREATE_AKTIVITETSKRAV =
             """
             INSERT INTO AKTIVITETSKRAV (
@@ -130,6 +197,20 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             FROM AKTIVITETSKRAV
             WHERE personident = ?
             ORDER BY created_at DESC;
+            """
+
+        const val UPDATE_AKTIVITETSKRAV_PERSONIDENT =
+            """
+            UPDATE AKTIVITETSKRAV
+            SET personident = ?, updated_at=?
+            WHERE personident = ?
+            """
+
+        private const val UPDATE_AKTIVITETSKRAV_STATUS =
+            """
+            UPDATE AKTIVITETSKRAV 
+            SET status=?, stoppunkt_at=?, updated_at=? WHERE uuid = ? 
+            RETURNING *
             """
     }
 }

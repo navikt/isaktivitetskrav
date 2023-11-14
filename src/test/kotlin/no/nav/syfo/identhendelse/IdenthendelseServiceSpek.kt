@@ -31,8 +31,8 @@ class IdenthendelseServiceSpek : Spek({
             val aktivitetskravRepository = AktivitetskravRepository(database)
 
             val identhendelseService = IdenthendelseService(
-                database = database,
                 pdlClient = externalMockEnvironment.pdlClient,
+                aktivitetskravRepository = aktivitetskravRepository,
             )
 
             afterEachTest {

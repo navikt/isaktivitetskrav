@@ -2,8 +2,9 @@ package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.domain.vurder
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
@@ -12,7 +13,7 @@ import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
-import java.util.UUID
+import java.util.*
 
 class AktivitetskravVarselService(
     private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,

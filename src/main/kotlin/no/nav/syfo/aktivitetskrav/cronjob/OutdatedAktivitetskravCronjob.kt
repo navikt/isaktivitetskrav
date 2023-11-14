@@ -27,7 +27,7 @@ class OutdatedAktivitetskravCronjob(
 
         outdatedAktivitetskrav.forEach {
             try {
-                aktivitetskravService.lukk(aktivitetskrav = it)
+                aktivitetskravService.lukkAktivitetskrav(aktivitetskrav = it)
                 result.updated++
             } catch (e: Exception) {
                 result.failed++
