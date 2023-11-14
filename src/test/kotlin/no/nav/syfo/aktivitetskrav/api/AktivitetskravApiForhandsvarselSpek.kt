@@ -168,7 +168,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.OK
                         }
                         with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.Created // TODO: Should give Bad Request
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
                 }

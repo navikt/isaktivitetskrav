@@ -10,6 +10,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig
+import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.application.exception.ForbiddenAccessVeilederException
 import no.nav.syfo.application.metric.METRICS_REGISTRY
 import no.nav.syfo.util.*
@@ -64,6 +65,9 @@ fun Application.installStatusPages() {
                     cause.response.status
                 }
                 is IllegalArgumentException -> {
+                    HttpStatusCode.BadRequest
+                }
+                is ConflictException -> {
                     HttpStatusCode.BadRequest
                 }
                 is ForbiddenAccessVeilederException -> {
