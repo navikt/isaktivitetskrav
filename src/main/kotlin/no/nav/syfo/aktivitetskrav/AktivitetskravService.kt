@@ -63,15 +63,15 @@ class AktivitetskravService(
         aktivitetskrav: Aktivitetskrav,
         aktivitetskravVurdering: AktivitetskravVurdering,
     ) {
+        if (aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL) {
+            throw ConflictException("Kan ikke sette FORHANDSVARSEL her, bruk aktivitetskravVarselService.sendForhandsvarsel")
+        }
         val currentVurdering = aktivitetskrav.vurderinger.firstOrNull()
         if (currentVurdering?.isFinal() == true) {
             throw ConflictException("Aktivitetskravet har allerede en avsluttende vurdering")
         }
-
         aktivitetskravVurdering.validate()
-        if (aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL) {
-            throw ConflictException("Kan ikke sette FORHANDSVARSEL her")
-        }
+
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
         database.connection.use { connection ->
