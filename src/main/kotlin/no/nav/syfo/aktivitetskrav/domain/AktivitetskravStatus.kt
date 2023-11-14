@@ -32,13 +32,3 @@ fun AktivitetskravStatus.isAllowedStatusBeforeForhandsvarsel() =
 
 fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
     this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT
-
-fun AktivitetskravStatus.isFinal() = this in finalStatuses
-
-private val finalStatuses = EnumSet.of(
-    AktivitetskravStatus.UNNTAK,
-    AktivitetskravStatus.OPPFYLT,
-    AktivitetskravStatus.IKKE_OPPFYLT,
-    AktivitetskravStatus.IKKE_AKTUELL,
-    AktivitetskravStatus.AUTOMATISK_OPPFYLT,
-)

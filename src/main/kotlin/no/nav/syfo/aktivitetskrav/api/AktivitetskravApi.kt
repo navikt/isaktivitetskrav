@@ -97,14 +97,6 @@ fun Route.registerAktivitetskravApi(
                 aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
                     ?: throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav not found")
 
-            if (
-                aktivitetskrav.status != AktivitetskravStatus.NY &&
-                aktivitetskrav.status != AktivitetskravStatus.NY_VURDERING &&
-                aktivitetskrav.status != AktivitetskravStatus.AVVENT
-            ) {
-                throw IllegalArgumentException("Failed to create forhandsvarsel: aktivitetskrav is not in a valid state")
-            }
-
             val forhandsvarsel = aktivitetskravVarselService.sendForhandsvarsel(
                 aktivitetskrav = aktivitetskrav,
                 veilederIdent = call.getNAVIdent(),

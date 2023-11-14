@@ -78,7 +78,7 @@ fun AktivitetskravVurdering.validate() {
 
 fun AktivitetskravVurdering.arsakerToString() = this.arsaker.joinToString(",")
 
-fun AktivitetskravVurdering.isFinal() = this.status.isFinal()
+fun AktivitetskravVurdering.isFinal() = this.status.isFinal
 
 fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?): AktivitetskravVurderingResponseDTO =
     AktivitetskravVurderingResponseDTO(
