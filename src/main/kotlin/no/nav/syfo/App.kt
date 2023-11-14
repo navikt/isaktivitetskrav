@@ -104,7 +104,7 @@ fun main() {
 
     lateinit var aktivitetskravService: AktivitetskravService
     lateinit var aktivitetskravVarselService: AktivitetskravVarselService
-    val aktivitetskravRepository = AktivitetskravRepository(database = applicationDatabase)
+    lateinit var aktivitetskravRepository: AktivitetskravRepository
 
     val applicationEngineEnvironment = applicationEngineEnvironment {
         log = logger
@@ -116,6 +116,7 @@ fun main() {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
+            aktivitetskravRepository = AktivitetskravRepository(database = applicationDatabase)
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
