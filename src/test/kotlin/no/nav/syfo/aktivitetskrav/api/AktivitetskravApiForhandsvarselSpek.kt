@@ -5,15 +5,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.cronjob.forhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
-import no.nav.syfo.testhelper.generator.createAktivitetskravForTest
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.util.*
@@ -50,12 +47,6 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                 ),
             )
             val aktivitetskravRepository = AktivitetskravRepository(database)
-            val aktivitetskravService = AktivitetskravService(
-                aktivitetskravRepository = aktivitetskravRepository,
-                aktivitetskravVurderingProducer = mockk(relaxed = true),
-                database = database,
-                arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
-            )
             val validToken = generateJWT(
                 audience = externalMockEnvironment.environment.azure.appClientId,
                 issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
@@ -115,7 +106,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                 }
             }
             describe("Forhåndsvarsel") {
-                beforeEachTest { aktivitetskravService.createAktivitetskravForTest(nyAktivitetskrav) }
+                beforeEachTest { aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav) }
                 describe("Happy path") {
                     it("Successfully creates a new forhandsvarsel") {
                         with(postForhandsvarsel()) {

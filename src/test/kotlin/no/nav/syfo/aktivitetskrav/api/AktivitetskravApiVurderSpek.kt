@@ -11,7 +11,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
-import no.nav.syfo.testhelper.generator.createAktivitetskravForTest
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
@@ -65,7 +64,7 @@ class AktivitetskravApiVurderSpek : Spek({
                 coEvery {
                     kafkaProducer.send(any())
                 } returns mockk<Future<RecordMetadata>>(relaxed = true)
-                aktivitetskravService.createAktivitetskravForTest(nyAktivitetskrav)
+                aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
             }
             afterEachTest {
                 database.dropData()

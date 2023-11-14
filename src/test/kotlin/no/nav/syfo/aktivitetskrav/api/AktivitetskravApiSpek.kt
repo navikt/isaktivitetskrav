@@ -12,7 +12,6 @@ import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
-import no.nav.syfo.testhelper.generator.createAktivitetskravForTest
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
@@ -86,11 +85,9 @@ class AktivitetskravApiSpek : Spek({
             describe("Get aktivitetskrav for person") {
                 describe("Happy path") {
                     it("Returns aktivitetskrav (uten vurderinger) for person") {
-                        aktivitetskravService.createAktivitetskravForTest(
-                            nyAktivitetskrav,
-                            nyAktivitetskravAnnenPerson,
-                            automatiskOppfyltAktivitetskrav
-                        )
+                        listOf(nyAktivitetskrav, nyAktivitetskravAnnenPerson, automatiskOppfyltAktivitetskrav).forEach {
+                            aktivitetskravRepository.createAktivitetskrav(it)
+                        }
 
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
@@ -120,9 +117,7 @@ class AktivitetskravApiSpek : Spek({
                         }
                     }
                     it("Returns aktivitetskrav (med vurderinger) for person") {
-                        aktivitetskravService.createAktivitetskravForTest(
-                            nyAktivitetskrav,
-                        )
+                        aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                         val avventVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.AVVENT,
@@ -202,11 +197,9 @@ class AktivitetskravApiSpek : Spek({
                         ).copy(
                             stoppunktAt = cutoffDate.minusDays(1)
                         )
-                        aktivitetskravService.createAktivitetskravForTest(
-                            aktivitetskravAtCutoffDate,
-                            nyAktivitetskrav,
-                            automatiskOppfyltAktivitetskravBeforeCutoff,
-                        )
+                        listOf(nyAktivitetskrav, aktivitetskravAtCutoffDate, automatiskOppfyltAktivitetskravBeforeCutoff).forEach {
+                            aktivitetskravRepository.createAktivitetskrav(it)
+                        }
 
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
