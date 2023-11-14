@@ -1,7 +1,9 @@
 package no.nav.syfo.identhendelse
 
 import io.ktor.server.testing.*
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.testhelper.ExternalMockEnvironment
@@ -29,10 +31,16 @@ class IdenthendelseServiceSpek : Spek({
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
             val aktivitetskravRepository = AktivitetskravRepository(database)
+            val aktivitetskravService = AktivitetskravService(
+                aktivitetskravRepository = aktivitetskravRepository,
+                aktivitetskravVurderingProducer = mockk(relaxed = true),
+                database = database,
+                arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+            )
 
             val identhendelseService = IdenthendelseService(
-                database = database,
                 pdlClient = externalMockEnvironment.pdlClient,
+                aktivitetskravService = aktivitetskravService,
             )
 
             afterEachTest {

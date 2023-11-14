@@ -29,7 +29,10 @@ fun launchKafkaModule(
         kafkaOppfolgingstilfellePersonService = kafkaOppfolgingstilfellePersonService,
     )
 
-    val identhendelseService = IdenthendelseService(database = database, pdlClient = pdlClient)
+    val identhendelseService = IdenthendelseService(
+        aktivitetskravService = aktivitetskravService,
+        pdlClient = pdlClient
+    )
     val kafkaIdenthendelseService = KafkaIdenthendelseService(identhendelseService = identhendelseService)
     launchKafkaTaskIdenthendelse(
         applicationState = applicationState,

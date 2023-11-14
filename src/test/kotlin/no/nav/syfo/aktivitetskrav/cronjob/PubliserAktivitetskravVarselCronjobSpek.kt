@@ -9,13 +9,15 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.vurder
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.EsyfovarselHendelse
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
-import no.nav.syfo.testhelper.*
+import no.nav.syfo.testhelper.ExternalMockEnvironment
+import no.nav.syfo.testhelper.UserConstants
+import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
+import no.nav.syfo.testhelper.getVarsler
 import no.nav.syfo.util.sekundOpplosning
 import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.KafkaProducer

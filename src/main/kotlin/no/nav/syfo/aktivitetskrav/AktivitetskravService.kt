@@ -97,25 +97,21 @@ class AktivitetskravService(
             .map { it.toAktivitetskrav() }
             .filter { it.stoppunktAt.isAfter(arenaCutoff) }
 
-    internal fun getOutdatedAktivitetskrav(outdatedCutoff: LocalDate): List<Aktivitetskrav> {
-        return database.getOutdatedAktivitetskrav(
-            arenaCutoff = arenaCutoff,
-            outdatedCutoff = outdatedCutoff
-        ).map { it.toAktivitetskrav() }
+    internal fun getOutdatedAktivitetskrav(outdatedCutoff: LocalDate): List<Aktivitetskrav> =
+        aktivitetskravRepository.getOutdatedAktivitetskrav(arenaCutoff, outdatedCutoff)
+            .map { it.toAktivitetskrav() }
+
+    internal fun lukkAktivitetskrav(aktivitetskrav: Aktivitetskrav) {
+        val lukketAktivitetskrav = aktivitetskrav.lukk()
+        aktivitetskravRepository.updateAktivitetskravStatus(lukketAktivitetskrav)
+        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = lukketAktivitetskrav)
     }
 
-    internal fun lukk(aktivitetskrav: Aktivitetskrav) {
-        val updatedAktivitetskrav = aktivitetskrav.copy(
-            status = AktivitetskravStatus.LUKKET
-        )
-        database.connection.use { connection ->
-            connection.updateAktivitetskrav(
-                aktivitetskrav = updatedAktivitetskrav
-            )
-            connection.commit()
-        }
-        aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = updatedAktivitetskrav)
-    }
+    fun updateAktivitetskravPersonIdent(
+        newIdent: PersonIdent,
+        oldPersonIdentList: List<PersonIdent>
+    ): Int =
+        aktivitetskravRepository.updateAktivitetskravPersonIdent(newIdent, oldPersonIdentList)
 
     private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
         val aktivitetskravVurderinger =
