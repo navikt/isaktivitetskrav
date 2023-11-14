@@ -104,6 +104,7 @@ fun main() {
 
     lateinit var aktivitetskravService: AktivitetskravService
     lateinit var aktivitetskravVarselService: AktivitetskravVarselService
+    val aktivitetskravRepository = AktivitetskravRepository(database = applicationDatabase)
 
     val applicationEngineEnvironment = applicationEngineEnvironment {
         log = logger
@@ -116,7 +117,7 @@ fun main() {
                 databaseEnvironment = environment.database,
             )
             aktivitetskravService = AktivitetskravService(
-                aktivitetskravRepository = AktivitetskravRepository(database = applicationDatabase),
+                aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,
@@ -152,6 +153,7 @@ fun main() {
             database = applicationDatabase,
             pdlClient = pdlClient,
             aktivitetskravService = aktivitetskravService,
+            aktivitetskravRepository = aktivitetskravRepository,
         )
         launchCronjobModule(
             applicationState = applicationState,

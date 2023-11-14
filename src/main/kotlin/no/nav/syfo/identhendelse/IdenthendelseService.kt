@@ -1,8 +1,7 @@
 package no.nav.syfo.identhendelse
 
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.identhendelse.kafka.COUNT_KAFKA_CONSUMER_PDL_AKTOR_UPDATES
@@ -11,7 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class IdenthendelseService(
-    private val aktivitetskravService: AktivitetskravService,
+    private val aktivitetskravRepository: AktivitetskravRepository,
     private val pdlClient: PdlClient,
 ) {
     private val log: Logger = LoggerFactory.getLogger(IdenthendelseService::class.java)
@@ -22,12 +21,12 @@ class IdenthendelseService(
             if (activeIdent != null) {
                 val inactiveIdenter = identhendelse.getInactivePersonidenter()
                 val oldPersonIdentList =
-                    inactiveIdenter.filter { aktivitetskravService.getAktivitetskrav(it).isNotEmpty() }
+                    inactiveIdenter.filter { aktivitetskravRepository.getAktivitetskrav(it).isNotEmpty() }
 
                 if (oldPersonIdentList.isNotEmpty()) {
                     checkThatPdlIsUpdated(activeIdent)
                     val numberOfUpdatedIdenter =
-                        aktivitetskravService.updateAktivitetskravPersonIdent(activeIdent, oldPersonIdentList)
+                        aktivitetskravRepository.updateAktivitetskravPersonIdent(activeIdent, oldPersonIdentList)
 
                     log.info("Identhendelse: Updated $numberOfUpdatedIdenter aktivitetskrav based on Identhendelse from PDL")
                     COUNT_KAFKA_CONSUMER_PDL_AKTOR_UPDATES.increment(numberOfUpdatedIdenter.toDouble())
