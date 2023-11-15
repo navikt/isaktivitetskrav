@@ -27,8 +27,7 @@ private val allowedChangedVurderingStatus = EnumSet.of(
     AktivitetskravStatus.FORHANDSVARSEL,
 )
 
-fun AktivitetskravStatus.isAllowedStatusBeforeForhandsvarsel() =
-    this in EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.NY_VURDERING, AktivitetskravStatus.AVVENT)
+fun AktivitetskravStatus.isAllowedStatusBeforeForhandsvarsel() = !this.isFinal
 
 fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
     this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT
