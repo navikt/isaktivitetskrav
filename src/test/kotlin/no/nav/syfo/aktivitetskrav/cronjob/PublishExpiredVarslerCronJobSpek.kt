@@ -43,12 +43,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
         val aktivitetskravVarselService = AktivitetskravVarselService(
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             aktivitetskravVurderingProducer = mockk(),
-            arbeidstakervarselProducer = mockk(),
             aktivitetskravVarselProducer = mockk(),
             expiredVarselProducer = expiredVarselProducer,
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
-            krrClient = externalMockEnvironment.krrClient,
         )
 
         val publishExpiredVarslerCronJob = PublishExpiredVarslerCronJob(

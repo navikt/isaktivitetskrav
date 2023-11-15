@@ -8,7 +8,6 @@ import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
-import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
@@ -18,12 +17,10 @@ import java.util.*
 class AktivitetskravVarselService(
     private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
-    private val arbeidstakervarselProducer: ArbeidstakervarselProducer,
     private val aktivitetskravVarselProducer: AktivitetskravVarselProducer,
     private val expiredVarselProducer: ExpiredVarselProducer,
     private val pdfGenClient: PdfGenClient,
     private val pdlClient: PdlClient,
-    private val krrClient: KRRClient,
 ) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, AktivitetskravVarsel, ByteArray>> {
         return aktivitetskravVarselRepository.getIkkeJournalforte()
@@ -38,20 +35,6 @@ class AktivitetskravVarselService(
     fun publiser(varsel: KafkaAktivitetskravVarsel) {
         aktivitetskravVarselProducer.sendAktivitetskravVarsel(
             varsel = varsel,
-        )
-        // TODO: Koden under kan fjernes når eSyfo konsumerer varselet over og sender til esyfovarsel
-        arbeidstakervarselProducer.sendArbeidstakervarsel(
-            varselHendelse = ArbeidstakerHendelse(
-                type = HendelseType.SM_FORHANDSVARSEL_STANS,
-                arbeidstakerFnr = varsel.personIdent,
-                data = VarselData(
-                    journalpost = VarselDataJournalpost(
-                        uuid = varsel.varselUuid.toString(),
-                        id = varsel.journalpostId,
-                    ),
-                ),
-                orgnummer = null,
-            )
         )
         aktivitetskravVarselRepository.setPublished(varsel)
     }

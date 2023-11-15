@@ -26,8 +26,6 @@ fun Application.testApiModule(
             database = externalMockEnvironment.database
         ),
         pdlClient = externalMockEnvironment.pdlClient,
-        krrClient = externalMockEnvironment.krrClient,
-        arbeidstakervarselProducer = mockk(),
         aktivitetskravVarselProducer = mockk(),
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         expiredVarselProducer = mockk(),

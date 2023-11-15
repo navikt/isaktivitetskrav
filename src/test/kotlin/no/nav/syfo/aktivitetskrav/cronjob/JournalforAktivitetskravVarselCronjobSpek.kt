@@ -64,12 +64,10 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         val aktivitetskravVarselService = AktivitetskravVarselService(
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             aktivitetskravVurderingProducer = mockk(),
-            arbeidstakervarselProducer = mockk(),
             aktivitetskravVarselProducer = mockk(),
             expiredVarselProducer = mockk(),
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
-            krrClient = externalMockEnvironment.krrClient,
         )
 
         val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
