@@ -105,6 +105,28 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                     )
                 }
             }
+
+            fun postUnntak(
+                aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+                arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            ) = run {
+                val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                handleRequest(HttpMethod.Post, url) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                    addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                    setBody(
+                        objectMapper.writeValueAsString(
+                            AktivitetskravVurderingRequestDTO(
+                                status = AktivitetskravStatus.UNNTAK,
+                                beskrivelse = "venter litt",
+                                arsaker = listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                            )
+                        )
+                    )
+                }
+            }
+
             describe("Forhåndsvarsel") {
                 beforeEachTest { aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav) }
                 describe("Happy path") {
@@ -165,6 +187,14 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                         }
                         with(postAvvent()) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                        }
+                        with(postForhandsvarsel()) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("Fails if already unntak") {
+                        with(postUnntak()) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
                         }
                         with(postForhandsvarsel()) {

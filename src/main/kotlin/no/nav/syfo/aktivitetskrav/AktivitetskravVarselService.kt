@@ -59,8 +59,8 @@ class AktivitetskravVarselService(
         if (aktivitetskrav.vurderinger.any { it.status == AktivitetskravStatus.FORHANDSVARSEL }) {
             throw ConflictException("Forhåndsvarsel allerede sendt")
         }
-        if (!aktivitetskrav.hasAllowedExistingStatusBeforeForhandsvarsel()) {
-            throw ConflictException("Kan bare sende forhåndsvarsel når status er NY, NY_VURDERING eller AVVENT, ikke ${aktivitetskrav.status}")
+        if (aktivitetskrav.isInFinalState()) {
+            throw ConflictException("Kan ikke sende forhåndsvarsel, aktivitetskravet har en avsluttende vurdering ${aktivitetskrav.status}")
         }
 
         val personNavn = pdlClient.navn(personIdent)

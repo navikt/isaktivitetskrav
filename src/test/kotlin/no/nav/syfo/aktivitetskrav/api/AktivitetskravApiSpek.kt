@@ -13,6 +13,7 @@ import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.createAktivitetskravUnntak
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -43,6 +44,11 @@ class AktivitetskravApiSpek : Spek({
         tilfelleStart = LocalDate.now().minusYears(1),
     ).copy(
         createdAt = nowUTC().minusWeeks(80)
+    )
+    val unntakAktivitetskrav = createAktivitetskravUnntak(
+        nyAktivitetskrav = createAktivitetskravNy(
+            tilfelleStart = LocalDate.now().minusWeeks(10),
+        )
     )
 
     describe(AktivitetskravApiSpek::class.java.simpleName) {
@@ -241,10 +247,11 @@ class AktivitetskravApiSpek : Spek({
             }
 
             describe("Create aktivitetskrav for person") {
-                val newAktivitetskravDto = NewAktivitetskravDTO(UUID.randomUUID())
+                val newAktivitetskravDto = NewAktivitetskravDTO(unntakAktivitetskrav.uuid)
 
                 describe("Happy path") {
-                    it("Creates aktivitetskrav from API request with previous aktivitetskrav") {
+                    it("Creates aktivitetskrav from API request with previous aktivitetskrav in final state") {
+                        aktivitetskravRepository.createAktivitetskrav(unntakAktivitetskrav)
                         with(
                             handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -301,6 +308,32 @@ class AktivitetskravApiSpek : Spek({
                     }
                     it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
                         testInvalidPersonIdent(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
+                    }
+                    it("returns status BadRequest if no previous aktivitetskrav exists for uuid") {
+                        with(
+                            handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(NewAktivitetskravDTO(UUID.randomUUID())))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if previous aktivitetskrav is not final") {
+                        val previousAktivitetskravUuid = nyAktivitetskrav.uuid
+                        aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
+                        with(
+                            handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                setBody(objectMapper.writeValueAsString(NewAktivitetskravDTO(previousAktivitetskravUuid)))
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
                     }
                 }
             }

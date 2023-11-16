@@ -54,8 +54,11 @@ fun Route.registerAktivitetskravApi(
             val personIdent = call.personIdent()
             val requestDTO: NewAktivitetskravDTO? =
                 runCatching { call.receiveNullable<NewAktivitetskravDTO>() }.getOrNull()
+            val previousAktivitetskrav = requestDTO?.previousAktivitetskravUuid?.let {
+                aktivitetskravService.getAktivitetskrav(uuid = it) ?: throw IllegalArgumentException("Failed to create aktivitetskrav: previous aktivitetskrav not found")
+            }
             val createdAktivitetskrav =
-                aktivitetskravService.createAktivitetskrav(personIdent, requestDTO?.previousAktivitetskravUuid)
+                aktivitetskravService.createAktivitetskrav(personIdent, previousAktivitetskrav)
 
             call.respond(
                 HttpStatusCode.Created,

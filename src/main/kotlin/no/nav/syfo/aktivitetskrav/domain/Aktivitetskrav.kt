@@ -80,7 +80,7 @@ fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
 
 fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 
-fun Aktivitetskrav.hasAllowedExistingStatusBeforeForhandsvarsel() = this.status.isAllowedStatusBeforeForhandsvarsel()
+fun Aktivitetskrav.isInFinalState() = this.status.isFinal
 
 internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean {
     val updatedStoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
