@@ -20,7 +20,6 @@ import no.nav.syfo.application.database.databaseModule
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
-import no.nav.syfo.client.krr.KRRClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
@@ -64,11 +63,6 @@ fun main() {
         pdlEnvironment = environment.clients.pdl,
         cache = cache,
     )
-    val krrClient = KRRClient(
-        azureAdClient = azureAdClient,
-        baseUrl = environment.clients.krr.baseUrl,
-        clientId = environment.clients.krr.clientId,
-    )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = azureAdClient,
         clientEnvironment = environment.clients.istilgangskontroll,
@@ -80,13 +74,6 @@ fun main() {
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         producer = KafkaProducer(
             aktivitetskravVurderingProducerConfig(kafkaEnvironment = environment.kafka)
-        )
-    )
-    val arbeidstakervarselProducer = ArbeidstakervarselProducer(
-        kafkaArbeidstakervarselProducer = KafkaProducer(
-            kafkaAivenProducerConfig<KafkaArbeidstakervarselSerializer>(
-                kafkaEnvironment = environment.kafka,
-            )
         )
     )
     val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
@@ -126,12 +113,10 @@ fun main() {
             aktivitetskravVarselService = AktivitetskravVarselService(
                 aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase),
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
-                arbeidstakervarselProducer = arbeidstakervarselProducer,
                 aktivitetskravVarselProducer = aktivitetskravVarselProducer,
                 expiredVarselProducer = expiredVarselProducer,
                 pdfGenClient = pdfGenClient,
                 pdlClient = pdlClient,
-                krrClient = krrClient,
             )
             apiModule(
                 applicationState = applicationState,

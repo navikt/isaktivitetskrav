@@ -10,8 +10,6 @@ import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.ArbeidstakervarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.EsyfovarselHendelse
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
@@ -47,23 +45,17 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
         val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
-        val esyfoVarselKafkaProducer = mockk<KafkaProducer<String, EsyfovarselHendelse>>()
         val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
-        val arbeidstakerVarselProducer = ArbeidstakervarselProducer(
-            kafkaArbeidstakervarselProducer = esyfoVarselKafkaProducer,
-        )
         val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
             kafkaProducer = aktivitetskravVarselKafkaProducer,
         )
         val aktivitetskravVarselService = AktivitetskravVarselService(
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             aktivitetskravVurderingProducer = mockk(),
-            arbeidstakervarselProducer = arbeidstakerVarselProducer,
             aktivitetskravVarselProducer = aktivitetskravVarselProducer,
             expiredVarselProducer = mockk(),
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
-            krrClient = externalMockEnvironment.krrClient,
         )
 
         val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
@@ -92,10 +84,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         }
 
         beforeEachTest {
-            clearMocks(esyfoVarselKafkaProducer, aktivitetskravVarselKafkaProducer)
-            coEvery {
-                esyfoVarselKafkaProducer.send(any())
-            } returns mockk<Future<RecordMetadata>>(relaxed = true)
+            clearMocks(aktivitetskravVarselKafkaProducer)
             coEvery {
                 aktivitetskravVarselKafkaProducer.send(any())
             } returns mockk<Future<RecordMetadata>>(relaxed = true)

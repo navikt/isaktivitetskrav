@@ -49,12 +49,10 @@ class AktivitetskravVarselServiceSpek : Spek({
             val aktivitetskravVarselService = AktivitetskravVarselService(
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
-                arbeidstakervarselProducer = mockk(),
                 aktivitetskravVarselProducer = mockk(),
                 expiredVarselProducer = expiredVarselProducer,
                 pdfGenClient = externalMockEnvironment.pdfgenClient,
                 pdlClient = externalMockEnvironment.pdlClient,
-                krrClient = externalMockEnvironment.krrClient,
             )
 
             beforeEachTest {
@@ -114,12 +112,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
                     val aktivitetskravVarselServiceWithMockedPdfGenClient = AktivitetskravVarselService(
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-                        arbeidstakervarselProducer = mockk(),
                         aktivitetskravVarselProducer = mockk(),
                         expiredVarselProducer = mockk(),
                         pdfGenClient = mockedPdfGenClient,
                         pdlClient = externalMockEnvironment.pdlClient,
-                        krrClient = externalMockEnvironment.krrClient,
                         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                     )
 
