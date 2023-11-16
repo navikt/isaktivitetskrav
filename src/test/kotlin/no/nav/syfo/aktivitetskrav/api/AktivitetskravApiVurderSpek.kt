@@ -269,6 +269,24 @@ class AktivitetskravApiVurderSpek : Spek({
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         }
                     }
+                    it("returns status BadRequest if existing vurdering is final") {
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = nyAktivitetskrav.uuid,
+                                vurderingDTO = vurderingOppfyltRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                        }
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = nyAktivitetskrav.uuid,
+                                vurderingDTO = vurderingOppfyltRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
                 }
             }
         }

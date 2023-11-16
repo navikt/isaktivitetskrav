@@ -4,6 +4,7 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
@@ -62,6 +63,15 @@ class AktivitetskravService(
         aktivitetskrav: Aktivitetskrav,
         aktivitetskravVurdering: AktivitetskravVurdering,
     ) {
+        if (aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL) {
+            throw ConflictException("Kan ikke sette FORHANDSVARSEL her, bruk aktivitetskravVarselService.sendForhandsvarsel")
+        }
+        val currentVurdering = aktivitetskrav.vurderinger.firstOrNull()
+        if (currentVurdering?.isFinal() == true) {
+            throw ConflictException("Aktivitetskravet har allerede en avsluttende vurdering")
+        }
+        aktivitetskravVurdering.validate()
+
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
         database.connection.use { connection ->
