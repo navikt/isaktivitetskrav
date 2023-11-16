@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav.api
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
+import no.nav.syfo.aktivitetskrav.domain.isInFinalState
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -21,7 +22,7 @@ data class AktivitetskravResponseDTO(
                 uuid = aktivitetskrav.uuid,
                 createdAt = aktivitetskrav.createdAt.toLocalDateTime(),
                 status = aktivitetskrav.status,
-                inFinalState = aktivitetskrav.status.isFinal,
+                inFinalState = aktivitetskrav.isInFinalState(),
                 stoppunktAt = aktivitetskrav.stoppunktAt,
                 vurderinger = vurderinger
             )

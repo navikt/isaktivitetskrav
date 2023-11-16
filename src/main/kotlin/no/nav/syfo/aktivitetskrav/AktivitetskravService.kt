@@ -33,17 +33,22 @@ class AktivitetskravService(
         )
     }
 
-    fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskravUuid: UUID? = null): Aktivitetskrav {
+    fun createAktivitetskrav(personIdent: PersonIdent, previousAktivitetskrav: Aktivitetskrav? = null): Aktivitetskrav {
+        if (previousAktivitetskrav != null && !previousAktivitetskrav.isInFinalState()) {
+            throw ConflictException("Forrige aktivitetskrav har ikke en avsluttende vurdering")
+        }
+
         val aktivitetskrav = Aktivitetskrav.create(personIdent)
         val createdAktivitetskrav =
             aktivitetskravRepository.createAktivitetskrav(
                 aktivitetskrav = aktivitetskrav,
-                previousAktivitetskravUuid = previousAktivitetskravUuid,
+                previousAktivitetskravUuid = previousAktivitetskrav?.uuid,
             ).toAktivitetskrav()
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = createdAktivitetskrav,
-            previousAktivitetskravUuid = previousAktivitetskravUuid,
+            previousAktivitetskravUuid = previousAktivitetskrav?.uuid,
         )
+
         return createdAktivitetskrav
     }
 
@@ -116,12 +121,6 @@ class AktivitetskravService(
         aktivitetskravRepository.updateAktivitetskravStatus(lukketAktivitetskrav)
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = lukketAktivitetskrav)
     }
-
-    fun updateAktivitetskravPersonIdent(
-        newIdent: PersonIdent,
-        oldPersonIdentList: List<PersonIdent>
-    ): Int =
-        aktivitetskravRepository.updateAktivitetskravPersonIdent(newIdent, oldPersonIdentList)
 
     private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
         val aktivitetskravVurderinger =
