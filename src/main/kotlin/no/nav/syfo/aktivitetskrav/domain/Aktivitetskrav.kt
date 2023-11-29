@@ -91,7 +91,7 @@ fun Aktivitetskrav.toHistorikkDTOs(): List<HistorikkDTO> {
     historikk.add(
         HistorikkDTO(
             tidspunkt = createdAt.toLocalDateTime(),
-            status = if (referanseTilfelleBitUuid != null) AktivitetskravStatus.NY else AktivitetskravStatus.NY_VURDERING,
+            status = if (createdAt.toLocalDate() == stoppunktAt) AktivitetskravStatus.NY_VURDERING else AktivitetskravStatus.NY,
             vurdertAv = null,
         )
     )
