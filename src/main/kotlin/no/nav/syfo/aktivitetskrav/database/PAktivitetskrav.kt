@@ -26,8 +26,10 @@ data class PAktivitetskrav(
             uuid = uuid,
             personIdent = personIdent,
             createdAt = createdAt,
+            updatedAt = updatedAt,
             status = AktivitetskravStatus.valueOf(status),
             stoppunktAt = stoppunktAt,
+            referanseTilfelleBitUuid = referanseTilfelleBitUuid,
             vurderinger = vurderinger.map { it.toAktivitetskravVurdering() },
         )
 
@@ -36,6 +38,7 @@ data class PAktivitetskrav(
             uuid = uuid,
             personIdent = personIdent,
             createdAt = createdAt,
+            updatedAt = updatedAt,
             status = AktivitetskravStatus.valueOf(status),
             stoppunktAt = stoppunktAt,
             vurderinger = vurderinger,

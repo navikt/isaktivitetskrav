@@ -7,6 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.aktivitetskrav.domain.toHistorikkDTOs
 import no.nav.syfo.aktivitetskrav.domain.toVurderingResponseDto
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
@@ -19,6 +21,7 @@ import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
+const val aktivitetskravApiHistorikk = "/historikk"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
 const val forhandsvarselPath = "/forhandsvarsel"
@@ -48,6 +51,20 @@ fun Route.registerAktivitetskravApi(
                 AktivitetskravResponseDTO.from(aktivitetskrav, vurderingResponseDTOs)
             }
 
+            call.respond(responseDTOList)
+        }
+        get(aktivitetskravApiHistorikk) {
+            val personIdent = call.personIdent()
+            val aktivitetskravAfterCutoff = aktivitetskravService.getAktivitetskravAfterCutoff(
+                personIdent = personIdent,
+            )
+            val responseDTOList = aktivitetskravAfterCutoff.filter {
+                it.status != AktivitetskravStatus.AUTOMATISK_OPPFYLT
+            }.flatMap { aktivitetskrav ->
+                aktivitetskrav.toHistorikkDTOs()
+            }.sortedByDescending {
+                it.tidspunkt
+            }
             call.respond(responseDTOList)
         }
         post {

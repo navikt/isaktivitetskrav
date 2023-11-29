@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.domain
 
+import no.nav.syfo.aktivitetskrav.api.HistorikkDTO
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import no.nav.syfo.util.isAfterOrEqual
@@ -14,8 +15,10 @@ data class Aktivitetskrav(
     val uuid: UUID,
     val personIdent: PersonIdent,
     val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime,
     val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
+    val referanseTilfelleBitUuid: UUID? = null,
     val vurderinger: List<AktivitetskravVurdering>,
 ) {
 
@@ -60,6 +63,7 @@ data class Aktivitetskrav(
             uuid = UUID.randomUUID(),
             personIdent = personIdent,
             createdAt = nowUTC(),
+            updatedAt = nowUTC(),
             status = status,
             stoppunktAt = stoppunktAt,
             vurderinger = emptyList(),
@@ -81,6 +85,36 @@ fun Aktivitetskrav.isAutomatiskOppfylt(): Boolean =
 fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 
 fun Aktivitetskrav.isInFinalState() = this.status.isFinal
+
+fun Aktivitetskrav.toHistorikkDTOs(): List<HistorikkDTO> {
+    val historikk = mutableListOf<HistorikkDTO>()
+    historikk.add(
+        HistorikkDTO(
+            tidspunkt = createdAt.toLocalDateTime(),
+            status = if (referanseTilfelleBitUuid != null) AktivitetskravStatus.NY else AktivitetskravStatus.NY_VURDERING,
+            vurdertAv = null,
+        )
+    )
+    vurderinger.forEach {
+        historikk.add(
+            HistorikkDTO(
+                tidspunkt = it.createdAt.toLocalDateTime(),
+                status = it.status,
+                vurdertAv = it.createdBy,
+            )
+        )
+    }
+    if (status == AktivitetskravStatus.LUKKET) {
+        historikk.add(
+            HistorikkDTO(
+                tidspunkt = updatedAt.toLocalDateTime(),
+                status = AktivitetskravStatus.LUKKET,
+                vurdertAv = null,
+            )
+        )
+    }
+    return historikk
+}
 
 internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean {
     val updatedStoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
