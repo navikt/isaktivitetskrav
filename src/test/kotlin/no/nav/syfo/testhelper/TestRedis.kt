@@ -12,6 +12,7 @@ fun testRedisServer(
 ): RedisServer = RedisServer.builder()
     .port(redisConfig.port)
     .setting("requirepass ${redisConfig.redisPassword}")
+    .setting("maxmemory 1024M")
     .build()
 
 fun testRedisCache(redisConfig: RedisConfig): RedisStore = RedisStore(

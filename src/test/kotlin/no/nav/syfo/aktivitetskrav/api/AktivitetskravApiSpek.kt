@@ -203,7 +203,11 @@ class AktivitetskravApiSpek : Spek({
                         ).copy(
                             stoppunktAt = cutoffDate.minusDays(1)
                         )
-                        listOf(nyAktivitetskrav, aktivitetskravAtCutoffDate, automatiskOppfyltAktivitetskravBeforeCutoff).forEach {
+                        listOf(
+                            nyAktivitetskrav,
+                            aktivitetskravAtCutoffDate,
+                            automatiskOppfyltAktivitetskravBeforeCutoff
+                        ).forEach {
                             aktivitetskravRepository.createAktivitetskrav(it)
                         }
 
@@ -333,6 +337,92 @@ class AktivitetskravApiSpek : Spek({
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                }
+            }
+
+            describe("Get historikk") {
+                val urlHistorikk = "$aktivitetskravApiBasePath/$aktivitetskravApiHistorikkPath"
+
+                describe("Happy path") {
+                    it("Returns empty list if no aktivitetskrav") {
+                        with(
+                            handleRequest(HttpMethod.Get, urlHistorikk) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val historikkDTOs = objectMapper.readValue<List<HistorikkDTO>>(response.content!!)
+                            historikkDTOs.size shouldBeEqualTo 0
+                        }
+                    }
+
+                    it("Returns historikk when aktivitetskrav has status NY") {
+                        aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
+
+                        with(
+                            handleRequest(HttpMethod.Get, urlHistorikk) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val historikkDTOs = objectMapper.readValue<List<HistorikkDTO>>(response.content!!)
+                            historikkDTOs.size shouldBeEqualTo 1
+                        }
+                    }
+
+                    it("Returns historikk for aktivitetskrav with vurdering") {
+                        aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = nyAktivitetskrav,
+                            aktivitetskravVurdering = AktivitetskravVurdering.create(
+                                status = AktivitetskravStatus.UNNTAK,
+                                createdBy = UserConstants.VEILEDER_IDENT,
+                                beskrivelse = "Unntak",
+                                arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
+                            )
+                        )
+
+                        with(
+                            handleRequest(HttpMethod.Get, urlHistorikk) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val historikkDTOs = objectMapper.readValue<List<HistorikkDTO>>(response.content!!)
+                            historikkDTOs.size shouldBeEqualTo 2
+                            historikkDTOs[0].status shouldBeEqualTo AktivitetskravStatus.NY
+                            historikkDTOs[1].status shouldBeEqualTo AktivitetskravStatus.UNNTAK
+                        }
+                    }
+
+                    it("Returns historikk for aktivitetskrav with vurdering") {
+                        aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
+                        aktivitetskravService.lukkAktivitetskrav(nyAktivitetskrav)
+
+                        with(
+                            handleRequest(HttpMethod.Get, urlHistorikk) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                            }
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val historikkDTOs = objectMapper.readValue<List<HistorikkDTO>>(response.content!!)
+                            historikkDTOs.size shouldBeEqualTo 2
+                            historikkDTOs[0].status shouldBeEqualTo AktivitetskravStatus.NY
+                            historikkDTOs[1].status shouldBeEqualTo AktivitetskravStatus.LUKKET
                         }
                     }
                 }

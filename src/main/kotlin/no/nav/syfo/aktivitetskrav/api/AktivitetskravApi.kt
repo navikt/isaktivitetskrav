@@ -21,7 +21,7 @@ import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
-const val aktivitetskravApiHistorikk = "/historikk"
+const val aktivitetskravApiHistorikkPath = "/historikk"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
 const val forhandsvarselPath = "/forhandsvarsel"
@@ -53,7 +53,7 @@ fun Route.registerAktivitetskravApi(
 
             call.respond(responseDTOList)
         }
-        get(aktivitetskravApiHistorikk) {
+        get(aktivitetskravApiHistorikkPath) {
             val personIdent = call.personIdent()
             val aktivitetskravAfterCutoff = aktivitetskravService.getAktivitetskravAfterCutoff(
                 personIdent = personIdent,
