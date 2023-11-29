@@ -39,4 +39,3 @@ internal fun createHistorikkDTOs(aktivitetskrav: Aktivitetskrav): List<Historikk
     }
     return historikk
 }
-
