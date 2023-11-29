@@ -374,7 +374,7 @@ class AktivitetskravApiSpek : Spek({
 
                             val historikkDTOs = objectMapper.readValue<List<HistorikkDTO>>(response.content!!)
                             historikkDTOs.size shouldBeEqualTo 1
-                            historikkDTOs[0].status == AktivitetskravStatus.NY
+                            historikkDTOs[0].status shouldBeEqualTo AktivitetskravStatus.NY
                         }
                     }
                     it("Returns historikk when aktivitetskrav has status NY_VURDERING") {
@@ -394,7 +394,7 @@ class AktivitetskravApiSpek : Spek({
 
                             val historikkDTOs = objectMapper.readValue<List<HistorikkDTO>>(response.content!!)
                             historikkDTOs.size shouldBeEqualTo 1
-                            historikkDTOs[0].status == AktivitetskravStatus.NY_VURDERING
+                            historikkDTOs[0].status shouldBeEqualTo AktivitetskravStatus.NY_VURDERING
                         }
                     }
 
