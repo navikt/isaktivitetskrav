@@ -46,9 +46,3 @@ data class VarselResponseDTO(
     val svarfrist: LocalDate,
     val document: List<DocumentComponentDTO>,
 )
-
-data class HistorikkDTO(
-    val tidspunkt: LocalDateTime,
-    val status: AktivitetskravStatus,
-    val vurdertAv: String?,
-)
