@@ -1,5 +1,7 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.api.HistorikkDTO
+import no.nav.syfo.aktivitetskrav.api.createHistorikkDTOs
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -111,6 +113,15 @@ class AktivitetskravService(
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
             .map { it.toAktivitetskrav() }
             .filter { it.stoppunktAt.isAfter(arenaCutoff) }
+
+    fun getAktivitetskravHistorikk(personIdent: PersonIdent): List<HistorikkDTO> =
+        getAktivitetskravAfterCutoff(personIdent).filter {
+            it.status != AktivitetskravStatus.AUTOMATISK_OPPFYLT
+        }.flatMap { aktivitetskrav ->
+            createHistorikkDTOs(aktivitetskrav)
+        }.sortedByDescending {
+            it.tidspunkt
+        }
 
     internal fun getOutdatedAktivitetskrav(outdatedCutoff: LocalDate): List<Aktivitetskrav> =
         aktivitetskravRepository.getOutdatedAktivitetskrav(arenaCutoff, outdatedCutoff)

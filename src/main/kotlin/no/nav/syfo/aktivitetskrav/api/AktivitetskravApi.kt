@@ -19,6 +19,7 @@ import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
 const val aktivitetskravApiPersonidentPath = "/personident"
+const val aktivitetskravApiHistorikkPath = "/historikk"
 const val aktivitetskravParam = "aktivitetskravUuid"
 const val vurderAktivitetskravPath = "/vurder"
 const val forhandsvarselPath = "/forhandsvarsel"
@@ -49,6 +50,10 @@ fun Route.registerAktivitetskravApi(
             }
 
             call.respond(responseDTOList)
+        }
+        get(aktivitetskravApiHistorikkPath) {
+            val personIdent = call.personIdent()
+            call.respond(aktivitetskravService.getAktivitetskravHistorikk(personIdent))
         }
         post {
             val personIdent = call.personIdent()
