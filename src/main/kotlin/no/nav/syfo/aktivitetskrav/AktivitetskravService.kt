@@ -114,7 +114,6 @@ class AktivitetskravService(
             .map { it.toAktivitetskrav() }
             .filter { it.stoppunktAt.isAfter(arenaCutoff) }
 
-
     fun getAktivitetskravHistorikk(personIdent: PersonIdent): List<HistorikkDTO> =
         getAktivitetskravAfterCutoff(personIdent).filter {
             it.status != AktivitetskravStatus.AUTOMATISK_OPPFYLT
