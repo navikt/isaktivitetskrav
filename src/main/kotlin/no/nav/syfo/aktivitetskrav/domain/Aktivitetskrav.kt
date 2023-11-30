@@ -17,7 +17,6 @@ data class Aktivitetskrav(
     val updatedAt: OffsetDateTime,
     val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
-    val referanseTilfelleBitUuid: UUID? = null,
     val vurderinger: List<AktivitetskravVurdering>,
 ) {
 

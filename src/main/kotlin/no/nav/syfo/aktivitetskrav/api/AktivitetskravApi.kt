@@ -7,7 +7,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.toVurderingResponseDto
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
@@ -54,17 +53,7 @@ fun Route.registerAktivitetskravApi(
         }
         get(aktivitetskravApiHistorikkPath) {
             val personIdent = call.personIdent()
-            val aktivitetskravAfterCutoff = aktivitetskravService.getAktivitetskravAfterCutoff(
-                personIdent = personIdent,
-            )
-            val responseDTOList = aktivitetskravAfterCutoff.filter {
-                it.status != AktivitetskravStatus.AUTOMATISK_OPPFYLT
-            }.flatMap { aktivitetskrav ->
-                createHistorikkDTOs(aktivitetskrav)
-            }.sortedByDescending {
-                it.tidspunkt
-            }
-            call.respond(responseDTOList)
+            call.respond(aktivitetskravService.getAktivitetskravHistorikk(personIdent))
         }
         post {
             val personIdent = call.personIdent()

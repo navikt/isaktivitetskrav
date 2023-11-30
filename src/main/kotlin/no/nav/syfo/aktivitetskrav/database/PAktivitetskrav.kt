@@ -29,7 +29,6 @@ data class PAktivitetskrav(
             updatedAt = updatedAt,
             status = AktivitetskravStatus.valueOf(status),
             stoppunktAt = stoppunktAt,
-            referanseTilfelleBitUuid = referanseTilfelleBitUuid,
             vurderinger = vurderinger.map { it.toAktivitetskravVurdering() },
         )
 
