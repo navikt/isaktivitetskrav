@@ -9,6 +9,7 @@ import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import org.slf4j.LoggerFactory
+import java.util.*
 
 class JournalforAktivitetskravVarselCronjob(
     private val aktivitetskravVarselService: AktivitetskravVarselService,
@@ -37,7 +38,8 @@ class JournalforAktivitetskravVarselCronjob(
                 val journalpostRequest = createJournalpostRequest(
                     personIdent = personIdent,
                     navn = navn,
-                    pdf = pdf
+                    pdf = pdf,
+                    varselUuid = varsel.uuid,
                 )
 
                 dokarkivClient.journalfor(
@@ -63,7 +65,7 @@ class JournalforAktivitetskravVarselCronjob(
     }
 }
 
-fun createJournalpostRequest(personIdent: PersonIdent, navn: String, pdf: ByteArray): JournalpostRequest {
+fun createJournalpostRequest(personIdent: PersonIdent, navn: String, pdf: ByteArray, varselUuid: UUID): JournalpostRequest {
     val avsenderMottaker = AvsenderMottaker.create(
         id = personIdent.value,
         idType = BrukerIdType.PERSON_IDENT,
@@ -101,6 +103,7 @@ fun createJournalpostRequest(personIdent: PersonIdent, navn: String, pdf: ByteAr
         tittel = dokumentTittel,
         bruker = bruker,
         dokumenter = dokumenter,
+        eksternReferanseId = varselUuid.toString(),
         kanal = kanal.value,
     )
 }
