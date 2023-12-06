@@ -31,5 +31,6 @@ data class JournalpostRequest(
     val tema: String = JournalpostTema.OPPFOLGING.value,
     val kanal: String,
     val sak: Sak = Sak(),
+    val eksternReferanseId: String,
     val overstyrInnsynsregler: String? = null,
 )

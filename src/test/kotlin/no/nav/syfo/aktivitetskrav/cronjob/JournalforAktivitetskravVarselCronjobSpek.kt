@@ -100,14 +100,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
 
         describe("${JournalforAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
             it("Journalfører og oppdaterer journalpostId for ikke-journalført forhandsvarsel") {
+                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
                     tittel = "Forhåndsvarsel om stans av sykepenger",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                     pdf = pdf,
                     kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
+                    varselId = varsel.uuid,
                 )
-
-                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
 
@@ -193,14 +194,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
             }
             it("Oppdaterer ikke journalpostId når journalføring feiler") {
+                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
                     tittel = "Forhåndsvarsel om stans av sykepenger",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                     pdf = pdf,
                     kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
+                    varselId = varsel.uuid,
                 )
-
-                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
 
                 coEvery { dokarkivClient.journalfor(any()) } throws RuntimeException("Journalføring feilet")
 

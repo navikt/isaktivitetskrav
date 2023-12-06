@@ -2,6 +2,7 @@ package no.nav.syfo.testhelper
 
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.domain.Virksomhetsnummer
+import java.util.UUID
 
 object UserConstants {
 
@@ -26,4 +27,6 @@ object UserConstants {
     val VIRKSOMHETSNUMMER_DEFAULT = Virksomhetsnummer(VIRKSOMHETSNUMMER)
     const val VEILEDER_IDENT = "Z999999"
     const val OTHER_VEILEDER_IDENT = "Z999998"
+
+    val EXISTING_EKSTERN_REFERANSE_UUID: UUID = UUID.fromString("e7e8e9e0-e1e2-e3e4-e5e6-e7e8e9e0e1e2")
 }
