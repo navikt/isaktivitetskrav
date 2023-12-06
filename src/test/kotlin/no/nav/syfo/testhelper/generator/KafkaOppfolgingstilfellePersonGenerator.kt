@@ -25,7 +25,7 @@ fun createKafkaOppfolgingstilfellePerson(
             arbeidstakerAtTilfelleEnd = true,
             start = tilfelleStart,
             end = tilfelleEnd,
-            antallSykedager = ChronoUnit.DAYS.between(tilfelleStart, tilfelleEnd).toInt(),
+            antallSykedager = ChronoUnit.DAYS.between(tilfelleStart, tilfelleEnd).toInt() + 1,
             virksomhetsnummerList = listOf(
                 VIRKSOMHETSNUMMER_DEFAULT.value,
             ),

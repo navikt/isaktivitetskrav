@@ -31,7 +31,7 @@ private fun Oppfolgingstilfelle.durationInWeeks(): Long {
     val durationInDays = if (this.antallSykedager != null) {
         antallSykedager.toLong()
     } else {
-        ChronoUnit.DAYS.between(this.tilfelleStart, this.tilfelleEnd)
+        ChronoUnit.DAYS.between(this.tilfelleStart, this.tilfelleEnd)  + 1
     }
     return durationInDays / DAYS_IN_WEEK
 }
