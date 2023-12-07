@@ -27,7 +27,7 @@ fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
 
 fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
 
-private fun Oppfolgingstilfelle.durationInWeeks(): Long {
+fun Oppfolgingstilfelle.durationInWeeks(): Long {
     val durationInDays = if (this.antallSykedager != null) {
         antallSykedager.toLong()
     } else {
