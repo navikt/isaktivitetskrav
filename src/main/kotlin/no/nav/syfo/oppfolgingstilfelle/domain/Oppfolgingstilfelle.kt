@@ -6,6 +6,8 @@ import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
 
+private const val DAYS_IN_WEEK = 7
+
 data class Oppfolgingstilfelle(
     val uuid: UUID,
     val createdAt: OffsetDateTime,
@@ -13,6 +15,7 @@ data class Oppfolgingstilfelle(
     val tilfelleGenerert: OffsetDateTime,
     val tilfelleStart: LocalDate,
     val tilfelleEnd: LocalDate,
+    val antallSykedager: Int?,
     val referanseTilfelleBitUuid: UUID,
     val referanseTilfelleBitInntruffet: OffsetDateTime,
     val gradertAtTilfelleEnd: Boolean?,
@@ -24,5 +27,11 @@ fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
 
 fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
 
-private fun Oppfolgingstilfelle.durationInWeeks(): Long =
-    ChronoUnit.WEEKS.between(this.tilfelleStart, this.tilfelleEnd)
+fun Oppfolgingstilfelle.durationInWeeks(): Long {
+    val durationInDays = if (this.antallSykedager != null) {
+        antallSykedager.toLong()
+    } else {
+        ChronoUnit.DAYS.between(this.tilfelleStart, this.tilfelleEnd) + 1
+    }
+    return durationInDays / DAYS_IN_WEEK
+}

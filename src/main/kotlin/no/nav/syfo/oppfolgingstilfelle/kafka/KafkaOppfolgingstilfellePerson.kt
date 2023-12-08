@@ -23,6 +23,7 @@ data class KafkaOppfolgingstilfelle(
     val arbeidstakerAtTilfelleEnd: Boolean,
     val start: LocalDate,
     val end: LocalDate,
+    val antallSykedager: Int?,
     val virksomhetsnummerList: List<String>,
 )
 
@@ -40,6 +41,7 @@ fun KafkaOppfolgingstilfellePerson.toOppfolgingstilfelle(
     tilfelleGenerert = this.createdAt,
     tilfelleStart = latestOppfolgingsTilfelle.start,
     tilfelleEnd = latestOppfolgingsTilfelle.end,
+    antallSykedager = latestOppfolgingsTilfelle.antallSykedager,
     referanseTilfelleBitUuid = UUID.fromString(this.referanseTilfelleBitUuid),
     referanseTilfelleBitInntruffet = this.referanseTilfelleBitInntruffet,
     gradertAtTilfelleEnd = latestOppfolgingsTilfelle.gradertAtTilfelleEnd,

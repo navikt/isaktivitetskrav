@@ -7,6 +7,7 @@ import no.nav.syfo.util.nowUTC
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 fun createKafkaOppfolgingstilfellePerson(
@@ -24,6 +25,7 @@ fun createKafkaOppfolgingstilfellePerson(
             arbeidstakerAtTilfelleEnd = true,
             start = tilfelleStart,
             end = tilfelleEnd,
+            antallSykedager = ChronoUnit.DAYS.between(tilfelleStart, tilfelleEnd).toInt() + 1,
             virksomhetsnummerList = listOf(
                 VIRKSOMHETSNUMMER_DEFAULT.value,
             ),
