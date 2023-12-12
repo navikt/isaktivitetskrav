@@ -27,7 +27,7 @@ fun createAktivitetskravOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskra
         status = AktivitetskravStatus.OPPFYLT,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Oppfylt",
-        arsaker = listOf(VurderingArsak.FRISKMELDT),
+        arsaker = listOf(VurderingArsak.OppfyltArsak.Friskmeldt),
     )
     return nyAktivitetskrav.vurder(oppfyltVurdering)
 }
@@ -38,10 +38,10 @@ fun createAktivitetskravAvvent(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Avvent",
         arsaker = listOf(
-            VurderingArsak.INFORMASJON_BEHANDLER,
-            VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-            VurderingArsak.DROFTES_MED_ROL,
-            VurderingArsak.DROFTES_INTERNT,
+            VurderingArsak.AvventArsak.InformasjonBehandler,
+            VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver,
+            VurderingArsak.AvventArsak.DroftesMedROL,
+            VurderingArsak.AvventArsak.DroftesInternt,
         ),
     )
     return nyAktivitetskrav.vurder(avventVurdering)
@@ -52,7 +52,7 @@ fun createAktivitetskravUnntak(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         status = AktivitetskravStatus.UNNTAK,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Unntak",
-        arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
+        arsaker = listOf(VurderingArsak.UnntakArsak.SjomennUtenriks),
     )
     return nyAktivitetskrav.vurder(unntakVurdering)
 }

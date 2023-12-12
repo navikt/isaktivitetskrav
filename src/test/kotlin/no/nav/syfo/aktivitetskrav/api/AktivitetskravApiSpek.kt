@@ -130,10 +130,10 @@ class AktivitetskravApiSpek : Spek({
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
-                                VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-                                VurderingArsak.INFORMASJON_BEHANDLER,
-                                VurderingArsak.DROFTES_MED_ROL,
-                                VurderingArsak.DROFTES_INTERNT,
+                                VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.AvventArsak.InformasjonBehandler,
+                                VurderingArsak.AvventArsak.DroftesMedROL,
+                                VurderingArsak.AvventArsak.DroftesInternt,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
@@ -144,7 +144,7 @@ class AktivitetskravApiSpek : Spek({
                             status = AktivitetskravStatus.OPPFYLT,
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Oppfylt",
-                            arsaker = listOf(VurderingArsak.GRADERT),
+                            arsaker = listOf(VurderingArsak.OppfyltArsak.Gradert),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
@@ -175,17 +175,18 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
                             latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
-                            latestVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.GRADERT)
+                            latestVurdering.arsaker.first()
+                                .toString() shouldBeEqualTo VurderingArsak.OppfyltArsak.Gradert.toString()
                             latestVurdering.varsel.shouldBeNull()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
                             oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            oldestVurdering.arsaker shouldBeEqualTo listOf(
-                                VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-                                VurderingArsak.INFORMASJON_BEHANDLER,
-                                VurderingArsak.DROFTES_MED_ROL,
-                                VurderingArsak.DROFTES_INTERNT,
+                            oldestVurdering.arsaker.map { it.toString() } shouldBeEqualTo listOf(
+                                VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver.toString(),
+                                VurderingArsak.AvventArsak.InformasjonBehandler.toString(),
+                                VurderingArsak.AvventArsak.DroftesMedROL.toString(),
+                                VurderingArsak.AvventArsak.DroftesInternt.toString(),
                             )
                             oldestVurdering.varsel.shouldBeNull()
                         }
@@ -406,7 +407,7 @@ class AktivitetskravApiSpek : Spek({
                                 status = AktivitetskravStatus.UNNTAK,
                                 createdBy = UserConstants.VEILEDER_IDENT,
                                 beskrivelse = "Unntak",
-                                arsaker = listOf(VurderingArsak.SJOMENN_UTENRIKS),
+                                arsaker = listOf(VurderingArsak.UnntakArsak.SjomennUtenriks),
                             )
                         )
 
