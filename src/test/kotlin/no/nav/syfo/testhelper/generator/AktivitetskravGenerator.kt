@@ -1,5 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
+import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
@@ -93,13 +94,27 @@ fun createNAktivitetskrav(
     return allAktivitetskrav.toList()
 }
 
+fun createExpiredForhandsvarsel(document: List<DocumentComponentDTO>) = AktivitetskravVarsel.create(document).copy(
+    svarfrist = LocalDate.now().minusWeeks(1)
+)
+
 fun createVarsler(): List<AktivitetskravVarsel> {
     val document = generateDocumentComponentDTO(fritekst = "Et test varsel")
     return listOf(
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusDays(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now()),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusDays(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusWeeks(1)),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().minusWeeks(1)
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().minusDays(1)
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now()
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().plusDays(1)
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().plusWeeks(1)
+        ),
     )
 }

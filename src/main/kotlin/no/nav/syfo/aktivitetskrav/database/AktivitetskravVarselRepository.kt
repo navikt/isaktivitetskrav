@@ -153,7 +153,7 @@ private fun Connection.createAktivitetskravVarsel(
         it.setInt(4, vurderingId)
         it.setObject(5, mapper.writeValueAsString(varsel.document))
         it.setNull(6, Types.VARCHAR)
-        it.setDate(7, Date.valueOf(varsel.svarfrist))
+        it.setDate(7, varsel.svarfrist?.let { svarFrist -> Date.valueOf(svarFrist) })
         it.setNull(8, Types.TIMESTAMP_WITH_TIMEZONE)
         it.setString(9, varsel.type.name)
         it.executeQuery().toList { toPAktivitetskravVarsel() }
@@ -320,7 +320,7 @@ fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
             object : TypeReference<List<DocumentComponentDTO>>() {}
         ),
         publishedAt = getObject("published_at", OffsetDateTime::class.java),
-        svarfrist = getDate("svarfrist").toLocalDate(),
+        svarfrist = getDate("svarfrist")?.toLocalDate(),
         expiredVarselPublishedAt = getObject("expired_varsel_published_at", OffsetDateTime::class.java),
         type = getString("type"),
     )
