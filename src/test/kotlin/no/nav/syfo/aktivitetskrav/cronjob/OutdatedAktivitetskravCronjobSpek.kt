@@ -96,7 +96,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                         status = AktivitetskravStatus.UNNTAK,
                         createdBy = UserConstants.VEILEDER_IDENT,
                         beskrivelse = null,
-                        listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                        listOf(VurderingArsak.Unntak.MedisinskeGrunner),
                     )
                 )
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)

@@ -22,6 +22,7 @@ class ExternalMockEnvironment private constructor() {
     val database = TestDatabase()
     val environment = testEnvironment()
     val mockHttpClient = mockHttpClient(environment = environment)
+
     val redisServer = testRedisServer(redisConfig = environment.redisConfig)
     val wellKnownInternalAzureAD = wellKnownInternalAzureAD()
     val azureAdClient = AzureAdClient(

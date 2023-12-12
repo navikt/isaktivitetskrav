@@ -75,7 +75,8 @@ class AktivitetskravApiVurderSpek : Spek({
                 vurderingDTO: AktivitetskravVurderingRequestDTO,
                 personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
             ) = run {
-                val urlVurderAktivitetskrav = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                val urlVurderAktivitetskrav =
+                    "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
                 handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
@@ -88,7 +89,7 @@ class AktivitetskravApiVurderSpek : Spek({
                 val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
                     status = AktivitetskravStatus.OPPFYLT,
                     beskrivelse = "Aktivitetskravet er oppfylt",
-                    arsaker = listOf(VurderingArsak.FRISKMELDT),
+                    arsaker = listOf(Arsak.FRISKMELDT),
                 )
 
                 describe("Happy path") {
@@ -117,7 +118,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.toString())
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
@@ -129,10 +130,10 @@ class AktivitetskravApiVurderSpek : Spek({
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
-                                VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
-                                VurderingArsak.INFORMASJON_BEHANDLER,
-                                VurderingArsak.DROFTES_MED_ROL,
-                                VurderingArsak.DROFTES_INTERNT,
+                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonBehandler,
+                                VurderingArsak.Avvent.DroftesMedROL,
+                                VurderingArsak.Avvent.DroftesInternt,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
@@ -164,7 +165,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                             kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.toString())
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
@@ -175,7 +176,7 @@ class AktivitetskravApiVurderSpek : Spek({
                         val vurderingAvventRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.AVVENT,
                             beskrivelse = "Avventer mer informasjon",
-                            arsaker = listOf(VurderingArsak.INFORMASJON_BEHANDLER),
+                            arsaker = listOf(Arsak.INFORMASJON_BEHANDLER),
                             frist = oneWeekFromNow,
                         )
 
@@ -203,7 +204,8 @@ class AktivitetskravApiVurderSpek : Spek({
                     }
                 }
                 describe("Unhappy path") {
-                    val urlVurderExistingAktivitetskrav = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                    val urlVurderExistingAktivitetskrav =
+                        "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
                     it("Returns status Unauthorized if no token is supplied") {
                         testMissingToken(urlVurderExistingAktivitetskrav, HttpMethod.Post)
                     }
@@ -257,7 +259,7 @@ class AktivitetskravApiVurderSpek : Spek({
                         val vurderingInvalidArsakRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.UNNTAK,
                             beskrivelse = "Aktivitetskravet er oppfylt",
-                            arsaker = listOf(VurderingArsak.TILTAK),
+                            arsaker = listOf(Arsak.TILTAK),
                         )
 
                         with(

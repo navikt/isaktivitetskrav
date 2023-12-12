@@ -70,13 +70,13 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
-                arsaker = listOf(VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
+                arsaker = listOf(VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver),
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
-                arsaker = listOf(VurderingArsak.FRISKMELDT),
+                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -97,31 +97,11 @@ class AktivitetskravSpek : Spek({
 
             ikkeOppfyltAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_OPPFYLT
         }
-        it("kan ikke vurdere IKKE_OPPFYLT med arsak") {
-            assertFailsWith(IllegalArgumentException::class) {
-                AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.IKKE_OPPFYLT,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = null,
-                    arsaker = listOf(VurderingArsak.ANNET),
-                )
-            }
-        }
         it("kan vurdere IKKE_AKTUELL uten arsak") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
             val ikkeOppfyltAktivitetskrav = createAktivitetskravIkkeAktuell(nyAktivitetskrav = aktivitetskrav)
 
             ikkeOppfyltAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_AKTUELL
-        }
-        it("kan ikke vurdere IKKE_AKTUELL med arsak") {
-            assertFailsWith(IllegalArgumentException::class) {
-                AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.IKKE_AKTUELL,
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                    beskrivelse = null,
-                    arsaker = listOf(VurderingArsak.ANNET),
-                )
-            }
         }
         EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT, AktivitetskravStatus.STANS)
             .forEach {
@@ -145,14 +125,14 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
-                arsaker = listOf(VurderingArsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
+                arsaker = listOf(VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver),
                 frist = twoWeeksFromNow,
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.OTHER_VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
-                arsaker = listOf(VurderingArsak.FRISKMELDT),
+                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -167,7 +147,7 @@ class AktivitetskravSpek : Spek({
 
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
-            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.FRISKMELDT.name)
+            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.toString())
             kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
             kafkaAktivitetskravVurdering.frist shouldBeEqualTo null
