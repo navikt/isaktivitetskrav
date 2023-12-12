@@ -2,6 +2,7 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.application.cronjob.Cronjob
 import no.nav.syfo.application.cronjob.CronjobResult
 import no.nav.syfo.client.dokarkiv.DokarkivClient
@@ -9,7 +10,6 @@ import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import org.slf4j.LoggerFactory
-import java.util.*
 
 class JournalforAktivitetskravVarselCronjob(
     private val aktivitetskravVarselService: AktivitetskravVarselService,
@@ -39,7 +39,7 @@ class JournalforAktivitetskravVarselCronjob(
                     personIdent = personIdent,
                     navn = navn,
                     pdf = pdf,
-                    varselUuid = varsel.uuid,
+                    varsel = varsel,
                 )
 
                 dokarkivClient.journalfor(
@@ -65,7 +65,12 @@ class JournalforAktivitetskravVarselCronjob(
     }
 }
 
-fun createJournalpostRequest(personIdent: PersonIdent, navn: String, pdf: ByteArray, varselUuid: UUID): JournalpostRequest {
+fun createJournalpostRequest(
+    personIdent: PersonIdent,
+    navn: String,
+    pdf: ByteArray,
+    varsel: AktivitetskravVarsel
+): JournalpostRequest {
     val avsenderMottaker = AvsenderMottaker.create(
         id = personIdent.value,
         idType = BrukerIdType.PERSON_IDENT,
@@ -79,13 +84,11 @@ fun createJournalpostRequest(personIdent: PersonIdent, navn: String, pdf: ByteAr
     // På sikt avhengig av om bruker er reservert mot digital kommunikasjon eller ikke (må lagres med AktivitetskravVarsel?)
     val kanal = JournalpostKanal.SENTRAL_UTSKRIFT
 
-    // Når vi evt får andre varsler enn forhåndsvarsel må vil lage noe logikk her (sjekke type AktivitetskravVarsel?)
-    val dokumentTittel = "Forhåndsvarsel om stans av sykepenger"
-    val brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL
+    val dokumentTittel = varsel.getDokumentTittel()
 
     val dokumenter = listOf(
         Dokument.create(
-            brevkode = brevkodeType,
+            brevkode = varsel.getBrevkode(),
             dokumentvarianter = listOf(
                 Dokumentvariant.create(
                     filnavn = dokumentTittel,
@@ -103,7 +106,7 @@ fun createJournalpostRequest(personIdent: PersonIdent, navn: String, pdf: ByteAr
         tittel = dokumentTittel,
         bruker = bruker,
         dokumenter = dokumenter,
-        eksternReferanseId = varselUuid.toString(),
+        eksternReferanseId = varsel.uuid.toString(),
         kanal = kanal.value,
     )
 }

@@ -86,6 +86,7 @@ class AktivitetskravRepositorySpek : Spek({
                     newVurdering.status shouldBeEqualTo vurdering.status.name
                     newVarsel.aktivitetskravVurderingId shouldBeEqualTo newVurdering.id
                     newVarsel.journalpostId shouldBeEqualTo null
+                    newVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
 
                     newVarselPdf?.pdf?.size shouldBeEqualTo pdf.size
                     newVarselPdf?.pdf?.get(0) shouldBeEqualTo pdf[0]
