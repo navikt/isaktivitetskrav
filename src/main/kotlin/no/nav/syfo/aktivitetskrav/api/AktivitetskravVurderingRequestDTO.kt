@@ -16,7 +16,7 @@ fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(
     status = this.status,
     createdBy = createdByIdent,
     beskrivelse = this.beskrivelse,
-    arsaker = arsaker.map { VurderingArsak.fromString(it.toString(), this.status) },
+    arsaker = arsaker.map { it.toVurderingArsak(this.status) },
     frist = this.frist,
 )
 
@@ -33,3 +33,38 @@ enum class Arsak {
     GRADERT,
     TILTAK;
 }
+
+fun Arsak.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
+    when (status) {
+        AktivitetskravStatus.AVVENT -> {
+            when (this) {
+                Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER -> VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver
+                Arsak.INFORMASJON_BEHANDLER -> VurderingArsak.Avvent.InformasjonBehandler
+                Arsak.DROFTES_MED_ROL -> VurderingArsak.Avvent.DroftesMedROL
+                Arsak.DROFTES_INTERNT -> VurderingArsak.Avvent.DroftesInternt
+                Arsak.ANNET -> VurderingArsak.Avvent.Annet
+                else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
+            }
+        }
+
+        AktivitetskravStatus.UNNTAK -> {
+            when (this) {
+                Arsak.MEDISINSKE_GRUNNER -> VurderingArsak.Unntak.MedisinskeGrunner
+                Arsak.TILRETTELEGGING_IKKE_MULIG -> VurderingArsak.Unntak.TilretteleggingIkkeMulig
+                Arsak.SJOMENN_UTENRIKS -> VurderingArsak.Unntak.SjomennUtenriks
+                else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
+            }
+        }
+
+        AktivitetskravStatus.OPPFYLT -> {
+            when (this) {
+                Arsak.TILTAK -> VurderingArsak.Oppfylt.Tiltak
+                Arsak.GRADERT -> VurderingArsak.Oppfylt.Gradert
+                Arsak.FRISKMELDT -> VurderingArsak.Oppfylt.Friskmeldt
+                else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
+            }
+        }
+
+        else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
+    }
+

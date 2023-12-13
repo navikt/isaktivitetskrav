@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
@@ -235,6 +236,6 @@ private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = P
     createdBy = getString("created_by"),
     status = getString("status"),
     beskrivelse = getString("beskrivelse"),
-    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty),
+    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty).map { Arsak.valueOf(it) },
     frist = getDate("frist")?.toLocalDate(),
 )

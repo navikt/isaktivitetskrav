@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
@@ -29,14 +30,14 @@ fun Connection.createAktivitetskravVurdering(
     aktivitetskravId: Int,
     aktivitetskravVurdering: AktivitetskravVurdering,
 ): PAktivitetskravVurdering {
-    val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use {
+    val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use { it ->
         it.setString(1, aktivitetskravVurdering.uuid.toString())
         it.setInt(2, aktivitetskravId)
         it.setObject(3, aktivitetskravVurdering.createdAt)
         it.setString(4, aktivitetskravVurdering.createdBy)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
-        it.setString(7, aktivitetskravVurdering.arsakerToString())
+        it.setString(7, aktivitetskravVurdering.arsaker.joinToString(",") { it.toDBString() })
         it.setDate(8, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
         it.executeQuery().toList { toPAktivitetskravVurdering() }
     }
@@ -138,6 +139,21 @@ private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = P
     createdBy = getString("created_by"),
     status = getString("status"),
     beskrivelse = getString("beskrivelse"),
-    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty),
+    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty).map { Arsak.valueOf(it) },
     frist = getDate("frist")?.toLocalDate(),
 )
+
+private fun VurderingArsak.toDBString(): String =
+    when (this) {
+        VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver -> "OPPFOLGINGSPLAN_ARBEIDSGIVER"
+        VurderingArsak.Avvent.InformasjonBehandler -> "INFORMASJON_BEHANDLER"
+        VurderingArsak.Avvent.DroftesMedROL -> "DROFTES_MED_ROL"
+        VurderingArsak.Avvent.DroftesInternt -> "DROFTES_INTERNT"
+        VurderingArsak.Avvent.Annet -> "ANNET"
+        VurderingArsak.Unntak.MedisinskeGrunner -> "MEDISINSKE_GRUNNER"
+        VurderingArsak.Unntak.TilretteleggingIkkeMulig -> "TILRETTELEGGING_IKKE_MULIG"
+        VurderingArsak.Unntak.SjomennUtenriks -> "SJOMENN_UTENRIKS"
+        VurderingArsak.Oppfylt.Friskmeldt -> "TILTAK"
+        VurderingArsak.Oppfylt.Gradert -> "GRADERT"
+        VurderingArsak.Oppfylt.Tiltak -> "FRISKMELDT"
+    }

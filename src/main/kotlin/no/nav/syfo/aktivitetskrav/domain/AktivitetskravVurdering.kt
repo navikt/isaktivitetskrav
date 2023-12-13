@@ -2,6 +2,7 @@ package no.nav.syfo.aktivitetskrav.domain
 
 import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
 import no.nav.syfo.aktivitetskrav.api.Arsak
+import no.nav.syfo.aktivitetskrav.api.toVurderingArsak
 import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
@@ -16,83 +17,18 @@ sealed class VurderingArsak {
         object DroftesMedROL : Avvent()
         object DroftesInternt : Avvent()
         object Annet : Avvent()
-
-        override fun toString(): String =
-            when (this) {
-                OppfolgingsplanArbeidsgiver -> "OPPFOLGINGSPLAN_ARBEIDSGIVER"
-                InformasjonBehandler -> "INFORMASJON_BEHANDLER"
-                DroftesMedROL -> "DROFTES_MED_ROL"
-                DroftesInternt -> "DROFTES_INTERNT"
-                Annet -> "ANNET"
-            }
-
-        companion object {
-            fun fromString(arsak: String): Avvent =
-                when (arsak) {
-                    "OPPFOLGINGSPLAN_ARBEIDSGIVER" -> OppfolgingsplanArbeidsgiver
-                    "INFORMASJON_BEHANDLER" -> InformasjonBehandler
-                    "DROFTES_MED_ROL" -> DroftesMedROL
-                    "DROFTES_INTERNT" -> DroftesInternt
-                    "ANNET" -> Annet
-                    else -> throw IllegalArgumentException("arsak: $arsak not supported for status")
-                }
-        }
     }
 
     sealed class Unntak : VurderingArsak() {
         object MedisinskeGrunner : Unntak()
         object TilretteleggingIkkeMulig : Unntak()
         object SjomennUtenriks : Unntak()
-
-        override fun toString(): String =
-            when (this) {
-                MedisinskeGrunner -> "MEDISINSKE_GRUNNER"
-                TilretteleggingIkkeMulig -> "TILRETTELEGGING_IKKE_MULIG"
-                SjomennUtenriks -> "SJOMENN_UTENRIKS"
-            }
-
-        companion object {
-            fun fromString(arsak: String): Unntak =
-                when (arsak) {
-                    "MEDISINSKE_GRUNNER" -> MedisinskeGrunner
-                    "TILRETTELEGGING_IKKE_MULIG" -> TilretteleggingIkkeMulig
-                    "SJOMENN_UTENRIKS" -> SjomennUtenriks
-                    else -> throw IllegalArgumentException("arsak: $arsak not supported for status")
-                }
-        }
     }
 
     sealed class Oppfylt : VurderingArsak() {
         object Friskmeldt : Oppfylt()
         object Gradert : Oppfylt()
         object Tiltak : Oppfylt()
-
-        override fun toString(): String =
-            when (this) {
-                Tiltak -> "TILTAK"
-                Gradert -> "GRADERT"
-                Friskmeldt -> "FRISKMELDT"
-            }
-
-        companion object {
-            fun fromString(arsak: String): Oppfylt =
-                when (arsak) {
-                    "TILTAK" -> Tiltak
-                    "GRADERT" -> Gradert
-                    "FRISKMELDT" -> Friskmeldt
-                    else -> throw IllegalArgumentException("arsak: $arsak not supported for status")
-                }
-        }
-    }
-
-    companion object {
-        fun fromString(arsak: String, status: AktivitetskravStatus): VurderingArsak =
-            when (status) {
-                AktivitetskravStatus.AVVENT -> Avvent.fromString(arsak)
-                AktivitetskravStatus.UNNTAK -> Unntak.fromString(arsak)
-                AktivitetskravStatus.OPPFYLT -> Oppfylt.fromString(arsak)
-                else -> throw IllegalArgumentException("arsak not supported for status")
-            }
     }
 }
 
@@ -113,7 +49,7 @@ data class AktivitetskravVurdering private constructor(
                 createdAt = pAktivitetskravVurdering.createdAt,
                 createdBy = pAktivitetskravVurdering.createdBy,
                 status = status,
-                arsaker = pAktivitetskravVurdering.arsaker.map { VurderingArsak.fromString(it, status) },
+                arsaker = pAktivitetskravVurdering.arsaker.map { it.toVurderingArsak(status) },
                 beskrivelse = pAktivitetskravVurdering.beskrivelse,
                 frist = pAktivitetskravVurdering.frist,
             )
@@ -151,8 +87,6 @@ fun AktivitetskravVurdering.validate() {
     }
 }
 
-fun AktivitetskravVurdering.arsakerToString() = this.arsaker.joinToString(",")
-
 fun AktivitetskravVurdering.isFinal() = this.status.isFinal
 
 fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?): AktivitetskravVurderingResponseDTO =
@@ -162,7 +96,22 @@ fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?
         createdBy = this.createdBy,
         status = this.status,
         beskrivelse = this.beskrivelse,
-        arsaker = this.arsaker.map { Arsak.valueOf(it.toString()) },
+        arsaker = this.arsaker.map { Arsak.valueOf(it.toDTOString()) },
         frist = this.frist,
         varsel = varsel?.toVarselResponseDTO()
     )
+
+private fun VurderingArsak.toDTOString(): String =
+    when (this) {
+        VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver -> "OPPFOLGINGSPLAN_ARBEIDSGIVER"
+        VurderingArsak.Avvent.InformasjonBehandler -> "INFORMASJON_BEHANDLER"
+        VurderingArsak.Avvent.DroftesMedROL -> "DROFTES_MED_ROL"
+        VurderingArsak.Avvent.DroftesInternt -> "DROFTES_INTERNT"
+        VurderingArsak.Avvent.Annet -> "ANNET"
+        VurderingArsak.Unntak.MedisinskeGrunner -> "MEDISINSKE_GRUNNER"
+        VurderingArsak.Unntak.TilretteleggingIkkeMulig -> "TILRETTELEGGING_IKKE_MULIG"
+        VurderingArsak.Unntak.SjomennUtenriks -> "SJOMENN_UTENRIKS"
+        VurderingArsak.Oppfylt.Friskmeldt -> "TILTAK"
+        VurderingArsak.Oppfylt.Gradert -> "GRADERT"
+        VurderingArsak.Oppfylt.Tiltak -> "FRISKMELDT"
+    }

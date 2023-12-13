@@ -176,17 +176,17 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker.first()
-                                .toString() shouldBeEqualTo VurderingArsak.Oppfylt.Gradert.toString()
+                                .toVurderingArsak(AktivitetskravStatus.OPPFYLT) shouldBeEqualTo VurderingArsak.Oppfylt.Gradert
                             latestVurdering.varsel.shouldBeNull()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
                             oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            oldestVurdering.arsaker.map { it.toString() } shouldBeEqualTo listOf(
-                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver.toString(),
-                                VurderingArsak.Avvent.InformasjonBehandler.toString(),
-                                VurderingArsak.Avvent.DroftesMedROL.toString(),
-                                VurderingArsak.Avvent.DroftesInternt.toString(),
+                            oldestVurdering.arsaker.map { it.toVurderingArsak(AktivitetskravStatus.AVVENT) } shouldBeEqualTo listOf(
+                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonBehandler,
+                                VurderingArsak.Avvent.DroftesMedROL,
+                                VurderingArsak.Avvent.DroftesInternt,
                             )
                             oldestVurdering.varsel.shouldBeNull()
                         }
