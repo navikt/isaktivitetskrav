@@ -136,8 +136,9 @@ private const val queryCreateAktivitetskravVarsel =
         document,
         journalpost_id,
         svarfrist,
-        expired_varsel_published_at
-    ) values (DEFAULT, ?, ?, ?, ?, ?::jsonb, ?, ?, ?)
+        expired_varsel_published_at,
+        type
+    ) values (DEFAULT, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?)
     RETURNING *
     """
 
@@ -154,6 +155,7 @@ private fun Connection.createAktivitetskravVarsel(
         it.setNull(6, Types.VARCHAR)
         it.setDate(7, Date.valueOf(varsel.svarfrist))
         it.setNull(8, Types.TIMESTAMP_WITH_TIMEZONE)
+        it.setString(9, varsel.type.name)
         it.executeQuery().toList { toPAktivitetskravVarsel() }
     }
 
@@ -320,6 +322,7 @@ fun ResultSet.toPAktivitetskravVarsel(): PAktivitetskravVarsel =
         publishedAt = getObject("published_at", OffsetDateTime::class.java),
         svarfrist = getDate("svarfrist").toLocalDate(),
         expiredVarselPublishedAt = getObject("expired_varsel_published_at", OffsetDateTime::class.java),
+        type = getString("type"),
     )
 
 private fun ResultSet.toPAktivitetskravVarselPdf(): PAktivitetskravVarselPdf =

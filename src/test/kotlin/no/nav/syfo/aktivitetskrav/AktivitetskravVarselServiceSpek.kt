@@ -10,6 +10,7 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
@@ -95,6 +96,7 @@ class AktivitetskravVarselServiceSpek : Spek({
 
                         varsel.journalpostId shouldBeEqualTo null
                         varsel.document shouldBeEqualTo document
+                        varsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
                     }
 
                     val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
