@@ -9,6 +9,7 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.testhelper.ExternalMockEnvironment
@@ -131,6 +132,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
                 kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
                 kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
                 kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
+                kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
             }
             it("Publiserer ikke forhandsvarsel som ikke er journalfort") {
                 createForhandsvarsel(
