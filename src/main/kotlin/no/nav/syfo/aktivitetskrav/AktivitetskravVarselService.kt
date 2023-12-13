@@ -7,9 +7,6 @@ import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
-import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
-import no.nav.syfo.client.pdfgen.PdfGenClient
-import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import java.util.*
 
@@ -18,8 +15,7 @@ class AktivitetskravVarselService(
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val aktivitetskravVarselProducer: AktivitetskravVarselProducer,
     private val expiredVarselProducer: ExpiredVarselProducer,
-    private val pdfGenClient: PdfGenClient,
-    private val pdlClient: PdlClient,
+    private val varselPdfService: VarselPdfService,
 ) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, AktivitetskravVarsel, ByteArray>> {
         return aktivitetskravVarselRepository.getIkkeJournalforte()
@@ -63,19 +59,14 @@ class AktivitetskravVarselService(
             throw ConflictException("Kan ikke sende forhåndsvarsel, aktivitetskravet har en avsluttende vurdering ${aktivitetskrav.status}")
         }
 
-        val personNavn = pdlClient.navn(personIdent)
-        val pdf = pdfGenClient.createForhandsvarselPdf(
-            callId,
-            ForhandsvarselPdfDTO.create(
-                mottakerNavn = personNavn,
-                mottakerFodselsnummer = personIdent.value,
-                documentComponents = forhandsvarselDTO.document,
-            )
+        val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
+        val pdf = varselPdfService.createVarselPdf(
+            varsel = forhandsvarsel,
+            personIdent = personIdent,
+            callId = callId,
         )
-
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
-        val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
 
         val nyttForhandsvarsel = aktivitetskravVarselRepository.create(
             aktivitetskrav = updatedAktivitetskrav,

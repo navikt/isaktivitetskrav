@@ -7,6 +7,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.*
@@ -115,8 +116,10 @@ fun main() {
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselProducer = aktivitetskravVarselProducer,
                 expiredVarselProducer = expiredVarselProducer,
-                pdfGenClient = pdfGenClient,
-                pdlClient = pdlClient,
+                varselPdfService = VarselPdfService(
+                    pdfGenClient = pdfGenClient,
+                    pdlClient = pdlClient,
+                ),
             )
             apiModule(
                 applicationState = applicationState,

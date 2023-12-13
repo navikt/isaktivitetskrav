@@ -4,6 +4,7 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
@@ -45,8 +46,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             aktivitetskravVurderingProducer = mockk(),
             aktivitetskravVarselProducer = mockk(),
             expiredVarselProducer = expiredVarselProducer,
-            pdfGenClient = externalMockEnvironment.pdfgenClient,
-            pdlClient = externalMockEnvironment.pdlClient,
+            varselPdfService = VarselPdfService(
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
+            ),
         )
 
         val publishExpiredVarslerCronJob = PublishExpiredVarslerCronJob(
