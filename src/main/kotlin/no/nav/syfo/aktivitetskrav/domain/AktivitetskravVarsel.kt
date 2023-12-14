@@ -12,7 +12,7 @@ data class AktivitetskravVarsel internal constructor(
     val createdAt: OffsetDateTime,
     val journalpostId: String?,
     val document: List<DocumentComponentDTO>,
-    val svarfrist: LocalDate,
+    val svarfrist: LocalDate?,
     val type: VarselType,
     val isPublished: Boolean = false,
 ) {
@@ -20,14 +20,13 @@ data class AktivitetskravVarsel internal constructor(
     companion object {
         fun create(
             document: List<DocumentComponentDTO>,
-            svarfrist: LocalDate = LocalDate.now().plusWeeks(3),
             type: VarselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
         ) =
             AktivitetskravVarsel(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),
                 journalpostId = null,
-                svarfrist = svarfrist,
+                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now().plusWeeks(3) else null,
                 document = document,
                 type = type,
             )
@@ -37,7 +36,7 @@ data class AktivitetskravVarsel internal constructor(
             createdAt: OffsetDateTime,
             journalpostId: String?,
             document: List<DocumentComponentDTO>,
-            svarfrist: LocalDate,
+            svarfrist: LocalDate?,
             isPublished: Boolean,
             type: String,
         ) = AktivitetskravVarsel(

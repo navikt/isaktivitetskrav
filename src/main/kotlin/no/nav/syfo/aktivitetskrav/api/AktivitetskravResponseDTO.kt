@@ -43,6 +43,6 @@ data class AktivitetskravVurderingResponseDTO(
 data class VarselResponseDTO(
     val uuid: String,
     val createdAt: LocalDateTime,
-    val svarfrist: LocalDate,
+    val svarfrist: LocalDate?,
     val document: List<DocumentComponentDTO>,
 )
