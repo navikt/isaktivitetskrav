@@ -1,6 +1,5 @@
 package no.nav.syfo.aktivitetskrav.database
 
-import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.*
 import no.nav.syfo.domain.PersonIdent
@@ -125,20 +124,24 @@ private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     personIdent = PersonIdent(getString("personident")),
     createdAt = getObject("created_at", OffsetDateTime::class.java),
     updatedAt = getObject("updated_at", OffsetDateTime::class.java),
-    status = getString("status"),
+    status = AktivitetskravStatus.valueOf(getString("status")),
     stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
     referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
     previousAktivitetskravUuid = getObject("previous_aktivitetskrav_uuid", UUID::class.java),
 )
 
-private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
-    id = getInt("id"),
-    uuid = UUID.fromString(getString("uuid")),
-    aktivitetskravId = getInt("aktivitetskrav_id"),
-    createdAt = getObject("created_at", OffsetDateTime::class.java),
-    createdBy = getString("created_by"),
-    status = getString("status"),
-    beskrivelse = getString("beskrivelse"),
-    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty).map { Arsak.valueOf(it) },
-    frist = getDate("frist")?.toLocalDate(),
-)
+private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
+    val status = AktivitetskravStatus.valueOf(getString("status"))
+    return PAktivitetskravVurdering(
+        id = getInt("id"),
+        uuid = UUID.fromString(getString("uuid")),
+        aktivitetskravId = getInt("aktivitetskrav_id"),
+        createdAt = getObject("created_at", OffsetDateTime::class.java),
+        createdBy = getString("created_by"),
+        status = status,
+        beskrivelse = getString("beskrivelse"),
+        arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
+            .map { it.toVurderingArsak(status) },
+        frist = getDate("frist")?.toLocalDate(),
+    )
+}

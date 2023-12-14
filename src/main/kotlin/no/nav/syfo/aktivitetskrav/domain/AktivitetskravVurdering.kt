@@ -1,7 +1,5 @@
 package no.nav.syfo.aktivitetskrav.domain
 
-import no.nav.syfo.aktivitetskrav.api.toVurderingArsak
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -30,7 +28,7 @@ sealed class VurderingArsak(val value: String) {
     }
 }
 
-data class AktivitetskravVurdering private constructor(
+data class AktivitetskravVurdering(
     val uuid: UUID,
     val createdAt: OffsetDateTime,
     val createdBy: String,
@@ -43,19 +41,6 @@ data class AktivitetskravVurdering private constructor(
     fun isFinal() = this.status.isFinal
 
     companion object {
-        fun createFromDatabase(pAktivitetskravVurdering: PAktivitetskravVurdering): AktivitetskravVurdering {
-            val status = AktivitetskravStatus.valueOf(pAktivitetskravVurdering.status)
-            return AktivitetskravVurdering(
-                uuid = pAktivitetskravVurdering.uuid,
-                createdAt = pAktivitetskravVurdering.createdAt,
-                createdBy = pAktivitetskravVurdering.createdBy,
-                status = status,
-                arsaker = pAktivitetskravVurdering.arsaker.map { it.toVurderingArsak(status) },
-                beskrivelse = pAktivitetskravVurdering.beskrivelse,
-                frist = pAktivitetskravVurdering.frist,
-            )
-        }
-
         fun create(
             status: AktivitetskravStatus,
             createdBy: String,

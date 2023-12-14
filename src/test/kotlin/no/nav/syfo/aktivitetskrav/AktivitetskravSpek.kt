@@ -147,7 +147,7 @@ class AktivitetskravSpek : Spek({
 
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
-            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.toString())
+            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
             kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
             kafkaAktivitetskravVurdering.frist shouldBeEqualTo null

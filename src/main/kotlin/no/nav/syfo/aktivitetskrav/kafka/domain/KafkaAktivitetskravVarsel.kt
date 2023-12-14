@@ -12,7 +12,7 @@ data class KafkaAktivitetskravVarsel(
     val varselUuid: UUID,
     val createdAt: OffsetDateTime,
     val journalpostId: String,
-    val svarfrist: LocalDate,
+    val svarfrist: LocalDate?,
     val type: String,
     val document: List<DocumentComponentDTO>,
 )

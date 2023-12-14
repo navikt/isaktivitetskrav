@@ -19,7 +19,7 @@ data class PAktivitetskravVarsel(
     val journalpostId: String?,
     val document: List<DocumentComponentDTO>,
     val publishedAt: OffsetDateTime?,
-    val svarfrist: LocalDate,
+    val svarfrist: LocalDate?,
     val expiredVarselPublishedAt: OffsetDateTime?,
     val type: String
 ) {
@@ -39,7 +39,7 @@ data class PAktivitetskravVarsel(
         createdAt = createdAt.toLocalDateTime(),
         personIdent = personIdent,
         varselType = VarselType.valueOf(type),
-        svarfrist = svarfrist,
+        svarfrist = svarfrist!!,
     )
 
     fun toKafkaAktivitetskravVarsel(references: VarselReferences) = KafkaAktivitetskravVarsel(

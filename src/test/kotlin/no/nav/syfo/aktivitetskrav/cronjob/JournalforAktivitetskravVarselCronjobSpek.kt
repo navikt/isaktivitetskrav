@@ -7,6 +7,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
@@ -66,8 +67,10 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             aktivitetskravVurderingProducer = mockk(),
             aktivitetskravVarselProducer = mockk(),
             expiredVarselProducer = mockk(),
-            pdfGenClient = externalMockEnvironment.pdfgenClient,
-            pdlClient = externalMockEnvironment.pdlClient,
+            varselPdfService = VarselPdfService(
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
+            ),
         )
 
         val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(

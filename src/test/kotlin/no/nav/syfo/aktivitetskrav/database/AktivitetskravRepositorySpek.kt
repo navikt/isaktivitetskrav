@@ -78,12 +78,12 @@ class AktivitetskravRepositorySpek : Spek({
                     val newVurdering = vurderinger.first()
                     val newVarselPdf = database.getAktivitetskravVarselPdf(newVarsel.id)
 
-                    retrievedAktivitetskrav.status shouldBeEqualTo updatedAktivitetskrav.status.name
+                    retrievedAktivitetskrav.status shouldBeEqualTo updatedAktivitetskrav.status
                     retrievedAktivitetskrav.updatedAt shouldBeGreaterThan retrievedAktivitetskrav.createdAt
                     vurderinger.size shouldBeEqualTo 1
                     newVurdering.aktivitetskravId shouldBeEqualTo retrievedAktivitetskrav.id
                     newVurdering.createdBy shouldBeEqualTo vurdering.createdBy
-                    newVurdering.status shouldBeEqualTo vurdering.status.name
+                    newVurdering.status shouldBeEqualTo vurdering.status
                     newVarsel.aktivitetskravVurderingId shouldBeEqualTo newVurdering.id
                     newVarsel.journalpostId shouldBeEqualTo null
                     newVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
@@ -149,7 +149,9 @@ class AktivitetskravRepositorySpek : Spek({
                                 updatedAktivitetskrav
                             }
                     val varsler =
-                        List(5) { AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)) }
+                        List(5) {
+                            createExpiredForhandsvarsel(document)
+                        }
                     for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
                         aktivitetskravVarselRepository.create(
                             aktivitetskrav = aktivitetkrav,
@@ -198,7 +200,7 @@ class AktivitetskravRepositorySpek : Spek({
                     )
                     val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
                     aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                    val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                    val varsel = createExpiredForhandsvarsel(document)
                     aktivitetskravVarselRepository.create(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = varsel,
