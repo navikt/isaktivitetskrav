@@ -67,4 +67,3 @@ fun Arsak.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
 
         else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
     }
-

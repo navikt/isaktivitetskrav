@@ -1,9 +1,7 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import no.nav.syfo.aktivitetskrav.api.Arsak
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
