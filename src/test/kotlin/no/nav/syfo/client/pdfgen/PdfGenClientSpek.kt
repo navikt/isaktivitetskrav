@@ -15,15 +15,15 @@ class PdfGenClientSpek : Spek({
     describe("${PdlClient::class.java.simpleName}: navn") {
         it("returns bytearray of pdf when requestBody is set correct") {
             runBlocking {
-                val forhandsvarselPdfDTO = ForhandsvarselPdfDTO.create(
+                val varselPdfDTO = VarselPdfDTO.create(
                     mottakerNavn = UserConstants.PERSON_FULLNAME,
-                    mottakerFodselsnummer = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
+                    mottakerPersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     documentComponents = emptyList(),
                 )
 
                 val pdf = pdfGenClient.createForhandsvarselPdf(
                     callId = "",
-                    forhandsvarselPdfDTO = forhandsvarselPdfDTO,
+                    varselPdfDTO = varselPdfDTO,
                 )
                 pdf shouldBeEqualTo UserConstants.PDF_FORHANDSVARSEL
             }

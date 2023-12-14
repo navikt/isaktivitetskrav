@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.mockk.mockk
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
@@ -21,11 +22,14 @@ fun Application.testApiModule(
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
     )
     val aktivitetskravVarselService = AktivitetskravVarselService(
-        pdfGenClient = externalMockEnvironment.pdfgenClient,
+        varselPdfService = VarselPdfService(
+            pdfGenClient = externalMockEnvironment.pdfgenClient,
+            pdlClient = externalMockEnvironment.pdlClient,
+        ),
         aktivitetskravVarselRepository = AktivitetskravVarselRepository(
             database = externalMockEnvironment.database
         ),
-        pdlClient = externalMockEnvironment.pdlClient,
+
         aktivitetskravVarselProducer = mockk(),
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         expiredVarselProducer = mockk(),

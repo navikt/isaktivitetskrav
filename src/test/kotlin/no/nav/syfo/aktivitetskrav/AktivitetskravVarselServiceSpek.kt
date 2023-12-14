@@ -52,8 +52,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselProducer = mockk(),
                 expiredVarselProducer = expiredVarselProducer,
-                pdfGenClient = externalMockEnvironment.pdfgenClient,
-                pdlClient = externalMockEnvironment.pdlClient,
+                varselPdfService = VarselPdfService(
+                    pdfGenClient = externalMockEnvironment.pdfgenClient,
+                    pdlClient = externalMockEnvironment.pdlClient,
+                ),
             )
 
             beforeEachTest {
@@ -116,8 +118,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                         aktivitetskravVarselProducer = mockk(),
                         expiredVarselProducer = mockk(),
-                        pdfGenClient = mockedPdfGenClient,
-                        pdlClient = externalMockEnvironment.pdlClient,
+                        varselPdfService = VarselPdfService(
+                            pdfGenClient = mockedPdfGenClient,
+                            pdlClient = externalMockEnvironment.pdlClient,
+                        ),
                         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                     )
 
@@ -141,7 +145,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                     coVerify {
                         mockedPdfGenClient.createForhandsvarselPdf(
                             callId = "",
-                            forhandsvarselPdfDTO = expectedForhandsvarselPdfRequestBody
+                            varselPdfDTO = expectedForhandsvarselPdfRequestBody
                         )
                     }
                 }
