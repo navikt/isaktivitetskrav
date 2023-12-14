@@ -2,17 +2,18 @@ package no.nav.syfo.testhelper.mock
 
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
-import no.nav.syfo.client.pdfgen.VarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.UserConstants
 
-suspend fun MockRequestHandleScope.pdfGenClientMockResponse(request: HttpRequestData): HttpResponseData {
+fun MockRequestHandleScope.pdfGenClientMockResponse(request: HttpRequestData): HttpResponseData {
     val requestUrl = request.url.encodedPath
-    request.receiveBody<VarselPdfDTO>()
 
     return when {
         requestUrl.endsWith(PdfGenClient.Companion.FORHANDSVARSEL_PATH) -> {
             respond(content = UserConstants.PDF_FORHANDSVARSEL)
+        }
+        requestUrl.endsWith(PdfGenClient.Companion.VURDERING_PATH) -> {
+            respond(content = UserConstants.PDF_VURDERING)
         }
 
         else -> error("Unhandled pdf ${request.url.encodedPath}")

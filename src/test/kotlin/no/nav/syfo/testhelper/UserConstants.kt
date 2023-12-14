@@ -13,6 +13,7 @@ object UserConstants {
     const val PERSON_FULLNAME = "Ullen Mellomnavn Bamse"
     const val PERSON_FULLNAME_WITH_DASHES = "Jan-Ola Mellomnavn Bamse"
     val PDF_FORHANDSVARSEL = byteArrayOf(0x2E, 0x28)
+    val PDF_VURDERING = byteArrayOf(0x2E, 0x25)
     private const val ARBEIDSTAKER_FNR = "12345678912"
     private const val VIRKSOMHETSNUMMER = "123456789"
 
@@ -21,7 +22,6 @@ object UserConstants {
     val THIRD_ARBEIDSTAKER_PERSONIDENT = PersonIdent(ARBEIDSTAKER_PERSONIDENT.value.replace("4", "1"))
     val ARBEIDSTAKER_PERSONIDENT_NO_NAME = PersonIdent(ARBEIDSTAKER_PERSONIDENT.value.replace("5", "1"))
     val ARBEIDSTAKER_PERSONIDENT_NAME_WITH_DASH = PersonIdent(ARBEIDSTAKER_PERSONIDENT.value.replace("6", "1"))
-    val ARBEIDSTAKER_PERSONIDENT_RESERVERT = PersonIdent(ARBEIDSTAKER_PERSONIDENT.value.replace("7", "1"))
     val PERSONIDENT_VEILEDER_NO_ACCESS = PersonIdent(ARBEIDSTAKER_PERSONIDENT.value.replace("3", "1"))
 
     val VIRKSOMHETSNUMMER_DEFAULT = Virksomhetsnummer(VIRKSOMHETSNUMMER)

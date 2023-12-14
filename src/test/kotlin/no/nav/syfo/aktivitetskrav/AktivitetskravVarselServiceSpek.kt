@@ -145,7 +145,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                     coVerify {
                         mockedPdfGenClient.createForhandsvarselPdf(
                             callId = "",
-                            varselPdfDTO = expectedForhandsvarselPdfRequestBody
+                            forhandsvarselPdfDTO = expectedForhandsvarselPdfRequestBody
                         )
                     }
                 }

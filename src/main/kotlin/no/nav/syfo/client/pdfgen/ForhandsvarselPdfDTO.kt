@@ -6,7 +6,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-data class VarselPdfDTO private constructor(
+data class ForhandsvarselPdfDTO private constructor(
     val mottakerNavn: String,
     val mottakerFodselsnummer: String,
     val datoSendt: String,
@@ -19,8 +19,8 @@ data class VarselPdfDTO private constructor(
             mottakerNavn: String,
             mottakerPersonIdent: PersonIdent,
             documentComponents: List<DocumentComponentDTO>
-        ): VarselPdfDTO =
-            VarselPdfDTO(
+        ): ForhandsvarselPdfDTO =
+            ForhandsvarselPdfDTO(
                 mottakerNavn = mottakerNavn,
                 mottakerFodselsnummer = mottakerPersonIdent.value,
                 datoSendt = LocalDate.now().format(formatter),
