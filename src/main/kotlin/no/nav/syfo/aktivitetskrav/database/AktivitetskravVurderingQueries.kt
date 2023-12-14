@@ -2,7 +2,6 @@ package no.nav.syfo.aktivitetskrav.database
 
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.database.*
-import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
@@ -72,65 +71,7 @@ fun Connection.updateAktivitetskrav(
     return updatedIds.first()
 }
 
-fun DatabaseInterface.getAktivitetskrav(
-    personIdent: PersonIdent,
-    connection: Connection? = null,
-): List<PAktivitetskrav> {
-    return connection?.getAktivitetskrav(
-        personIdent = personIdent,
-    )
-        ?: this.connection.use {
-            it.getAktivitetskrav(
-                personIdent = personIdent,
-            )
-        }
-}
-
-const val queryGetAktivitetskravByPersonident =
-    """
-        SELECT *
-        FROM AKTIVITETSKRAV
-        WHERE personident = ?
-        ORDER BY created_at DESC;
-    """
-
-private fun Connection.getAktivitetskrav(
-    personIdent: PersonIdent,
-): List<PAktivitetskrav> = prepareStatement(queryGetAktivitetskravByPersonident).use {
-    it.setString(1, personIdent.value)
-    it.executeQuery().toList { toPAktivitetskrav() }
-}
-
-fun DatabaseInterface.getAktivitetskravVurderinger(
-    aktivitetskravId: Int,
-): List<PAktivitetskravVurdering> = this.connection.use { connection ->
-    connection.prepareStatement(queryGetAktivitetskravVurderinger).use {
-        it.setInt(1, aktivitetskravId)
-        it.executeQuery().toList { toPAktivitetskravVurdering() }
-    }
-}
-
-const val queryGetAktivitetskravVurderinger =
-    """
-        SELECT *
-        FROM AKTIVITETSKRAV_VURDERING
-        WHERE aktivitetskrav_id = ?
-        ORDER BY created_at DESC
-    """
-
-private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
-    id = getInt("id"),
-    uuid = UUID.fromString(getString("uuid")),
-    personIdent = PersonIdent(getString("personident")),
-    createdAt = getObject("created_at", OffsetDateTime::class.java),
-    updatedAt = getObject("updated_at", OffsetDateTime::class.java),
-    status = AktivitetskravStatus.valueOf(getString("status")),
-    stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
-    referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
-    previousAktivitetskravUuid = getObject("previous_aktivitetskrav_uuid", UUID::class.java),
-)
-
-private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
+fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
     val status = AktivitetskravStatus.valueOf(getString("status"))
     return PAktivitetskravVurdering(
         id = getInt("id"),

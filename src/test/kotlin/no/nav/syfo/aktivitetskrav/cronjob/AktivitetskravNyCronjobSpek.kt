@@ -35,7 +35,6 @@ class AktivitetskravNyCronjobSpek : Spek({
         val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravRepository = aktivitetskravRepository,
-            database = database,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
         )

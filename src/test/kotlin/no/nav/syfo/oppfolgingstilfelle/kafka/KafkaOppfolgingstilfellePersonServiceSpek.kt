@@ -4,7 +4,6 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
@@ -47,7 +46,6 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravRepository = aktivitetskravRepository,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
-            database = database,
             arenaCutoff = arenaCutoff,
         )
         val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
@@ -308,7 +306,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         kafkaProducer.send(any())
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
+                    val aktivitetskravList = aktivitetskravRepository.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                     )
 
@@ -335,7 +333,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                     }
 
-                    val aktivitetskravList = database.getAktivitetskrav(
+                    val aktivitetskravList = aktivitetskravRepository.getAktivitetskrav(
                         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                     )
 

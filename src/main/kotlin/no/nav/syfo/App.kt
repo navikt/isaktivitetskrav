@@ -108,7 +108,6 @@ fun main() {
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
-                database = applicationDatabase,
                 arenaCutoff = environment.arenaCutoff,
             )
             aktivitetskravVarselService = AktivitetskravVarselService(
