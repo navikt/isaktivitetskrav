@@ -1,9 +1,6 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
-import no.nav.syfo.aktivitetskrav.domain.isInFinalState
+import no.nav.syfo.aktivitetskrav.domain.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -35,10 +32,27 @@ data class AktivitetskravVurderingResponseDTO(
     val createdBy: String,
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
-    val arsaker: List<VurderingArsak>,
+    val arsaker: List<Arsak>,
     val frist: LocalDate?,
     val varsel: VarselResponseDTO?
-)
+) {
+    companion object {
+        fun from(
+            aktivitetskravVurdering: AktivitetskravVurdering,
+            varsel: AktivitetskravVarsel?
+        ): AktivitetskravVurderingResponseDTO =
+            AktivitetskravVurderingResponseDTO(
+                uuid = aktivitetskravVurdering.uuid.toString(),
+                createdAt = aktivitetskravVurdering.createdAt.toLocalDateTime(),
+                createdBy = aktivitetskravVurdering.createdBy,
+                status = aktivitetskravVurdering.status,
+                beskrivelse = aktivitetskravVurdering.beskrivelse,
+                arsaker = aktivitetskravVurdering.arsaker.map { Arsak.valueOf(it.value) },
+                frist = aktivitetskravVurdering.frist,
+                varsel = varsel?.toVarselResponseDTO()
+            )
+    }
+}
 
 data class VarselResponseDTO(
     val uuid: String,

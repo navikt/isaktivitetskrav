@@ -78,12 +78,12 @@ class AktivitetskravRepositorySpek : Spek({
                     val newVurdering = vurderinger.first()
                     val newVarselPdf = database.getAktivitetskravVarselPdf(newVarsel.id)
 
-                    retrievedAktivitetskrav.status shouldBeEqualTo updatedAktivitetskrav.status.name
+                    retrievedAktivitetskrav.status shouldBeEqualTo updatedAktivitetskrav.status
                     retrievedAktivitetskrav.updatedAt shouldBeGreaterThan retrievedAktivitetskrav.createdAt
                     vurderinger.size shouldBeEqualTo 1
                     newVurdering.aktivitetskravId shouldBeEqualTo retrievedAktivitetskrav.id
                     newVurdering.createdBy shouldBeEqualTo vurdering.createdBy
-                    newVurdering.status shouldBeEqualTo vurdering.status.name
+                    newVurdering.status shouldBeEqualTo vurdering.status
                     newVarsel.aktivitetskravVurderingId shouldBeEqualTo newVurdering.id
                     newVarsel.journalpostId shouldBeEqualTo null
                     newVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name

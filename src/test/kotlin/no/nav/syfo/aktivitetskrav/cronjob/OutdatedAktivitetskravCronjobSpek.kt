@@ -85,7 +85,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             lukketAktivitetskrav.uuid shouldBeEqualTo aktivitetskrav.uuid
 
             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-            kafkaAktivitetskravVurdering.status shouldBeEqualTo lukketAktivitetskrav.status
+            kafkaAktivitetskravVurdering.status shouldBeEqualTo lukketAktivitetskrav.status.name
         }
         it("Lukker ikke vurdert aktivitetskrav hvor stoppunkt er etter arena-cutoff og før outdated-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -96,7 +96,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                         status = AktivitetskravStatus.UNNTAK,
                         createdBy = UserConstants.VEILEDER_IDENT,
                         beskrivelse = null,
-                        listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                        listOf(VurderingArsak.Unntak.MedisinskeGrunner),
                     )
                 )
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
@@ -113,7 +113,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             }
 
             val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET } shouldBeEqualTo false
         }
         it("Lukker ikke nytt aktivitetskrav hvor stoppunkt er før arena-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -133,7 +133,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             }
 
             val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET } shouldBeEqualTo false
         }
         it("Lukker ikke nytt aktivitetskrav hvor stoppunkt er etter arena-cutoff og etter outdated-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -153,7 +153,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             }
 
             val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET } shouldBeEqualTo false
         }
         it("Lukker ikke nytt aktivitetskrav hvor stoppunkt er etter arena-cutoff og før outdated-cutoff hvis det finnes aktivitetskrav for samme person hvor stoppunkt er etter outdated-cutoff") {
             val aktivitetskrav = createNyttAktivitetskrav(
@@ -177,7 +177,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
             }
 
             val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET.name } shouldBeEqualTo false
+            pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET } shouldBeEqualTo false
         }
     }
 })

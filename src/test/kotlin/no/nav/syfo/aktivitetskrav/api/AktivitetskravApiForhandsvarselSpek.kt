@@ -99,7 +99,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             AktivitetskravVurderingRequestDTO(
                                 status = AktivitetskravStatus.AVVENT,
                                 beskrivelse = "venter litt",
-                                arsaker = listOf(VurderingArsak.ANNET),
+                                arsaker = listOf(Arsak.ANNET),
                             )
                         )
                     )
@@ -120,7 +120,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             AktivitetskravVurderingRequestDTO(
                                 status = AktivitetskravStatus.UNNTAK,
                                 beskrivelse = "venter litt",
-                                arsaker = listOf(VurderingArsak.MEDISINSKE_GRUNNER),
+                                arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
                             )
                         )
                     )

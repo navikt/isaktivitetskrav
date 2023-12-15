@@ -1,27 +1,34 @@
 package no.nav.syfo.aktivitetskrav.domain
 
-import no.nav.syfo.aktivitetskrav.api.AktivitetskravVurderingResponseDTO
-import no.nav.syfo.aktivitetskrav.database.PAktivitetskravVurdering
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
-enum class VurderingArsak(val validForStatus: AktivitetskravStatus) {
-    OPPFOLGINGSPLAN_ARBEIDSGIVER(AktivitetskravStatus.AVVENT),
-    INFORMASJON_BEHANDLER(AktivitetskravStatus.AVVENT),
-    DROFTES_MED_ROL(AktivitetskravStatus.AVVENT),
-    DROFTES_INTERNT(AktivitetskravStatus.AVVENT),
-    ANNET(AktivitetskravStatus.AVVENT),
-    MEDISINSKE_GRUNNER(AktivitetskravStatus.UNNTAK),
-    TILRETTELEGGING_IKKE_MULIG(AktivitetskravStatus.UNNTAK),
-    SJOMENN_UTENRIKS(AktivitetskravStatus.UNNTAK),
-    FRISKMELDT(AktivitetskravStatus.OPPFYLT),
-    GRADERT(AktivitetskravStatus.OPPFYLT),
-    TILTAK(AktivitetskravStatus.OPPFYLT);
+sealed class VurderingArsak(val value: String) {
+
+    sealed class Avvent(value: String) : VurderingArsak(value) {
+        data object OppfolgingsplanArbeidsgiver : Avvent("OPPFOLGINGSPLAN_ARBEIDSGIVER")
+        data object InformasjonBehandler : Avvent("INFORMASJON_BEHANDLER")
+        data object DroftesMedROL : Avvent("DROFTES_MED_ROL")
+        data object DroftesInternt : Avvent("DROFTES_INTERNT")
+        data object Annet : Avvent("ANNET")
+    }
+
+    sealed class Unntak(value: String) : VurderingArsak(value) {
+        data object MedisinskeGrunner : Unntak("MEDISINSKE_GRUNNER")
+        data object TilretteleggingIkkeMulig : Unntak("TILRETTELEGGING_IKKE_MULIG")
+        data object SjomennUtenriks : Unntak("SJOMENN_UTENRIKS")
+    }
+
+    sealed class Oppfylt(value: String) : VurderingArsak(value) {
+        data object Friskmeldt : Oppfylt("FRISKMELDT")
+        data object Gradert : Oppfylt("GRADERT")
+        data object Tiltak : Oppfylt("TILTAK")
+    }
 }
 
-data class AktivitetskravVurdering private constructor(
+data class AktivitetskravVurdering(
     val uuid: UUID,
     val createdAt: OffsetDateTime,
     val createdBy: String,
@@ -30,17 +37,10 @@ data class AktivitetskravVurdering private constructor(
     val beskrivelse: String?,
     val frist: LocalDate?,
 ) {
-    companion object {
-        fun createFromDatabase(pAktivitetskravVurdering: PAktivitetskravVurdering) = AktivitetskravVurdering(
-            uuid = pAktivitetskravVurdering.uuid,
-            createdAt = pAktivitetskravVurdering.createdAt,
-            createdBy = pAktivitetskravVurdering.createdBy,
-            status = AktivitetskravStatus.valueOf(pAktivitetskravVurdering.status),
-            arsaker = pAktivitetskravVurdering.arsaker.map { VurderingArsak.valueOf(it) },
-            beskrivelse = pAktivitetskravVurdering.beskrivelse,
-            frist = pAktivitetskravVurdering.frist,
-        )
 
+    fun isFinal() = this.status.isFinal
+
+    companion object {
         fun create(
             status: AktivitetskravStatus,
             createdBy: String,
@@ -71,23 +71,4 @@ fun AktivitetskravVurdering.validate() {
     if (status.requiresVurderingArsak() && arsaker.isEmpty()) {
         throw IllegalArgumentException("Must have arsak for status $status")
     }
-    if (arsaker.any { it.validForStatus != status }) {
-        throw IllegalArgumentException("Must have valid arsak for status $status")
-    }
 }
-
-fun AktivitetskravVurdering.arsakerToString() = this.arsaker.joinToString(",")
-
-fun AktivitetskravVurdering.isFinal() = this.status.isFinal
-
-fun AktivitetskravVurdering.toVurderingResponseDto(varsel: AktivitetskravVarsel?): AktivitetskravVurderingResponseDTO =
-    AktivitetskravVurderingResponseDTO(
-        uuid = this.uuid.toString(),
-        createdAt = this.createdAt.toLocalDateTime(),
-        createdBy = this.createdBy,
-        status = this.status,
-        beskrivelse = this.beskrivelse,
-        arsaker = this.arsaker,
-        frist = this.frist,
-        varsel = varsel?.toVarselResponseDTO()
-    )

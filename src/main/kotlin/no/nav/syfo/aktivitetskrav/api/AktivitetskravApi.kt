@@ -7,7 +7,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.domain.toVurderingResponseDto
 import no.nav.syfo.application.api.VeilederTilgangskontrollPlugin
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
@@ -44,7 +43,7 @@ fun Route.registerAktivitetskravApi(
             val responseDTOList = aktivitetskravAfterCutoff.map { aktivitetskrav ->
                 val vurderingResponseDTOs = aktivitetskrav.vurderinger.map { vurdering ->
                     val varsel = aktivitetskravVarselService.getVarsel(vurdering.uuid)
-                    vurdering.toVurderingResponseDto(varsel)
+                    AktivitetskravVurderingResponseDTO.from(vurdering, varsel)
                 }
                 AktivitetskravResponseDTO.from(aktivitetskrav, vurderingResponseDTOs)
             }
@@ -60,7 +59,8 @@ fun Route.registerAktivitetskravApi(
             val requestDTO: NewAktivitetskravDTO? =
                 runCatching { call.receiveNullable<NewAktivitetskravDTO>() }.getOrNull()
             val previousAktivitetskrav = requestDTO?.previousAktivitetskravUuid?.let {
-                aktivitetskravService.getAktivitetskrav(uuid = it) ?: throw IllegalArgumentException("Failed to create aktivitetskrav: previous aktivitetskrav not found")
+                aktivitetskravService.getAktivitetskrav(uuid = it)
+                    ?: throw IllegalArgumentException("Failed to create aktivitetskrav: previous aktivitetskrav not found")
             }
             val createdAktivitetskrav =
                 aktivitetskravService.createAktivitetskrav(personIdent, previousAktivitetskrav)

@@ -1,6 +1,8 @@
 package no.nav.syfo.aktivitetskrav.database
 
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -11,11 +13,50 @@ data class PAktivitetskravVurdering(
     val aktivitetskravId: Int,
     val createdAt: OffsetDateTime,
     val createdBy: String,
-    val status: String,
+    val status: AktivitetskravStatus,
     val beskrivelse: String?,
-    val arsaker: List<String>,
+    val arsaker: List<VurderingArsak>,
     val frist: LocalDate?,
 ) {
     fun toAktivitetskravVurdering() =
-        AktivitetskravVurdering.createFromDatabase(this)
+        AktivitetskravVurdering(
+            uuid = this.uuid,
+            createdAt = this.createdAt,
+            createdBy = this.createdBy,
+            status = this.status,
+            arsaker = this.arsaker,
+            beskrivelse = this.beskrivelse,
+            frist = this.frist,
+        )
 }
+
+fun String.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
+    when (status) {
+        AktivitetskravStatus.AVVENT ->
+            when (this) {
+                "OPPFOLGINGSPLAN_ARBEIDSGIVER" -> VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver
+                "INFORMASJON_BEHANDLER" -> VurderingArsak.Avvent.InformasjonBehandler
+                "DROFTES_MED_ROL" -> VurderingArsak.Avvent.DroftesMedROL
+                "DROFTES_INTERNT" -> VurderingArsak.Avvent.DroftesInternt
+                "ANNET" -> VurderingArsak.Avvent.Annet
+                else -> throw IllegalArgumentException()
+            }
+
+        AktivitetskravStatus.UNNTAK ->
+            when (this) {
+                "MEDISINSKE_GRUNNER" -> VurderingArsak.Unntak.MedisinskeGrunner
+                "TILRETTELEGGING_IKKE_MULIG" -> VurderingArsak.Unntak.TilretteleggingIkkeMulig
+                "SJOMENN_UTENRIKS" -> VurderingArsak.Unntak.SjomennUtenriks
+                else -> throw IllegalArgumentException()
+            }
+
+        AktivitetskravStatus.OPPFYLT ->
+            when (this) {
+                "FRISKMELDT" -> VurderingArsak.Oppfylt.Friskmeldt
+                "GRADERT" -> VurderingArsak.Oppfylt.Gradert
+                "TILTAK" -> VurderingArsak.Oppfylt.Tiltak
+                else -> throw IllegalArgumentException()
+            }
+
+        else -> throw IllegalArgumentException()
+    }

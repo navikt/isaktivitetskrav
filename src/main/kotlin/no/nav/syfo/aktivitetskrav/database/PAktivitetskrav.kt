@@ -14,7 +14,7 @@ data class PAktivitetskrav(
     val personIdent: PersonIdent,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
-    val status: String,
+    val status: AktivitetskravStatus,
     val stoppunktAt: LocalDate,
     val referanseTilfelleBitUuid: UUID?,
     val previousAktivitetskravUuid: UUID?,
@@ -27,7 +27,7 @@ data class PAktivitetskrav(
             personIdent = personIdent,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            status = AktivitetskravStatus.valueOf(status),
+            status = status,
             stoppunktAt = stoppunktAt,
             vurderinger = vurderinger.map { it.toAktivitetskravVurdering() },
         )
@@ -38,7 +38,7 @@ data class PAktivitetskrav(
             personIdent = personIdent,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            status = AktivitetskravStatus.valueOf(status),
+            status = status,
             stoppunktAt = stoppunktAt,
             vurderinger = vurderinger,
         )
