@@ -2,8 +2,9 @@ package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.VarselType
-import no.nav.syfo.client.pdfgen.VarselPdfDTO
+import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
+import no.nav.syfo.client.pdfgen.VurderingPdfDTO
 import no.nav.syfo.client.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 
@@ -15,18 +16,26 @@ class VarselPdfService(
         personIdent: PersonIdent,
         varsel: AktivitetskravVarsel,
         callId: String
-    ): ByteArray {
-        val personNavn = pdlClient.navn(personIdent)
-        val varselPdfDTO = VarselPdfDTO.create(
-            documentComponents = varsel.document,
-            mottakerNavn = personNavn,
-            mottakerPersonIdent = personIdent,
-        )
+    ): ByteArray = when (varsel.type) {
+        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER -> {
+            val personNavn = pdlClient.navn(personIdent)
+            val forhandsvarselPdfDTO = ForhandsvarselPdfDTO.create(
+                documentComponents = varsel.document,
+                mottakerNavn = personNavn,
+                mottakerPersonIdent = personIdent,
+            )
 
-        return when (varsel.type) {
-            VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER -> pdfGenClient.createForhandsvarselPdf(
+            pdfGenClient.createForhandsvarselPdf(
                 callId,
-                varselPdfDTO
+                forhandsvarselPdfDTO
+            )
+        }
+
+        VarselType.UNNTAK -> {
+            val vurderingPdfDTO = VurderingPdfDTO.create(varsel.document)
+            pdfGenClient.createVurderingPdf(
+                callId,
+                vurderingPdfDTO,
             )
         }
     }
