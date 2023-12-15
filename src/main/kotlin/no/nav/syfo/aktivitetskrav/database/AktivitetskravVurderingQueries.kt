@@ -29,23 +29,23 @@ fun Connection.createAktivitetskravVurdering(
     aktivitetskravId: Int,
     aktivitetskravVurdering: AktivitetskravVurdering,
 ): PAktivitetskravVurdering {
-    val idList = this.prepareStatement(queryCreateAktivitetskravVurdering).use { it ->
+    val aktivitetskravVurderinger = this.prepareStatement(queryCreateAktivitetskravVurdering).use {
         it.setString(1, aktivitetskravVurdering.uuid.toString())
         it.setInt(2, aktivitetskravId)
         it.setObject(3, aktivitetskravVurdering.createdAt)
         it.setString(4, aktivitetskravVurdering.createdBy)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
-        it.setString(7, aktivitetskravVurdering.arsaker.joinToString(",") { it.value })
+        it.setString(7, aktivitetskravVurdering.arsaker.joinToString(",") { arsak -> arsak.value })
         it.setDate(8, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
         it.executeQuery().toList { toPAktivitetskravVurdering() }
     }
 
-    if (idList.size != 1) {
+    if (aktivitetskravVurderinger.size != 1) {
         throw NoElementInsertedException("Creating AKTIVITETSKRAV_VURDERING failed, no rows affected.")
     }
 
-    return idList.first()
+    return aktivitetskravVurderinger.first()
 }
 
 const val queryUpdateAktivitetskrav =
