@@ -3,7 +3,6 @@ package no.nav.syfo.identhendelse
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.getAktivitetskrav
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
@@ -55,7 +54,7 @@ class IdenthendelseServiceSpek : Spek({
                 }
 
                 it("Oppdaterer aktivitetskrav når person har fått ny ident") {
-                    val previousUpdatedAt = database.getAktivitetskrav(personIdent = inaktivIdent).first().updatedAt
+                    val previousUpdatedAt = aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent).first().updatedAt
                     val kafkaIdenthendelseDTO =
                         generateKafkaIdenthendelseDTO(
                             aktivIdent = aktivIdent,
@@ -63,10 +62,10 @@ class IdenthendelseServiceSpek : Spek({
                         )
                     runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
 
-                    val aktivitetskravMedInaktivIdent = database.getAktivitetskrav(personIdent = inaktivIdent)
+                    val aktivitetskravMedInaktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
                     aktivitetskravMedInaktivIdent.size shouldBeEqualTo 0
 
-                    val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdent)
+                    val aktivitetskravMedAktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 2
                     val updatedAktivitetskravNy = aktivitetskravMedAktivIdent.first()
                     updatedAktivitetskravNy.updatedAt shouldBeGreaterThan previousUpdatedAt
@@ -79,10 +78,10 @@ class IdenthendelseServiceSpek : Spek({
                         )
                     runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
 
-                    val aktivitetskravMedInaktivIdent = database.getAktivitetskrav(personIdent = inaktivIdent)
+                    val aktivitetskravMedInaktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
                     aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
 
-                    val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdent)
+                    val aktivitetskravMedAktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
                 }
                 it("Oppdaterer ingenting når person mangler aktiv ident") {
@@ -93,10 +92,10 @@ class IdenthendelseServiceSpek : Spek({
                         )
                     runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
 
-                    val aktivitetskravMedInaktivIdent = database.getAktivitetskrav(personIdent = inaktivIdent)
+                    val aktivitetskravMedInaktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
                     aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
 
-                    val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdent)
+                    val aktivitetskravMedAktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
                 }
                 it("Kaster feil og oppdaterer ingenting når person har fått ny ident, men ident er ikke oppdatert i PDL") {
@@ -113,10 +112,10 @@ class IdenthendelseServiceSpek : Spek({
                         }
                     }
 
-                    val aktivitetskravMedInaktivIdent = database.getAktivitetskrav(personIdent = inaktivIdent)
+                    val aktivitetskravMedInaktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
                     aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
 
-                    val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdentIkkeOppdatert)
+                    val aktivitetskravMedAktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdentIkkeOppdatert)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
                 }
             }
@@ -129,10 +128,10 @@ class IdenthendelseServiceSpek : Spek({
                         )
                     runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
 
-                    val aktivitetskravMedInaktivIdent = database.getAktivitetskrav(personIdent = inaktivIdent)
+                    val aktivitetskravMedInaktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
                     aktivitetskravMedInaktivIdent.size shouldBeEqualTo 0
 
-                    val aktivitetskravMedAktivIdent = database.getAktivitetskrav(personIdent = aktivIdent)
+                    val aktivitetskravMedAktivIdent = aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
                     aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
                 }
             }

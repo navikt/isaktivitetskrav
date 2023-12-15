@@ -74,7 +74,7 @@ class AktivitetskravRepositorySpek : Spek({
                     )
 
                     val retrievedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(updatedAktivitetskrav.uuid)
-                    val vurderinger = database.getAktivitetskravVurderinger(retrievedAktivitetskrav!!.id)
+                    val vurderinger = retrievedAktivitetskrav!!.vurderinger
                     val newVurdering = vurderinger.first()
                     val newVarselPdf = database.getAktivitetskravVarselPdf(newVarsel.id)
 

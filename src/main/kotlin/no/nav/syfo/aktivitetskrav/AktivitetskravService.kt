@@ -5,7 +5,6 @@ import no.nav.syfo.aktivitetskrav.api.createHistorikkDTOs
 import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
@@ -16,7 +15,6 @@ import java.util.*
 class AktivitetskravService(
     private val aktivitetskravRepository: AktivitetskravRepository,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
-    private val database: DatabaseInterface,
     private val arenaCutoff: LocalDate,
 ) {
 
@@ -81,14 +79,11 @@ class AktivitetskravService(
 
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
-        database.connection.use { connection ->
-            val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav = updatedAktivitetskrav)
-            connection.createAktivitetskravVurdering(
-                aktivitetskravId = aktivitetskravId,
-                aktivitetskravVurdering = aktivitetskravVurdering
-            )
-            connection.commit()
-        }
+        aktivitetskravRepository.createAktivitetskravVurdering(
+            aktivitetskrav = updatedAktivitetskrav,
+            aktivitetskravVurdering = aktivitetskravVurdering,
+        )
+
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )
@@ -105,9 +100,7 @@ class AktivitetskravService(
             ?.toAktivitetskrav()
 
     internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
-        database.getAktivitetskrav(personIdent = personIdent, connection = connection).map { pAktivitetskrav ->
-            withVurderinger(pAktivitetskrav = pAktivitetskrav)
-        }
+        aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent, connection = connection).map { it.toAktivitetskrav() }
 
     fun getAktivitetskravAfterCutoff(personIdent: PersonIdent): List<Aktivitetskrav> =
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
@@ -131,13 +124,6 @@ class AktivitetskravService(
         val lukketAktivitetskrav = aktivitetskrav.lukk()
         aktivitetskravRepository.updateAktivitetskravStatus(lukketAktivitetskrav)
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = lukketAktivitetskrav)
-    }
-
-    private fun withVurderinger(pAktivitetskrav: PAktivitetskrav): Aktivitetskrav {
-        val aktivitetskravVurderinger =
-            database.getAktivitetskravVurderinger(aktivitetskravId = pAktivitetskrav.id)
-                .map { it.toAktivitetskravVurdering() }
-        return pAktivitetskrav.toAktivitetskrav(vurderinger = aktivitetskravVurderinger)
     }
 
     internal fun updateAktivitetskrav(

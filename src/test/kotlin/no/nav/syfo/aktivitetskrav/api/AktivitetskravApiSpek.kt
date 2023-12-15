@@ -68,7 +68,6 @@ class AktivitetskravApiSpek : Spek({
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
-                database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
             )
 
