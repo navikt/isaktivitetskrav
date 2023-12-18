@@ -8,6 +8,7 @@ data class AktivitetskravVurderingRequestDTO(
     val beskrivelse: String?,
     val arsaker: List<Arsak>,
     val frist: LocalDate? = null,
+    val document: List<DocumentComponentDTO>? = emptyList()
 )
 
 fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(
