@@ -1,6 +1,8 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList
@@ -29,16 +31,21 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
 
     fun getAktivitetskrav(
         personIdent: PersonIdent,
-    ): List<PAktivitetskrav> =
-        database.connection.use { connection ->
-            connection.prepareStatement(GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY).use {
-                it.setString(1, personIdent.value)
-                it.executeQuery().toList { toPAktivitetskrav() }
-            }.map {
-                val vurderinger = connection.getAktivitetskravVurderinger(aktivitetskravId = it.id)
-                it.copy(vurderinger = vurderinger)
-            }
+        connection: Connection? = null,
+    ): List<PAktivitetskrav> = connection?.getAktivitetskrav(personIdent = personIdent)
+        ?: database.connection.use {
+            it.getAktivitetskrav(personIdent = personIdent)
         }
+
+    private fun Connection.getAktivitetskrav(
+        personIdent: PersonIdent,
+    ): List<PAktivitetskrav> = this.prepareStatement(GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY).use {
+        it.setString(1, personIdent.value)
+        it.executeQuery().toList { toPAktivitetskrav() }
+    }.map {
+        val vurderinger = this.getAktivitetskravVurderinger(aktivitetskravId = it.id)
+        it.copy(vurderinger = vurderinger)
+    }
 
     fun getOutdatedAktivitetskrav(
         arenaCutoff: LocalDate,
@@ -74,6 +81,20 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
 
                 return created
             }
+    }
+
+    fun createAktivitetskravVurdering(
+        aktivitetskrav: Aktivitetskrav,
+        aktivitetskravVurdering: AktivitetskravVurdering,
+    ) {
+        database.connection.use { connection ->
+            val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav = aktivitetskrav)
+            connection.createAktivitetskravVurdering(
+                aktivitetskravId = aktivitetskravId,
+                aktivitetskravVurdering = aktivitetskravVurdering
+            )
+            connection.commit()
+        }
     }
 
     fun updateAktivitetskravStatus(
@@ -143,7 +164,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
     private fun Connection.getAktivitetskravVurderinger(
         aktivitetskravId: Int
     ): List<PAktivitetskravVurdering> =
-        prepareStatement(GET_AKTIVIETSKRAV_VURDERINGER_QUERY).use {
+        prepareStatement(GET_AKTIVITETSKRAV_VURDERINGER_QUERY).use {
             it.setInt(1, aktivitetskravId)
             it.executeQuery().toList { toPAktivitetskravVurdering() }
         }
@@ -157,7 +178,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             WHERE uuid = ?
             """
 
-        private const val GET_AKTIVIETSKRAV_VURDERINGER_QUERY =
+        private const val GET_AKTIVITETSKRAV_VURDERINGER_QUERY =
             """
             SELECT *
             FROM AKTIVITETSKRAV_VURDERING
@@ -221,20 +242,8 @@ private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     personIdent = PersonIdent(getString("personident")),
     createdAt = getObject("created_at", OffsetDateTime::class.java),
     updatedAt = getObject("updated_at", OffsetDateTime::class.java),
-    status = getString("status"),
+    status = AktivitetskravStatus.valueOf(getString("status")),
     stoppunktAt = getDate("stoppunkt_at").toLocalDate(),
     referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
     previousAktivitetskravUuid = getObject("previous_aktivitetskrav_uuid", UUID::class.java),
-)
-
-private fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering = PAktivitetskravVurdering(
-    id = getInt("id"),
-    uuid = UUID.fromString(getString("uuid")),
-    aktivitetskravId = getInt("aktivitetskrav_id"),
-    createdAt = getObject("created_at", OffsetDateTime::class.java),
-    createdBy = getString("created_by"),
-    status = getString("status"),
-    beskrivelse = getString("beskrivelse"),
-    arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty),
-    frist = getDate("frist")?.toLocalDate(),
 )

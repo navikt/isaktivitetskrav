@@ -35,7 +35,6 @@ class AktivitetskravNyCronjobSpek : Spek({
         val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravRepository = aktivitetskravRepository,
-            database = database,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
         )
@@ -87,13 +86,13 @@ class AktivitetskravNyCronjobSpek : Spek({
                 val pAktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val aktivitetskravNyList =
-                    pAktivitetskravList.filter { it.status == AktivitetskravStatus.NY.name }
+                    pAktivitetskravList.filter { it.status == AktivitetskravStatus.NY }
                 aktivitetskravNyList.size shouldBeEqualTo 1
                 val aktivitetskrav = aktivitetskravNyList.first()
                 aktivitetskrav.uuid shouldBeEqualTo aktivitetskrav1.uuid
 
                 val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status
+                kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status.name
             }
             it("Setter bare aktivitetskrav AUTOMATISK_OPPFYLT til NY") {
                 aktivitetskravRepository.createAktivitetskrav(aktivitetskravNy)
@@ -129,7 +128,7 @@ class AktivitetskravNyCronjobSpek : Spek({
 
                 val pAktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                pAktivitetskravList.any { it.status == AktivitetskravStatus.NY.name } shouldBeEqualTo false
+                pAktivitetskravList.any { it.status == AktivitetskravStatus.NY } shouldBeEqualTo false
             }
         }
     }

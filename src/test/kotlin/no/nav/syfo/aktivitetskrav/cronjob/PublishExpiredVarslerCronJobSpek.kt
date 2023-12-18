@@ -4,6 +4,7 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
@@ -14,6 +15,7 @@ import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.createExpiredForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -45,8 +47,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             aktivitetskravVurderingProducer = mockk(),
             aktivitetskravVarselProducer = mockk(),
             expiredVarselProducer = expiredVarselProducer,
-            pdfGenClient = externalMockEnvironment.pdfgenClient,
-            pdlClient = externalMockEnvironment.pdlClient,
+            varselPdfService = VarselPdfService(
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
+            ),
         )
 
         val publishExpiredVarslerCronJob = PublishExpiredVarslerCronJob(
@@ -79,7 +83,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                     else PersonIdent(UserConstants.ARBEIDSTAKER_PERSONIDENT.value.dropLast(1).plus("$i"))
                 )
                 val varsel =
-                    AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
+                    createExpiredForhandsvarsel(forhandsvarselDTO.document)
                 aktivitetskravVarselRepository.create(
                     aktivitetskrav = aktivitetskrav,
                     varsel = varsel,
@@ -102,7 +106,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             it("Publishes expired varsel to kafka when svarfrist is today or earlier") {
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
-                    AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().minusWeeks(1))
+                    createExpiredForhandsvarsel(forhandsvarselDTO.document)
                 aktivitetskravVarselRepository.create(
                     aktivitetskrav = newAktivitetskrav,
                     varsel = varsel,
@@ -129,7 +133,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             it("Does not publish anything to kafka when there is no expired varsler") {
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
-                    AktivitetskravVarsel.create(forhandsvarselDTO.document, svarfrist = LocalDate.now().plusWeeks(1))
+                    AktivitetskravVarsel.create(forhandsvarselDTO.document).copy(
+                        svarfrist = LocalDate.now().plusWeeks(1)
+                    )
+
                 aktivitetskravVarselRepository.create(
                     aktivitetskrav = newAktivitetskrav,
                     varsel = varsel,

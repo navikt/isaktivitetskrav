@@ -1,6 +1,7 @@
 package no.nav.syfo.client.pdfgen
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -12,18 +13,18 @@ data class ForhandsvarselPdfDTO private constructor(
     val documentComponents: List<DocumentComponentDTO>,
 ) {
     companion object {
-        val formatter = DateTimeFormatter.ofPattern("dd. MMMM yyyy", Locale("no", "NO"))
+        private val formatter = DateTimeFormatter.ofPattern("dd. MMMM yyyy", Locale("no", "NO"))
 
         fun create(
             mottakerNavn: String,
-            mottakerFodselsnummer: String,
+            mottakerPersonIdent: PersonIdent,
             documentComponents: List<DocumentComponentDTO>
         ): ForhandsvarselPdfDTO =
             ForhandsvarselPdfDTO(
-                mottakerNavn,
-                mottakerFodselsnummer,
-                LocalDate.now().format(formatter),
-                documentComponents
+                mottakerNavn = mottakerNavn,
+                mottakerFodselsnummer = mottakerPersonIdent.value,
+                datoSendt = LocalDate.now().format(formatter),
+                documentComponents = documentComponents
             )
     }
 }

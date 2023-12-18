@@ -50,7 +50,6 @@ class AktivitetskravApiVurderSpek : Spek({
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
-                database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
             )
             val validToken = generateJWT(
@@ -109,16 +108,16 @@ class AktivitetskravApiVurderSpek : Spek({
                             val latestAktivitetskrav =
                                 aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
-                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
+                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
                             val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
+                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.OppfyltArsak.Friskmeldt.toString())
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
@@ -130,10 +129,10 @@ class AktivitetskravApiVurderSpek : Spek({
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
-                                VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver,
-                                VurderingArsak.AvventArsak.InformasjonBehandler,
-                                VurderingArsak.AvventArsak.DroftesMedROL,
-                                VurderingArsak.AvventArsak.DroftesInternt,
+                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonBehandler,
+                                VurderingArsak.Avvent.DroftesMedROL,
+                                VurderingArsak.Avvent.DroftesInternt,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
@@ -156,16 +155,16 @@ class AktivitetskravApiVurderSpek : Spek({
                             val latestAktivitetskrav =
                                 aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                                     .first()
-                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status.name
+                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status
                             latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
 
                             val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status
+                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
                             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.OppfyltArsak.Friskmeldt.toString())
+                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
                             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                             kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()

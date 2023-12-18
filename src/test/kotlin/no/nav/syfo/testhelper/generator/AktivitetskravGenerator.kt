@@ -1,5 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
+import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
@@ -27,7 +28,7 @@ fun createAktivitetskravOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskra
         status = AktivitetskravStatus.OPPFYLT,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Oppfylt",
-        arsaker = listOf(VurderingArsak.OppfyltArsak.Friskmeldt),
+        arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
     )
     return nyAktivitetskrav.vurder(oppfyltVurdering)
 }
@@ -38,10 +39,10 @@ fun createAktivitetskravAvvent(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Avvent",
         arsaker = listOf(
-            VurderingArsak.AvventArsak.InformasjonBehandler,
-            VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver,
-            VurderingArsak.AvventArsak.DroftesMedROL,
-            VurderingArsak.AvventArsak.DroftesInternt,
+            VurderingArsak.Avvent.InformasjonBehandler,
+            VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+            VurderingArsak.Avvent.DroftesMedROL,
+            VurderingArsak.Avvent.DroftesInternt,
         ),
     )
     return nyAktivitetskrav.vurder(avventVurdering)
@@ -52,7 +53,7 @@ fun createAktivitetskravUnntak(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         status = AktivitetskravStatus.UNNTAK,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Unntak",
-        arsaker = listOf(VurderingArsak.UnntakArsak.SjomennUtenriks),
+        arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
     )
     return nyAktivitetskrav.vurder(unntakVurdering)
 }
@@ -73,7 +74,7 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
         status = AktivitetskravStatus.IKKE_AKTUELL,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = null,
-        arsaker = emptyList(),
+        arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
     )
 
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
@@ -93,13 +94,27 @@ fun createNAktivitetskrav(
     return allAktivitetskrav.toList()
 }
 
+fun createExpiredForhandsvarsel(document: List<DocumentComponentDTO>) = AktivitetskravVarsel.create(document).copy(
+    svarfrist = LocalDate.now().minusWeeks(1)
+)
+
 fun createVarsler(): List<AktivitetskravVarsel> {
     val document = generateDocumentComponentDTO(fritekst = "Et test varsel")
     return listOf(
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusDays(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now()),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusDays(1)),
-        AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().plusWeeks(1)),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().minusWeeks(1)
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().minusDays(1)
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now()
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().plusDays(1)
+        ),
+        AktivitetskravVarsel.create(document).copy(
+            svarfrist = LocalDate.now().plusWeeks(1)
+        ),
     )
 }

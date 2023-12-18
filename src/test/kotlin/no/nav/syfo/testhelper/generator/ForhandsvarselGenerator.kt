@@ -11,6 +11,6 @@ fun generateForhandsvarsel(fritekst: String) = ForhandsvarselDTO(
 
 fun generateForhandsvarselPdfDTO(forhandsvarsel: ForhandsvarselDTO) = ForhandsvarselPdfDTO.create(
     mottakerNavn = UserConstants.PERSON_FULLNAME,
-    mottakerFodselsnummer = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
+    mottakerPersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
     documentComponents = forhandsvarsel.document,
 )

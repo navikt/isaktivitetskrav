@@ -28,4 +28,4 @@ private val allowedChangedVurderingStatus = EnumSet.of(
 )
 
 fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
-    this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT
+    this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT || this == AktivitetskravStatus.IKKE_AKTUELL

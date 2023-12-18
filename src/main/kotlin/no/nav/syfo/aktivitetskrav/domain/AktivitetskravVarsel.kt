@@ -12,21 +12,23 @@ data class AktivitetskravVarsel internal constructor(
     val createdAt: OffsetDateTime,
     val journalpostId: String?,
     val document: List<DocumentComponentDTO>,
-    val svarfrist: LocalDate,
+    val svarfrist: LocalDate?,
+    val type: VarselType,
     val isPublished: Boolean = false,
 ) {
 
     companion object {
         fun create(
             document: List<DocumentComponentDTO>,
-            svarfrist: LocalDate = LocalDate.now().plusWeeks(3),
+            type: VarselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
         ) =
             AktivitetskravVarsel(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),
                 journalpostId = null,
-                svarfrist = svarfrist,
+                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now().plusWeeks(3) else null,
                 document = document,
+                type = type,
             )
 
         fun createFromDatabase(
@@ -34,8 +36,9 @@ data class AktivitetskravVarsel internal constructor(
             createdAt: OffsetDateTime,
             journalpostId: String?,
             document: List<DocumentComponentDTO>,
-            svarfrist: LocalDate,
+            svarfrist: LocalDate?,
             isPublished: Boolean,
+            type: String,
         ) = AktivitetskravVarsel(
             uuid = uuid,
             createdAt = createdAt,
@@ -43,6 +46,7 @@ data class AktivitetskravVarsel internal constructor(
             document = document,
             svarfrist = svarfrist,
             isPublished = isPublished,
+            type = VarselType.valueOf(type)
         )
     }
 
@@ -52,8 +56,7 @@ data class AktivitetskravVarsel internal constructor(
         svarfrist = this.svarfrist,
         document = this.document,
     )
-}
 
-enum class VarselType {
-    FORHANDSVARSEL_STANS_AV_SYKEPENGER
+    fun getDokumentTittel() = this.type.getDokumentTittel()
+    fun getBrevkode() = this.type.getBrevkode()
 }

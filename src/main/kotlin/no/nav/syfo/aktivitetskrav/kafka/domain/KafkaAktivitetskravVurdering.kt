@@ -33,7 +33,7 @@ data class KafkaAktivitetskravVurdering(
                 beskrivelse = latestVurdering?.beskrivelse,
                 stoppunktAt = aktivitetskrav.stoppunktAt,
                 updatedBy = latestVurdering?.createdBy,
-                arsaker = latestVurdering?.arsaker?.map { it.toString() } ?: emptyList(),
+                arsaker = latestVurdering?.arsaker?.map { it.value } ?: emptyList(),
                 sisteVurderingUuid = latestVurdering?.uuid,
                 sistVurdert = latestVurdering?.createdAt,
                 frist = latestVurdering?.frist,

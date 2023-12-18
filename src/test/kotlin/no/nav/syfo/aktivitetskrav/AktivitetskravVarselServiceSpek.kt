@@ -8,8 +8,8 @@ import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
@@ -19,6 +19,7 @@ import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.createExpiredForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.generator.generateForhandsvarselPdfDTO
 import org.amshove.kluent.shouldBe
@@ -51,8 +52,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselProducer = mockk(),
                 expiredVarselProducer = expiredVarselProducer,
-                pdfGenClient = externalMockEnvironment.pdfgenClient,
-                pdlClient = externalMockEnvironment.pdlClient,
+                varselPdfService = VarselPdfService(
+                    pdfGenClient = externalMockEnvironment.pdfgenClient,
+                    pdlClient = externalMockEnvironment.pdlClient,
+                ),
             )
 
             beforeEachTest {
@@ -95,6 +98,7 @@ class AktivitetskravVarselServiceSpek : Spek({
 
                         varsel.journalpostId shouldBeEqualTo null
                         varsel.document shouldBeEqualTo document
+                        varsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
                     }
 
                     val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
@@ -114,8 +118,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                         aktivitetskravVarselProducer = mockk(),
                         expiredVarselProducer = mockk(),
-                        pdfGenClient = mockedPdfGenClient,
-                        pdlClient = externalMockEnvironment.pdlClient,
+                        varselPdfService = VarselPdfService(
+                            pdfGenClient = mockedPdfGenClient,
+                            pdlClient = externalMockEnvironment.pdlClient,
+                        ),
                         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                     )
 
@@ -154,7 +160,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                     )
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
                     aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                    val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                    val varsel = createExpiredForhandsvarsel(document)
                     aktivitetskravVarselRepository.create(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = varsel,
@@ -179,7 +185,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                     )
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
                     aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                    val varsel = AktivitetskravVarsel.create(document, svarfrist = LocalDate.now().minusWeeks(1))
+                    val varsel = createExpiredForhandsvarsel(document)
                     aktivitetskravVarselRepository.create(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = varsel,

@@ -13,20 +13,31 @@ class PdfGenClientSpek : Spek({
     val pdfGenClient = externalMockEnvironment.pdfgenClient
 
     describe("${PdlClient::class.java.simpleName}: navn") {
-        it("returns bytearray of pdf when requestBody is set correct") {
-            runBlocking {
-                val forhandsvarselPdfDTO = ForhandsvarselPdfDTO.create(
-                    mottakerNavn = UserConstants.PERSON_FULLNAME,
-                    mottakerFodselsnummer = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
-                    documentComponents = emptyList(),
-                )
+        it("returns bytearray of pdf for forhandsvarsel") {
+            val forhandsvarselPdfDTO = ForhandsvarselPdfDTO.create(
+                mottakerNavn = UserConstants.PERSON_FULLNAME,
+                mottakerPersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                documentComponents = emptyList(),
+            )
 
-                val pdf = pdfGenClient.createForhandsvarselPdf(
+            val pdf = runBlocking {
+                pdfGenClient.createForhandsvarselPdf(
                     callId = "",
                     forhandsvarselPdfDTO = forhandsvarselPdfDTO,
                 )
-                pdf shouldBeEqualTo UserConstants.PDF_FORHANDSVARSEL
             }
+
+            pdf shouldBeEqualTo UserConstants.PDF_FORHANDSVARSEL
+        }
+        it("returns bytearray of pdf for vurdering") {
+            val pdf = runBlocking {
+                pdfGenClient.createVurderingPdf(
+                    callId = "",
+                    VurderingPdfDTO.create(emptyList()),
+                )
+            }
+
+            pdf shouldBeEqualTo UserConstants.PDF_VURDERING
         }
     }
 })

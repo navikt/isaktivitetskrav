@@ -68,7 +68,6 @@ class AktivitetskravApiSpek : Spek({
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
-                database = database,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
             )
 
@@ -130,10 +129,10 @@ class AktivitetskravApiSpek : Spek({
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
-                                VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver,
-                                VurderingArsak.AvventArsak.InformasjonBehandler,
-                                VurderingArsak.AvventArsak.DroftesMedROL,
-                                VurderingArsak.AvventArsak.DroftesInternt,
+                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonBehandler,
+                                VurderingArsak.Avvent.DroftesMedROL,
+                                VurderingArsak.Avvent.DroftesInternt,
                             ),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
@@ -144,7 +143,7 @@ class AktivitetskravApiSpek : Spek({
                             status = AktivitetskravStatus.OPPFYLT,
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Oppfylt",
-                            arsaker = listOf(VurderingArsak.OppfyltArsak.Gradert),
+                            arsaker = listOf(VurderingArsak.Oppfylt.Gradert),
                         )
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
@@ -176,17 +175,17 @@ class AktivitetskravApiSpek : Spek({
                             latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker.first()
-                                .toString() shouldBeEqualTo VurderingArsak.OppfyltArsak.Gradert.toString()
+                                .toVurderingArsak(AktivitetskravStatus.OPPFYLT) shouldBeEqualTo VurderingArsak.Oppfylt.Gradert
                             latestVurdering.varsel.shouldBeNull()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
                             oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            oldestVurdering.arsaker.map { it.toString() } shouldBeEqualTo listOf(
-                                VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver.toString(),
-                                VurderingArsak.AvventArsak.InformasjonBehandler.toString(),
-                                VurderingArsak.AvventArsak.DroftesMedROL.toString(),
-                                VurderingArsak.AvventArsak.DroftesInternt.toString(),
+                            oldestVurdering.arsaker.map { it.toVurderingArsak(AktivitetskravStatus.AVVENT) } shouldBeEqualTo listOf(
+                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonBehandler,
+                                VurderingArsak.Avvent.DroftesMedROL,
+                                VurderingArsak.Avvent.DroftesInternt,
                             )
                             oldestVurdering.varsel.shouldBeNull()
                         }
@@ -407,7 +406,7 @@ class AktivitetskravApiSpek : Spek({
                                 status = AktivitetskravStatus.UNNTAK,
                                 createdBy = UserConstants.VEILEDER_IDENT,
                                 beskrivelse = "Unntak",
-                                arsaker = listOf(VurderingArsak.UnntakArsak.SjomennUtenriks),
+                                arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
                             )
                         )
 

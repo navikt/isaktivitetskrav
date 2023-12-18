@@ -35,7 +35,6 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
         val aktivitetskravRepository = AktivitetskravRepository(database)
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravRepository = aktivitetskravRepository,
-            database = database,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
         )
@@ -87,13 +86,13 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
                 val pAktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val automatiskOppfylteAktivitetskrav =
-                    pAktivitetskravList.filter { it.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT.name }
+                    pAktivitetskravList.filter { it.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT }
                 automatiskOppfylteAktivitetskrav.size shouldBeEqualTo 1
                 val automatiskOppfyltAktivitetskrav = automatiskOppfylteAktivitetskrav.first()
                 automatiskOppfyltAktivitetskrav.uuid shouldBeEqualTo aktivitetskrav1.uuid
 
                 val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo automatiskOppfyltAktivitetskrav.status
+                kafkaAktivitetskravVurdering.status shouldBeEqualTo automatiskOppfyltAktivitetskrav.status.name
             }
             it("Setter bare aktivitetskrav NY til AUTOMATISK_OPPFYLT") {
                 aktivitetskravRepository.createAktivitetskrav(automatiskOppfylt)
@@ -129,7 +128,7 @@ class AktivitetskravAutomatiskOppfyltCronjobSpek : Spek({
 
                 val pAktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                pAktivitetskravList.any { it.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT.name } shouldBeEqualTo false
+                pAktivitetskravList.any { it.status == AktivitetskravStatus.AUTOMATISK_OPPFYLT } shouldBeEqualTo false
             }
         }
     }

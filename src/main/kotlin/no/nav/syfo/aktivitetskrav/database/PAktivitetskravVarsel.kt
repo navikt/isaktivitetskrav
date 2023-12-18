@@ -19,8 +19,9 @@ data class PAktivitetskravVarsel(
     val journalpostId: String?,
     val document: List<DocumentComponentDTO>,
     val publishedAt: OffsetDateTime?,
-    val svarfrist: LocalDate,
+    val svarfrist: LocalDate?,
     val expiredVarselPublishedAt: OffsetDateTime?,
+    val type: String
 ) {
     fun toAktivitetkravVarsel() = AktivitetskravVarsel.createFromDatabase(
         uuid = uuid,
@@ -29,6 +30,7 @@ data class PAktivitetskravVarsel(
         document = document,
         svarfrist = svarfrist,
         isPublished = publishedAt != null,
+        type = type,
     )
 
     fun toExpiredVarsel(personIdent: PersonIdent, aktivitetskravUuid: UUID) = ExpiredVarsel(
@@ -36,8 +38,8 @@ data class PAktivitetskravVarsel(
         varselUuid = uuid,
         createdAt = createdAt.toLocalDateTime(),
         personIdent = personIdent,
-        varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-        svarfrist = svarfrist,
+        varselType = VarselType.valueOf(type),
+        svarfrist = svarfrist!!,
     )
 
     fun toKafkaAktivitetskravVarsel(references: VarselReferences) = KafkaAktivitetskravVarsel(
@@ -49,6 +51,7 @@ data class PAktivitetskravVarsel(
         journalpostId = journalpostId!!,
         svarfrist = svarfrist,
         document = document,
+        type = type,
     )
 }
 

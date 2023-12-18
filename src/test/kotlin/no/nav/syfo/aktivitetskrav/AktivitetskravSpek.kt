@@ -70,13 +70,13 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
-                arsaker = listOf(VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver),
+                arsaker = listOf(VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver),
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
-                arsaker = listOf(VurderingArsak.OppfyltArsak.Friskmeldt),
+                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -125,14 +125,14 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
-                arsaker = listOf(VurderingArsak.AvventArsak.OppfolgingsplanArbeidsgiver),
+                arsaker = listOf(VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver),
                 frist = twoWeeksFromNow,
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.OTHER_VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
-                arsaker = listOf(VurderingArsak.OppfyltArsak.Friskmeldt),
+                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -147,7 +147,7 @@ class AktivitetskravSpek : Spek({
 
             kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
-            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.OppfyltArsak.Friskmeldt.toString())
+            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
             kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
             kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
             kafkaAktivitetskravVurdering.frist shouldBeEqualTo null
