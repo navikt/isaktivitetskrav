@@ -32,7 +32,10 @@ enum class Arsak {
     SJOMENN_UTENRIKS,
     FRISKMELDT,
     GRADERT,
-    TILTAK;
+    TILTAK,
+    INNVILGET_VTA,
+    MOTTAR_AAP,
+    ER_DOD;
 }
 
 fun Arsak.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
@@ -62,6 +65,16 @@ fun Arsak.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
                 Arsak.TILTAK -> VurderingArsak.Oppfylt.Tiltak
                 Arsak.GRADERT -> VurderingArsak.Oppfylt.Gradert
                 Arsak.FRISKMELDT -> VurderingArsak.Oppfylt.Friskmeldt
+                else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
+            }
+        }
+
+        AktivitetskravStatus.IKKE_AKTUELL -> {
+            when (this) {
+                Arsak.INNVILGET_VTA -> VurderingArsak.IkkeAktuell.InnvilgetVTA
+                Arsak.MOTTAR_AAP -> VurderingArsak.IkkeAktuell.MottarAAP
+                Arsak.ER_DOD -> VurderingArsak.IkkeAktuell.ErDod
+                Arsak.ANNET -> VurderingArsak.IkkeAktuell.Annet
                 else -> throw IllegalArgumentException("arsak: $this not supported for status: $status")
             }
         }

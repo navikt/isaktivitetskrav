@@ -74,7 +74,7 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
         status = AktivitetskravStatus.IKKE_AKTUELL,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = null,
-        arsaker = emptyList(),
+        arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
     )
 
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)

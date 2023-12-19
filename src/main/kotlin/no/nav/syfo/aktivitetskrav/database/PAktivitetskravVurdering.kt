@@ -39,7 +39,7 @@ fun String.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
                 "DROFTES_MED_ROL" -> VurderingArsak.Avvent.DroftesMedROL
                 "DROFTES_INTERNT" -> VurderingArsak.Avvent.DroftesInternt
                 "ANNET" -> VurderingArsak.Avvent.Annet
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("String was $this and status was $status")
             }
 
         AktivitetskravStatus.UNNTAK ->
@@ -47,7 +47,7 @@ fun String.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
                 "MEDISINSKE_GRUNNER" -> VurderingArsak.Unntak.MedisinskeGrunner
                 "TILRETTELEGGING_IKKE_MULIG" -> VurderingArsak.Unntak.TilretteleggingIkkeMulig
                 "SJOMENN_UTENRIKS" -> VurderingArsak.Unntak.SjomennUtenriks
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("String was $this and status was $status")
             }
 
         AktivitetskravStatus.OPPFYLT ->
@@ -55,8 +55,17 @@ fun String.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
                 "FRISKMELDT" -> VurderingArsak.Oppfylt.Friskmeldt
                 "GRADERT" -> VurderingArsak.Oppfylt.Gradert
                 "TILTAK" -> VurderingArsak.Oppfylt.Tiltak
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("String was $this and status was $status")
             }
 
-        else -> throw IllegalArgumentException()
+        AktivitetskravStatus.IKKE_AKTUELL ->
+            when (this) {
+                "INNVILGET_VTA" -> VurderingArsak.IkkeAktuell.InnvilgetVTA
+                "MOTTAR_AAP" -> VurderingArsak.IkkeAktuell.MottarAAP
+                "ER_DOD" -> VurderingArsak.IkkeAktuell.ErDod
+                "ANNET" -> VurderingArsak.IkkeAktuell.Annet
+                else -> throw IllegalArgumentException("String was $this and status was $status")
+            }
+
+        else -> throw IllegalArgumentException("String was $this and status was $status")
     }

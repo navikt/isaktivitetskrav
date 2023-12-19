@@ -26,6 +26,13 @@ sealed class VurderingArsak(val value: String) {
         data object Gradert : Oppfylt("GRADERT")
         data object Tiltak : Oppfylt("TILTAK")
     }
+
+    sealed class IkkeAktuell(value: String) : VurderingArsak(value) {
+        data object InnvilgetVTA : Oppfylt("INNVILGET_VTA")
+        data object MottarAAP : Oppfylt("MOTTAR_AAP")
+        data object ErDod : Oppfylt("ER_DOD")
+        data object Annet : Oppfylt("ANNET")
+    }
 }
 
 data class AktivitetskravVurdering(
