@@ -161,9 +161,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
                     aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                     val varsel = createExpiredForhandsvarsel(document)
-                    aktivitetskravVarselRepository.create(
+                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = varsel,
+                        newVurdering = vurdering,
                         pdf = pdf,
                     )
                     val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }
@@ -186,9 +187,10 @@ class AktivitetskravVarselServiceSpek : Spek({
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
                     aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                     val varsel = createExpiredForhandsvarsel(document)
-                    aktivitetskravVarselRepository.create(
+                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = varsel,
+                        newVurdering = vurdering,
                         pdf = pdf,
                     )
                     val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }

@@ -14,10 +14,9 @@ import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
-import no.nav.syfo.testhelper.generator.createAktivitetskravNy
-import no.nav.syfo.testhelper.generator.createExpiredForhandsvarsel
-import no.nav.syfo.testhelper.generator.generateForhandsvarsel
+import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -84,9 +83,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                 )
                 val varsel =
                     createExpiredForhandsvarsel(forhandsvarselDTO.document)
-                aktivitetskravVarselRepository.create(
+                aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                     aktivitetskrav = aktivitetskrav,
                     varsel = varsel,
+                    newVurdering = aktivitetskrav.vurderinger.first(),
                     pdf = pdf,
                 )
             }
@@ -107,9 +107,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
                     createExpiredForhandsvarsel(forhandsvarselDTO.document)
-                aktivitetskravVarselRepository.create(
+                aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                     aktivitetskrav = newAktivitetskrav,
                     varsel = varsel,
+                    newVurdering = newAktivitetskrav.vurderinger.first(),
                     pdf = pdf,
                 )
 
@@ -133,13 +134,14 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             it("Does not publish anything to kafka when there is no expired varsler") {
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
-                    AktivitetskravVarsel.create(forhandsvarselDTO.document).copy(
+                    AktivitetskravVarsel.create(VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER, forhandsvarselDTO.document).copy(
                         svarfrist = LocalDate.now().plusWeeks(1)
                     )
 
-                aktivitetskravVarselRepository.create(
+                aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                     aktivitetskrav = newAktivitetskrav,
                     varsel = varsel,
+                    newVurdering = newAktivitetskrav.vurderinger.first(),
                     pdf = pdf,
                 )
 
@@ -149,9 +151,35 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                     result.updated shouldBeEqualTo 0
                 }
 
-                val producerRecordSlot = slot<ProducerRecord<String, ExpiredVarsel>>()
                 verify(exactly = 0) {
-                    expiredVarselProducerMock.send(capture(producerRecordSlot))
+                    expiredVarselProducerMock.send(any())
+                }
+            }
+            it("Does not publish varsel without svarfrist to kafka") {
+                var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                aktivitetskrav = createAktivitetskravUnntak(nyAktivitetskrav = aktivitetskrav)
+                val varsel = AktivitetskravVarsel.create(
+                    document = generateDocumentComponentDTO("Fritekst"),
+                    type = VarselType.UNNTAK,
+                )
+                aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+                    aktivitetskrav = aktivitetskrav,
+                    newVurdering = aktivitetskrav.vurderinger.first(),
+                    varsel = varsel,
+                    pdf = pdf,
+                )
+
+                aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = aktivitetskrav.vurderinger.first().uuid).shouldNotBeNull()
+
+                runBlocking {
+                    val result = publishExpiredVarslerCronJob.runJob()
+                    result.failed shouldBeEqualTo 0
+                    result.updated shouldBeEqualTo 0
+                }
+
+                verify(exactly = 0) {
+                    expiredVarselProducerMock.send(any())
                 }
             }
             it("Fails publishing to kafka for one expired varsel and succeed for two others") {

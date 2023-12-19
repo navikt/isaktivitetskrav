@@ -19,17 +19,23 @@ data class AktivitetskravVarsel internal constructor(
 
     companion object {
         fun create(
+            type: VarselType,
             document: List<DocumentComponentDTO>,
-            type: VarselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-        ) =
-            AktivitetskravVarsel(
+        ): AktivitetskravVarsel {
+            if (document.isEmpty()) {
+                throw IllegalArgumentException("Varsel can't have empty document")
+            }
+
+            return AktivitetskravVarsel(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),
                 journalpostId = null,
-                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now().plusWeeks(3) else null,
+                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now()
+                    .plusWeeks(3) else null,
                 document = document,
                 type = type,
             )
+        }
 
         fun createFromDatabase(
             uuid: UUID,

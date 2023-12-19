@@ -94,26 +94,27 @@ fun createNAktivitetskrav(
     return allAktivitetskrav.toList()
 }
 
-fun createExpiredForhandsvarsel(document: List<DocumentComponentDTO>) = AktivitetskravVarsel.create(document).copy(
+fun createExpiredForhandsvarsel(document: List<DocumentComponentDTO>) = AktivitetskravVarsel.create(VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER, document).copy(
     svarfrist = LocalDate.now().minusWeeks(1)
 )
 
 fun createVarsler(): List<AktivitetskravVarsel> {
+    val type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
     val document = generateDocumentComponentDTO(fritekst = "Et test varsel")
     return listOf(
-        AktivitetskravVarsel.create(document).copy(
+        AktivitetskravVarsel.create(type, document).copy(
             svarfrist = LocalDate.now().minusWeeks(1)
         ),
-        AktivitetskravVarsel.create(document).copy(
+        AktivitetskravVarsel.create(type, document).copy(
             svarfrist = LocalDate.now().minusDays(1)
         ),
-        AktivitetskravVarsel.create(document).copy(
+        AktivitetskravVarsel.create(type, document).copy(
             svarfrist = LocalDate.now()
         ),
-        AktivitetskravVarsel.create(document).copy(
+        AktivitetskravVarsel.create(type, document).copy(
             svarfrist = LocalDate.now().plusDays(1)
         ),
-        AktivitetskravVarsel.create(document).copy(
+        AktivitetskravVarsel.create(type, document).copy(
             svarfrist = LocalDate.now().plusWeeks(1)
         ),
     )

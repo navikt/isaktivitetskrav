@@ -105,20 +105,24 @@ fun main() {
                 databaseEnvironment = environment.database,
             )
             aktivitetskravRepository = AktivitetskravRepository(database = applicationDatabase)
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase)
+            val varselPdfService = VarselPdfService(
+                pdfGenClient = pdfGenClient,
+                pdlClient = pdlClient,
+            )
             aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+                varselPdfService = varselPdfService,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 arenaCutoff = environment.arenaCutoff,
             )
             aktivitetskravVarselService = AktivitetskravVarselService(
-                aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = applicationDatabase),
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselProducer = aktivitetskravVarselProducer,
                 expiredVarselProducer = expiredVarselProducer,
-                varselPdfService = VarselPdfService(
-                    pdfGenClient = pdfGenClient,
-                    pdlClient = pdlClient,
-                ),
+                varselPdfService = varselPdfService,
             )
             apiModule(
                 applicationState = applicationState,
