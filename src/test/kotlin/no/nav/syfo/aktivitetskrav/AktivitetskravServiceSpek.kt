@@ -135,10 +135,12 @@ class AktivitetskravServiceSpek : Spek({
                         )
                     }
 
-                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav =
+                        aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.UNNTAK
                     val latestVurdering = aktivitetskrav.vurderinger.first()
-                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    val varsel =
+                        aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                     varsel.shouldNotBeNull()
                     varsel.type shouldBeEqualTo VarselType.UNNTAK.name
                     varsel.document.shouldNotBeEmpty()
@@ -167,10 +169,12 @@ class AktivitetskravServiceSpek : Spek({
                         )
                     }
 
-                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav =
+                        aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
                     val latestVurdering = aktivitetskrav.vurderinger.first()
-                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    val varsel =
+                        aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                     varsel.shouldBeNull()
                 }
 
@@ -182,7 +186,7 @@ class AktivitetskravServiceSpek : Spek({
                         AktivitetskravStatus.IKKE_AKTUELL,
                         UserConstants.VEILEDER_IDENT,
                         fritekst,
-                        emptyList(),
+                        listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
                     )
 
                     runBlocking {
@@ -194,10 +198,12 @@ class AktivitetskravServiceSpek : Spek({
                         )
                     }
 
-                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav =
+                        aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_AKTUELL
                     val latestVurdering = aktivitetskrav.vurderinger.first()
-                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    val varsel =
+                        aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                     varsel.shouldBeNull()
                 }
 
@@ -221,10 +227,12 @@ class AktivitetskravServiceSpek : Spek({
                         )
                     }
 
-                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav =
+                        aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                     val latestVurdering = aktivitetskrav.vurderinger.first()
-                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    val varsel =
+                        aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                     varsel.shouldBeNull()
                 }
             }
