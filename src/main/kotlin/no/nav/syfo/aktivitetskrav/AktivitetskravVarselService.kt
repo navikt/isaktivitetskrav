@@ -59,7 +59,10 @@ class AktivitetskravVarselService(
             throw ConflictException("Kan ikke sende forhåndsvarsel, aktivitetskravet har en avsluttende vurdering ${aktivitetskrav.status}")
         }
 
-        val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
+        val forhandsvarsel = AktivitetskravVarsel.create(
+            type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+            document = forhandsvarselDTO.document
+        )
         val pdf = varselPdfService.createVarselPdf(
             varsel = forhandsvarsel,
             personIdent = personIdent,
@@ -68,8 +71,9 @@ class AktivitetskravVarselService(
         val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
 
-        val nyttForhandsvarsel = aktivitetskravVarselRepository.create(
+        val nyttForhandsvarsel = aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
             aktivitetskrav = updatedAktivitetskrav,
+            newVurdering = vurdering,
             varsel = forhandsvarsel,
             pdf = pdf,
         )

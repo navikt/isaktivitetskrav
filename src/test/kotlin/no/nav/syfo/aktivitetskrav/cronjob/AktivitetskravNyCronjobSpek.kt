@@ -4,7 +4,9 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
@@ -33,10 +35,16 @@ class AktivitetskravNyCronjobSpek : Spek({
         val aktivitetskravVurderingProducer =
             AktivitetskravVurderingProducer(producer = kafkaProducer)
         val aktivitetskravRepository = AktivitetskravRepository(database)
+        val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
         val aktivitetskravService = AktivitetskravService(
             aktivitetskravRepository = aktivitetskravRepository,
+            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
             arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+            varselPdfService = VarselPdfService(
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
+            )
         )
 
         val aktivitetskravNyCronjob = AktivitetskravNyCronjob(

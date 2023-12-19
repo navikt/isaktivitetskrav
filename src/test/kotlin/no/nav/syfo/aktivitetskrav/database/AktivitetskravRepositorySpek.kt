@@ -63,13 +63,14 @@ class AktivitetskravRepositorySpek : Spek({
                 it("Should create forhåndsvarsel in db") {
                     val vurdering: AktivitetskravVurdering =
                         forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
-                    val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
+                    val forhandsvarsel = AktivitetskravVarsel.create(VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER, forhandsvarselDTO.document)
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
                     val pdf = byteArrayOf(0x2E, 100)
 
-                    val newVarsel = aktivitetskravVarselRepository.create(
+                    val newVarsel = aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = forhandsvarsel,
+                        newVurdering = vurdering,
                         pdf = pdf,
                     )
 
@@ -111,9 +112,10 @@ class AktivitetskravRepositorySpek : Spek({
                             }
                     val varsler = createVarsler()
                     for ((aktivitetkrav, varsel) in aktivitetskravList.zip(varsler)) {
-                        aktivitetskravVarselRepository.create(
+                        aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                             aktivitetskrav = aktivitetkrav,
                             varsel = varsel,
+                            newVurdering = aktivitetkrav.vurderinger.first(),
                             pdf = pdf,
                         )
                     }
@@ -153,9 +155,10 @@ class AktivitetskravRepositorySpek : Spek({
                             createExpiredForhandsvarsel(document)
                         }
                     for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
-                        aktivitetskravVarselRepository.create(
+                        aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                             aktivitetskrav = aktivitetkrav,
                             varsel = varsel,
+                            newVurdering = aktivitetkrav.vurderinger.first(),
                             pdf = pdf,
                         )
                     }
@@ -201,9 +204,10 @@ class AktivitetskravRepositorySpek : Spek({
                     val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
                     aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
                     val varsel = createExpiredForhandsvarsel(document)
-                    aktivitetskravVarselRepository.create(
+                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         aktivitetskrav = updatedAktivitetskrav,
                         varsel = varsel,
+                        newVurdering = updatedAktivitetskrav.vurderinger.first(),
                         pdf = pdf,
                     )
                     val expiredVarsler =

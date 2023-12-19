@@ -47,6 +47,8 @@ data class AktivitetskravVurdering(
 
     fun isFinal() = this.status.isFinal
 
+    fun requiresVarselPdf(): Boolean = this.status.toVarselType() != null
+
     companion object {
         fun create(
             status: AktivitetskravStatus,

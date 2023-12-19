@@ -121,6 +121,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                                 status = AktivitetskravStatus.UNNTAK,
                                 beskrivelse = "venter litt",
                                 arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
+                                document = generateDocumentComponentDTO("Litt fritekst"),
                             )
                         )
                     )

@@ -5,8 +5,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
@@ -14,6 +17,7 @@ import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createAktivitetskravUnntak
+import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -65,10 +69,16 @@ class AktivitetskravApiSpek : Spek({
                 ),
             )
             val aktivitetskravRepository = AktivitetskravRepository(database)
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                varselPdfService = VarselPdfService(
+                    pdfGenClient = externalMockEnvironment.pdfgenClient,
+                    pdlClient = externalMockEnvironment.pdlClient,
+                )
             )
 
             beforeEachTest {
@@ -135,20 +145,28 @@ class AktivitetskravApiSpek : Spek({
                                 VurderingArsak.Avvent.DroftesInternt,
                             ),
                         )
-                        aktivitetskravService.vurderAktivitetskrav(
-                            aktivitetskrav = nyAktivitetskrav,
-                            aktivitetskravVurdering = avventVurdering
-                        )
+                        runBlocking {
+                            aktivitetskravService.vurderAktivitetskrav(
+                                aktivitetskrav = nyAktivitetskrav,
+                                aktivitetskravVurdering = avventVurdering,
+                                document = emptyList(),
+                                callId = "",
+                            )
+                        }
                         val oppfyltVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.OPPFYLT,
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Oppfylt",
                             arsaker = listOf(VurderingArsak.Oppfylt.Gradert),
                         )
-                        aktivitetskravService.vurderAktivitetskrav(
-                            aktivitetskrav = nyAktivitetskrav,
-                            aktivitetskravVurdering = oppfyltVurdering
-                        )
+                        runBlocking {
+                            aktivitetskravService.vurderAktivitetskrav(
+                                aktivitetskrav = nyAktivitetskrav,
+                                aktivitetskravVurdering = oppfyltVurdering,
+                                document = emptyList(),
+                                callId = "",
+                            )
+                        }
 
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
@@ -400,15 +418,19 @@ class AktivitetskravApiSpek : Spek({
 
                     it("Returns historikk for aktivitetskrav with unntak-vurdering") {
                         aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
-                        aktivitetskravService.vurderAktivitetskrav(
-                            aktivitetskrav = nyAktivitetskrav,
-                            aktivitetskravVurdering = AktivitetskravVurdering.create(
-                                status = AktivitetskravStatus.UNNTAK,
-                                createdBy = UserConstants.VEILEDER_IDENT,
-                                beskrivelse = "Unntak",
-                                arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
+                        runBlocking {
+                            aktivitetskravService.vurderAktivitetskrav(
+                                aktivitetskrav = nyAktivitetskrav,
+                                aktivitetskravVurdering = AktivitetskravVurdering.create(
+                                    status = AktivitetskravStatus.UNNTAK,
+                                    createdBy = UserConstants.VEILEDER_IDENT,
+                                    beskrivelse = "Unntak",
+                                    arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
+                                ),
+                                document = generateDocumentComponentDTO("Litt fritekst"),
+                                callId = "",
                             )
-                        )
+                        }
 
                         with(
                             handleRequest(HttpMethod.Get, urlHistorikk) {
