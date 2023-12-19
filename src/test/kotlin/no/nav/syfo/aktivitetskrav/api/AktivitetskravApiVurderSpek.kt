@@ -100,6 +100,7 @@ class AktivitetskravApiVurderSpek : Spek({
                     status = AktivitetskravStatus.OPPFYLT,
                     beskrivelse = "Aktivitetskravet er oppfylt",
                     arsaker = listOf(Arsak.FRISKMELDT),
+                    document = generateDocumentComponentDTO("Aktivitetskravet er oppfylt")
                 )
 
                 describe("Happy path") {

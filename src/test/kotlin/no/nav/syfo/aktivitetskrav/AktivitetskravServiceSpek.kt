@@ -149,7 +149,7 @@ class AktivitetskravServiceSpek : Spek({
                     varselPdf.shouldNotBeNull()
                 }
 
-                it("creates vurdering and no varsel for oppfylt") {
+                it("creates vurdering, varsel and pdf for oppfylt") {
                     var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
                     val fritekst = "En beskrivelse"
@@ -175,10 +175,15 @@ class AktivitetskravServiceSpek : Spek({
                     val latestVurdering = aktivitetskrav.vurderinger.first()
                     val varsel =
                         aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
-                    varsel.shouldBeNull()
+                    varsel.shouldNotBeNull()
+                    varsel.type shouldBeEqualTo VarselType.OPPFYLT.name
+                    varsel.document.shouldNotBeEmpty()
+                    varsel.svarfrist.shouldBeNull()
+                    val varselPdf = database.getAktivitetskravVarselPdf(aktivitetskravVarselId = varsel.id)
+                    varselPdf.shouldNotBeNull()
                 }
 
-                it("creates vurdering and no varsel for ikke-aktuell") {
+                it("creates vurdering, varsel and pdf for ikke-aktuell") {
                     var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
                     val fritekst = "En beskrivelse"
@@ -204,7 +209,12 @@ class AktivitetskravServiceSpek : Spek({
                     val latestVurdering = aktivitetskrav.vurderinger.first()
                     val varsel =
                         aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
-                    varsel.shouldBeNull()
+                    varsel.shouldNotBeNull()
+                    varsel.type shouldBeEqualTo VarselType.IKKE_AKTUELL.name
+                    varsel.document.shouldNotBeEmpty()
+                    varsel.svarfrist.shouldBeNull()
+                    val varselPdf = database.getAktivitetskravVarselPdf(aktivitetskravVarselId = varsel.id)
+                    varselPdf.shouldNotBeNull()
                 }
 
                 it("creates vurdering and no varsel for avvent") {

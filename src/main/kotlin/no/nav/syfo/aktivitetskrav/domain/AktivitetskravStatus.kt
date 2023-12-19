@@ -33,5 +33,7 @@ fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
 fun AktivitetskravStatus.toVarselType(): VarselType? = when (this) {
     AktivitetskravStatus.FORHANDSVARSEL -> VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
     AktivitetskravStatus.UNNTAK -> VarselType.UNNTAK
+    AktivitetskravStatus.OPPFYLT -> VarselType.OPPFYLT
+    AktivitetskravStatus.IKKE_AKTUELL -> VarselType.IKKE_AKTUELL
     else -> null
 }
