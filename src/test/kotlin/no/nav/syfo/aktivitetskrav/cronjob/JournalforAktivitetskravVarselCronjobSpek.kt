@@ -8,10 +8,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
 import no.nav.syfo.client.dokarkiv.domain.JournalpostKanal
@@ -19,6 +19,7 @@ import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
+import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
 import no.nav.syfo.testhelper.getVarsler
@@ -79,15 +80,17 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             aktivitetskravVarselService = aktivitetskravVarselService,
         )
 
-        fun createForhandsvarsel(aktivitetskrav: Aktivitetskrav, pdf: ByteArray): AktivitetskravVarsel {
-            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
-
-            val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
-            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-            val forhandsvarsel = AktivitetskravVarsel.create(forhandsvarselDTO.document)
-            aktivitetskravVarselRepository.create(
-                aktivitetskrav = updatedAktivitetskrav,
+        fun createVarsel(
+            aktivitetskrav: Aktivitetskrav,
+            pdf: ByteArray,
+            varselType: VarselType,
+            document: List<DocumentComponentDTO>
+        ): AktivitetskravVarsel {
+            val forhandsvarsel = AktivitetskravVarsel.create(varselType, document)
+            aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+                aktivitetskrav = aktivitetskrav,
                 varsel = forhandsvarsel,
+                newVurdering = aktivitetskrav.vurderinger.first(),
                 pdf = pdf,
             )
 
@@ -102,8 +105,63 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         }
 
         describe("${JournalforAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
+            beforeEachTest {
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskravPersonManglerNavn)
+            }
+            it("Journalfører og oppdaterer journalpostId for ikke journalført unntak") {
+                val fritekst = "Aktivitetskravet er oppfylt"
+                val vurdering = AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.UNNTAK,
+                    beskrivelse = fritekst,
+                    arsaker = listOf(VurderingArsak.Unntak.MedisinskeGrunner),
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                )
+                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.UNNTAK,
+                    document = generateDocumentComponentDTO(fritekst),
+                )
+
+                val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
+                    tittel = "Vurdering av aktivitetskravet",
+                    brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
+                    pdf = pdf,
+                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
+                    varselId = varsel.uuid,
+                )
+
+                coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
+
+                runBlocking {
+                    val result = journalforAktivitetskravVarselCronjob.runJob()
+
+                    result.failed shouldBeEqualTo 0
+                    result.updated shouldBeEqualTo 1
+                }
+
+                coVerify {
+                    dokarkivClient.journalfor(expectedJournalpostRequestUnntakVarsel)
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldNotBeNull()
+                first.updatedAt shouldBeGreaterThan first.createdAt
+            }
             it("Journalfører og oppdaterer journalpostId for ikke-journalført forhandsvarsel") {
-                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                    document = forhandsvarselDTO.document,
+                )
 
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
                     tittel = "Forhåndsvarsel om stans av sykepenger",
@@ -134,7 +192,14 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 first.updatedAt shouldBeGreaterThan first.createdAt
             }
             it("Journalfører ikke og oppdaterer ingenting når forhandsvarsel er journalført fra før") {
-                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                    document = forhandsvarselDTO.document,
+                )
                 aktivitetskravVarselRepository.updateJournalpostId(varsel, "1")
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
@@ -174,7 +239,14 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 varsler.shouldBeEmpty()
             }
             it("Feiler og oppdaterer ingenting når person tilknyttet forhåndsvarsel mangler navn") {
-                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskravPersonManglerNavn, pdf = pdf)
+                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+                val updatedAktivitetskrav = aktivitetskravPersonManglerNavn.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                    document = forhandsvarselDTO.document,
+                )
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
 
@@ -197,7 +269,14 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
             }
             it("Oppdaterer ikke journalpostId når journalføring feiler") {
-                val varsel = createForhandsvarsel(aktivitetskrav = aktivitetskrav, pdf = pdf)
+                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                    document = forhandsvarselDTO.document,
+                )
 
                 val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
                     tittel = "Forhåndsvarsel om stans av sykepenger",

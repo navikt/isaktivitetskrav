@@ -89,6 +89,8 @@ fun Route.registerAktivitetskravApi(
             aktivitetskravService.vurderAktivitetskrav(
                 aktivitetskrav = aktivitetskrav,
                 aktivitetskravVurdering = aktivitetskravVurdering,
+                document = requestDTO.document ?: emptyList(),
+                callId = call.getCallId(),
             )
 
             call.respond(HttpStatusCode.OK)

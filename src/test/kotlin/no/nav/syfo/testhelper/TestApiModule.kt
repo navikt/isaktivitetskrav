@@ -15,18 +15,22 @@ fun Application.testApiModule(
     externalMockEnvironment: ExternalMockEnvironment,
     aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
 ) {
+    val database = externalMockEnvironment.database
+    val varselPdfService = VarselPdfService(
+        pdfGenClient = externalMockEnvironment.pdfgenClient,
+        pdlClient = externalMockEnvironment.pdlClient,
+    )
     val aktivitetskravService = AktivitetskravService(
-        aktivitetskravRepository = AktivitetskravRepository(externalMockEnvironment.database),
+        aktivitetskravRepository = AktivitetskravRepository(database),
+        aktivitetskravVarselRepository = AktivitetskravVarselRepository(database),
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+        varselPdfService = varselPdfService
     )
     val aktivitetskravVarselService = AktivitetskravVarselService(
-        varselPdfService = VarselPdfService(
-            pdfGenClient = externalMockEnvironment.pdfgenClient,
-            pdlClient = externalMockEnvironment.pdlClient,
-        ),
+        varselPdfService = varselPdfService,
         aktivitetskravVarselRepository = AktivitetskravVarselRepository(
-            database = externalMockEnvironment.database
+            database = database
         ),
 
         aktivitetskravVarselProducer = mockk(),
@@ -40,7 +44,7 @@ fun Application.testApiModule(
     )
     this.apiModule(
         applicationState = externalMockEnvironment.applicationState,
-        database = externalMockEnvironment.database,
+        database = database,
         environment = externalMockEnvironment.environment,
         wellKnownInternalAzureAD = externalMockEnvironment.wellKnownInternalAzureAD,
         aktivitetskravService = aktivitetskravService,

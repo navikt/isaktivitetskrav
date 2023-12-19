@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.application.database.DatabaseInterface
@@ -23,17 +24,17 @@ private val mapper = configuredJacksonMapper()
 
 class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
 
-    fun create(
+    fun createAktivitetskravVurderingWithVarselPdf(
         aktivitetskrav: Aktivitetskrav,
+        newVurdering: AktivitetskravVurdering,
         varsel: AktivitetskravVarsel,
         pdf: ByteArray,
     ): PAktivitetskravVarsel =
         database.connection.use { connection ->
             val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav)
-            val newestVurdering = aktivitetskrav.vurderinger.first()
             val vurdering = connection.createAktivitetskravVurdering(
                 aktivitetskravId = aktivitetskravId,
-                aktivitetskravVurdering = newestVurdering,
+                aktivitetskravVurdering = newVurdering,
             )
             val nyttVarsel = connection.createAktivitetskravVarsel(
                 vurderingId = vurdering.id,

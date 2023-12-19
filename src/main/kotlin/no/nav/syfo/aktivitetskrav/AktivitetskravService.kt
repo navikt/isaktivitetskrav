@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.api.HistorikkDTO
 import no.nav.syfo.aktivitetskrav.api.createHistorikkDTOs
 import no.nav.syfo.aktivitetskrav.database.*
@@ -14,6 +15,8 @@ import java.util.*
 
 class AktivitetskravService(
     private val aktivitetskravRepository: AktivitetskravRepository,
+    private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
+    private val varselPdfService: VarselPdfService,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val arenaCutoff: LocalDate,
 ) {
@@ -64,9 +67,11 @@ class AktivitetskravService(
         updateAktivitetskrav(connection, updatedAktivitetskrav)
     }
 
-    internal fun vurderAktivitetskrav(
+    internal suspend fun vurderAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
         aktivitetskravVurdering: AktivitetskravVurdering,
+        document: List<DocumentComponentDTO>,
+        callId: String,
     ) {
         if (aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL) {
             throw ConflictException("Kan ikke sette FORHANDSVARSEL her, bruk aktivitetskravVarselService.sendForhandsvarsel")
@@ -79,10 +84,28 @@ class AktivitetskravService(
 
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
-        aktivitetskravRepository.createAktivitetskravVurdering(
-            aktivitetskrav = updatedAktivitetskrav,
-            aktivitetskravVurdering = aktivitetskravVurdering,
-        )
+        if (aktivitetskravVurdering.requiresVarselPdf()) {
+            val varsel = AktivitetskravVarsel.create(
+                type = aktivitetskravVurdering.status.toVarselType()!!,
+                document = document
+            )
+            val pdf = varselPdfService.createVarselPdf(
+                personIdent = aktivitetskrav.personIdent,
+                varsel = varsel,
+                callId = callId,
+            )
+            aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+                aktivitetskrav = updatedAktivitetskrav,
+                newVurdering = aktivitetskravVurdering,
+                varsel = varsel,
+                pdf = pdf,
+            )
+        } else {
+            aktivitetskravRepository.createAktivitetskravVurdering(
+                aktivitetskrav = updatedAktivitetskrav,
+                aktivitetskravVurdering = aktivitetskravVurdering,
+            )
+        }
 
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav

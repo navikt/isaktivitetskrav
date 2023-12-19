@@ -29,3 +29,9 @@ private val allowedChangedVurderingStatus = EnumSet.of(
 
 fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
     this == AktivitetskravStatus.AVVENT || this == AktivitetskravStatus.UNNTAK || this == AktivitetskravStatus.OPPFYLT
+
+fun AktivitetskravStatus.toVarselType(): VarselType? = when (this) {
+    AktivitetskravStatus.FORHANDSVARSEL -> VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
+    AktivitetskravStatus.UNNTAK -> VarselType.UNNTAK
+    else -> null
+}

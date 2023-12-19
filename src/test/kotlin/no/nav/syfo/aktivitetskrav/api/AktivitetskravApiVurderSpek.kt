@@ -4,14 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
+import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -47,10 +51,17 @@ class AktivitetskravApiVurderSpek : Spek({
                 ),
             )
             val aktivitetskravRepository = AktivitetskravRepository(database)
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = mockk(relaxed = true),
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                varselPdfService = VarselPdfService(
+                    pdfGenClient = externalMockEnvironment.pdfgenClient,
+                    pdlClient = externalMockEnvironment.pdlClient,
+                )
+
             )
             val validToken = generateJWT(
                 audience = externalMockEnvironment.environment.azure.appClientId,
@@ -135,10 +146,14 @@ class AktivitetskravApiVurderSpek : Spek({
                                 VurderingArsak.Avvent.DroftesInternt,
                             ),
                         )
-                        aktivitetskravService.vurderAktivitetskrav(
-                            aktivitetskrav = nyAktivitetskrav,
-                            aktivitetskravVurdering = avventVurdering
-                        )
+                        runBlocking {
+                            aktivitetskravService.vurderAktivitetskrav(
+                                aktivitetskrav = nyAktivitetskrav,
+                                aktivitetskravVurdering = avventVurdering,
+                                document = emptyList(),
+                                callId = "",
+                            )
+                        }
 
                         with(
                             postEndreVurdering(
@@ -199,6 +214,33 @@ class AktivitetskravApiVurderSpek : Spek({
 
                             val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
                             kafkaAktivitetskravVurdering.frist shouldBeEqualTo latestAktivitetskravVurdering.frist
+                        }
+                    }
+                    it("Updates Aktivitetskrav with Unntak-vurdering and varsel if request is successful") {
+                        val unntakVurderingRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Aktivitetskravet er oppfylt",
+                            arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
+                            document = generateDocumentComponentDTO("Litt fritekst")
+                        )
+
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = nyAktivitetskrav.uuid,
+                                vurderingDTO = unntakVurderingRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.OK
+
+                            val latestAktivitetskrav =
+                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                    .first()
+                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+                            latestAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.UNNTAK
+
+                            val varsel =
+                                aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestAktivitetskravVurdering.uuid)
+                            varsel.shouldNotBeNull()
                         }
                     }
                 }
@@ -283,6 +325,22 @@ class AktivitetskravApiVurderSpek : Spek({
                             postEndreVurdering(
                                 aktivitetskravUuid = nyAktivitetskrav.uuid,
                                 vurderingDTO = vurderingOppfyltRequestDTO,
+                            )
+                        ) {
+                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                        }
+                    }
+                    it("returns status BadRequest if UNNTAK is missing document") {
+                        val vurderingUnntakMissingDocumentRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.UNNTAK,
+                            beskrivelse = "Aktivitetskravet er oppfylt",
+                            arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
+                        )
+
+                        with(
+                            postEndreVurdering(
+                                aktivitetskravUuid = aktivitetskravUuid,
+                                vurderingDTO = vurderingUnntakMissingDocumentRequestDTO
                             )
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.BadRequest

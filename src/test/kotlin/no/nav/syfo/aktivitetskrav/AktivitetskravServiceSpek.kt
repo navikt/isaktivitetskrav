@@ -2,7 +2,13 @@ package no.nav.syfo.aktivitetskrav
 
 import io.ktor.server.testing.*
 import io.mockk.*
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
+import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.aktivitetskrav.domain.VarselType
+import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.application.exception.ConflictException
@@ -11,15 +17,19 @@ import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createAktivitetskravOppfylt
+import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
+import no.nav.syfo.testhelper.getAktivitetskravVarselPdf
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldNotBeEmpty
+import org.amshove.kluent.shouldNotBeNull
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.util.*
 import java.util.concurrent.Future
 
 class AktivitetskravServiceSpek : Spek({
@@ -31,11 +41,17 @@ class AktivitetskravServiceSpek : Spek({
             val database = externalMockEnvironment.database
             val vurderingProducerMock = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
             val aktivitetskravRepository = AktivitetskravRepository(database = database)
+            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(vurderingProducerMock)
             val aktivitetskravService = AktivitetskravService(
                 aktivitetskravRepository = aktivitetskravRepository,
+                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+                varselPdfService = VarselPdfService(
+                    pdfGenClient = externalMockEnvironment.pdfgenClient,
+                    pdlClient = externalMockEnvironment.pdlClient,
+                )
             )
 
             beforeEachTest {
@@ -95,6 +111,121 @@ class AktivitetskravServiceSpek : Spek({
                     savedAktivitetskrav?.previousAktivitetskravUuid shouldBeEqualTo null
                     aktivitetskravVurderingRecord.previousAktivitetskravUuid shouldBeEqualTo null
                     aktivitetskravVurderingRecord.uuid shouldBeEqualTo createdAktivitetskrav.uuid
+                }
+            }
+
+            describe("vurder aktivitetskrav") {
+                it("creates vurdering, varsel and pdf for unntak") {
+                    var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                    val fritekst = "En beskrivelse"
+                    val vurdering = AktivitetskravVurdering.create(
+                        AktivitetskravStatus.UNNTAK,
+                        UserConstants.VEILEDER_IDENT,
+                        fritekst,
+                        listOf(VurderingArsak.Unntak.MedisinskeGrunner),
+                    )
+
+                    runBlocking {
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = aktivitetskrav,
+                            aktivitetskravVurdering = vurdering,
+                            document = generateDocumentComponentDTO(fritekst),
+                            callId = "",
+                        )
+                    }
+
+                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.UNNTAK
+                    val latestVurdering = aktivitetskrav.vurderinger.first()
+                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    varsel.shouldNotBeNull()
+                    varsel.type shouldBeEqualTo VarselType.UNNTAK.name
+                    varsel.document.shouldNotBeEmpty()
+                    varsel.svarfrist.shouldBeNull()
+                    val varselPdf = database.getAktivitetskravVarselPdf(aktivitetskravVarselId = varsel.id)
+                    varselPdf.shouldNotBeNull()
+                }
+
+                it("creates vurdering and no varsel for oppfylt") {
+                    var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                    val fritekst = "En beskrivelse"
+                    val vurdering = AktivitetskravVurdering.create(
+                        AktivitetskravStatus.OPPFYLT,
+                        UserConstants.VEILEDER_IDENT,
+                        fritekst,
+                        listOf(VurderingArsak.Oppfylt.Gradert),
+                    )
+
+                    runBlocking {
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = aktivitetskrav,
+                            aktivitetskravVurdering = vurdering,
+                            document = generateDocumentComponentDTO(fritekst),
+                            callId = "",
+                        )
+                    }
+
+                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
+                    val latestVurdering = aktivitetskrav.vurderinger.first()
+                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    varsel.shouldBeNull()
+                }
+
+                it("creates vurdering and no varsel for ikke-aktuell") {
+                    var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                    val fritekst = "En beskrivelse"
+                    val vurdering = AktivitetskravVurdering.create(
+                        AktivitetskravStatus.IKKE_AKTUELL,
+                        UserConstants.VEILEDER_IDENT,
+                        fritekst,
+                        emptyList(),
+                    )
+
+                    runBlocking {
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = aktivitetskrav,
+                            aktivitetskravVurdering = vurdering,
+                            document = generateDocumentComponentDTO(fritekst),
+                            callId = "",
+                        )
+                    }
+
+                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_AKTUELL
+                    val latestVurdering = aktivitetskrav.vurderinger.first()
+                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    varsel.shouldBeNull()
+                }
+
+                it("creates vurdering and no varsel for avvent") {
+                    var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
+                    aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                    val fritekst = "En beskrivelse"
+                    val vurdering = AktivitetskravVurdering.create(
+                        AktivitetskravStatus.AVVENT,
+                        UserConstants.VEILEDER_IDENT,
+                        fritekst,
+                        listOf(VurderingArsak.Avvent.DroftesMedROL),
+                    )
+
+                    runBlocking {
+                        aktivitetskravService.vurderAktivitetskrav(
+                            aktivitetskrav = aktivitetskrav,
+                            aktivitetskravVurdering = vurdering,
+                            document = generateDocumentComponentDTO(fritekst),
+                            callId = "",
+                        )
+                    }
+
+                    aktivitetskrav = aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AVVENT
+                    val latestVurdering = aktivitetskrav.vurderinger.first()
+                    val varsel = aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                    varsel.shouldBeNull()
                 }
             }
         }
