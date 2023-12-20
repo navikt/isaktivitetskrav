@@ -31,7 +31,7 @@ class VarselPdfService(
             )
         }
 
-        VarselType.UNNTAK -> {
+        VarselType.UNNTAK, VarselType.OPPFYLT, VarselType.IKKE_AKTUELL -> {
             val vurderingPdfDTO = VurderingPdfDTO.create(varsel.document)
             pdfGenClient.createVurderingPdf(
                 callId,

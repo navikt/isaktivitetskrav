@@ -153,17 +153,18 @@ class AktivitetskravApiSpek : Spek({
                                 callId = "",
                             )
                         }
+                        val beskrivelse = "Oppfylt"
                         val oppfyltVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.OPPFYLT,
                             createdBy = UserConstants.VEILEDER_IDENT,
-                            beskrivelse = "Oppfylt",
+                            beskrivelse = beskrivelse,
                             arsaker = listOf(VurderingArsak.Oppfylt.Gradert),
                         )
                         runBlocking {
                             aktivitetskravService.vurderAktivitetskrav(
                                 aktivitetskrav = nyAktivitetskrav,
                                 aktivitetskravVurdering = oppfyltVurdering,
-                                document = emptyList(),
+                                document = generateDocumentComponentDTO(beskrivelse),
                                 callId = "",
                             )
                         }
@@ -189,12 +190,12 @@ class AktivitetskravApiSpek : Spek({
                             val oldestVurdering = aktivitetskravResponseDTO.vurderinger.last()
 
                             latestVurdering.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
-                            latestVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
+                            latestVurdering.beskrivelse shouldBeEqualTo beskrivelse
                             latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker.first()
                                 .toVurderingArsak(AktivitetskravStatus.OPPFYLT) shouldBeEqualTo VurderingArsak.Oppfylt.Gradert
-                            latestVurdering.varsel.shouldBeNull()
+                            latestVurdering.varsel.shouldNotBeNull()
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"

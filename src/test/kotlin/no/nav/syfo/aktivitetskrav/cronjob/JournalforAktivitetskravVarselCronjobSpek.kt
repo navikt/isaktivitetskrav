@@ -109,7 +109,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
                 aktivitetskravRepository.createAktivitetskrav(aktivitetskravPersonManglerNavn)
             }
-            it("Journalfører og oppdaterer journalpostId for ikke journalført unntak") {
+            it("Journalfører og oppdaterer journalpostId for ikke journalført unntak-vurdering") {
                 val fritekst = "Aktivitetskravet er oppfylt"
                 val vurdering = AktivitetskravVurdering.create(
                     status = AktivitetskravStatus.UNNTAK,
@@ -153,6 +153,97 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 first.journalpostId.shouldNotBeNull()
                 first.updatedAt shouldBeGreaterThan first.createdAt
             }
+
+            it("Journalfører og oppdaterer journalpostId for ikke journalført ikke aktuell-vurdering") {
+                val fritekst = "Aktivitetskravet er ikke aktuelt"
+                val vurdering = AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.IKKE_AKTUELL,
+                    beskrivelse = fritekst,
+                    arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                )
+                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.IKKE_AKTUELL,
+                    document = generateDocumentComponentDTO(fritekst),
+                )
+
+                val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
+                    tittel = "Vurdering av aktivitetskravet",
+                    brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
+                    pdf = pdf,
+                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
+                    varselId = varsel.uuid,
+                )
+
+                coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
+
+                runBlocking {
+                    val result = journalforAktivitetskravVarselCronjob.runJob()
+
+                    result.failed shouldBeEqualTo 0
+                    result.updated shouldBeEqualTo 1
+                }
+
+                coVerify {
+                    dokarkivClient.journalfor(expectedJournalpostRequestUnntakVarsel)
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldNotBeNull()
+                first.updatedAt shouldBeGreaterThan first.createdAt
+            }
+
+            it("Journalfører og oppdaterer journalpostId for ikke journalført oppfylt-vurdering") {
+                val fritekst = "Aktivitetskravet er oppfylt"
+                val vurdering = AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.OPPFYLT,
+                    beskrivelse = fritekst,
+                    arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                )
+                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+                val varsel = createVarsel(
+                    aktivitetskrav = updatedAktivitetskrav,
+                    pdf = pdf,
+                    varselType = VarselType.OPPFYLT,
+                    document = generateDocumentComponentDTO(fritekst),
+                )
+
+                val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
+                    tittel = "Vurdering av aktivitetskravet",
+                    brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
+                    pdf = pdf,
+                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
+                    varselId = varsel.uuid,
+                )
+
+                coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
+
+                runBlocking {
+                    val result = journalforAktivitetskravVarselCronjob.runJob()
+
+                    result.failed shouldBeEqualTo 0
+                    result.updated shouldBeEqualTo 1
+                }
+
+                coVerify {
+                    dokarkivClient.journalfor(expectedJournalpostRequestUnntakVarsel)
+                }
+
+                val varsler = database.getVarsler(personIdent)
+                varsler.size shouldBeEqualTo 1
+                val first = varsler.first()
+                first.uuid shouldBeEqualTo varsel.uuid
+                first.journalpostId.shouldNotBeNull()
+                first.updatedAt shouldBeGreaterThan first.createdAt
+            }
+
             it("Journalfører og oppdaterer journalpostId for ikke-journalført forhandsvarsel") {
                 val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
                 val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
