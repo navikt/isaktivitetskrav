@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
+import no.nav.syfo.aktivitetskrav.IAktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
@@ -16,9 +17,9 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
-class AktivitetskravRepository(private val database: DatabaseInterface) {
+class AktivitetskravRepository(private val database: DatabaseInterface) : IAktivitetskravRepository {
 
-    fun getAktivitetskrav(uuid: UUID): PAktivitetskrav? =
+    override fun getAktivitetskrav(uuid: UUID): PAktivitetskrav? =
         database.connection.use { connection ->
             connection.prepareStatement(GET_AKTIVITETSKRAV_BY_UUID_QUERY).use {
                 it.setString(1, uuid.toString())
@@ -29,9 +30,9 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             }
         }
 
-    fun getAktivitetskrav(
+    override fun getAktivitetskrav(
         personIdent: PersonIdent,
-        connection: Connection? = null,
+        connection: Connection?,
     ): List<PAktivitetskrav> = connection?.getAktivitetskrav(personIdent = personIdent)
         ?: database.connection.use {
             it.getAktivitetskrav(personIdent = personIdent)
@@ -47,7 +48,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
         it.copy(vurderinger = vurderinger)
     }
 
-    fun getOutdatedAktivitetskrav(
+    override fun getOutdatedAktivitetskrav(
         arenaCutoff: LocalDate,
         outdatedCutoff: LocalDate
     ): List<PAktivitetskrav> =
@@ -60,11 +61,11 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             }
         }
 
-    fun createAktivitetskrav(
+    override fun createAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
-        previousAktivitetskravUuid: UUID? = null,
-        referanseTilfelleBitUuid: UUID? = null,
-        connection: Connection? = null,
+        previousAktivitetskravUuid: UUID?,
+        referanseTilfelleBitUuid: UUID?,
+        connection: Connection?,
     ): PAktivitetskrav {
         return connection?.createAktivitetskrav(
             aktivitetskrav = aktivitetskrav,
@@ -83,21 +84,22 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
             }
     }
 
-    fun createAktivitetskravVurdering(
+    override fun createAktivitetskravVurdering(
         aktivitetskrav: Aktivitetskrav,
         aktivitetskravVurdering: AktivitetskravVurdering,
-    ) {
+    ): PAktivitetskravVurdering {
         database.connection.use { connection ->
             val aktivitetskravId = connection.updateAktivitetskrav(aktivitetskrav = aktivitetskrav)
-            connection.createAktivitetskravVurdering(
+            val created = connection.createAktivitetskravVurdering(
                 aktivitetskravId = aktivitetskravId,
                 aktivitetskravVurdering = aktivitetskravVurdering
             )
             connection.commit()
+            return created
         }
     }
 
-    fun updateAktivitetskravStatus(
+    override fun updateAktivitetskravStatus(
         aktivitetskrav: Aktivitetskrav
     ): PAktivitetskrav {
         val updatedAktivitetskravRecords = database.connection.use { connection ->
@@ -118,7 +120,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) {
         return updatedAktivitetskravRecords.first()
     }
 
-    fun updateAktivitetskravPersonIdent(
+    override fun updateAktivitetskravPersonIdent(
         nyPersonIdent: PersonIdent,
         inactiveIdenter: List<PersonIdent>,
     ): Int {

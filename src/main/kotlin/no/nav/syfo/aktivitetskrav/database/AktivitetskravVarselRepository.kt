@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.aktivitetskrav.IAktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
@@ -22,9 +23,9 @@ import java.util.*
 
 private val mapper = configuredJacksonMapper()
 
-class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
+class AktivitetskravVarselRepository(private val database: DatabaseInterface) : IAktivitetskravVarselRepository {
 
-    fun createAktivitetskravVurderingWithVarselPdf(
+    override fun createAktivitetskravVurderingWithVarselPdf(
         aktivitetskrav: Aktivitetskrav,
         newVurdering: AktivitetskravVurdering,
         varsel: AktivitetskravVarsel,
@@ -48,21 +49,22 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             nyttVarsel
         }
 
-    fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
+    override fun getIkkeJournalforte(): List<Triple<PersonIdent, PAktivitetskravVarsel, ByteArray>> =
         database.getIkkeJournalforteVarsler()
 
-    fun getIkkePubliserte(): List<Pair<PAktivitetskravVarsel, VarselReferences>> =
+    override fun getIkkePubliserte(): List<Pair<PAktivitetskravVarsel, VarselReferences>> =
         database.getIkkePubliserteVarsler()
 
-    fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
+    override fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
 
-    fun setPublished(varsel: KafkaAktivitetskravVarsel) =
+    override fun setPublished(varsel: KafkaAktivitetskravVarsel) =
         database.setPublished(varsel.varselUuid)
 
-    fun getVarselForVurdering(vurderingUuid: UUID) = database.getVarselForVurdering(vurderingUuid = vurderingUuid)
+    override fun getVarselForVurdering(vurderingUuid: UUID) =
+        database.getVarselForVurdering(vurderingUuid = vurderingUuid)
 
-    suspend fun getExpiredVarsler(): List<Triple<PersonIdent, UUID, PAktivitetskravVarsel>> =
+    override suspend fun getExpiredVarsler(): List<Triple<PersonIdent, UUID, PAktivitetskravVarsel>> =
         withContext(Dispatchers.IO) {
             database.connection.use { connection ->
                 connection.prepareStatement(SELECT_EXPIRED_VARSLER)
@@ -79,7 +81,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) {
             }
         }
 
-    suspend fun updateExpiredVarselPublishedAt(
+    override suspend fun updateExpiredVarselPublishedAt(
         publishedExpiredVarsel: ExpiredVarsel
     ): Int =
         withContext(Dispatchers.IO) {

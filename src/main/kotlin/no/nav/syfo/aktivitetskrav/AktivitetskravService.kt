@@ -14,8 +14,8 @@ import java.time.LocalDate
 import java.util.*
 
 class AktivitetskravService(
-    private val aktivitetskravRepository: AktivitetskravRepository,
-    private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
+    private val aktivitetskravRepository: IAktivitetskravRepository,
+    private val aktivitetskravVarselRepository: IAktivitetskravVarselRepository,
     private val varselPdfService: VarselPdfService,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val arenaCutoff: LocalDate,
@@ -123,7 +123,8 @@ class AktivitetskravService(
             ?.toAktivitetskrav()
 
     internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
-        aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent, connection = connection).map { it.toAktivitetskrav() }
+        aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent, connection = connection)
+            .map { it.toAktivitetskrav() }
 
     fun getAktivitetskravAfterCutoff(personIdent: PersonIdent): List<Aktivitetskrav> =
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
