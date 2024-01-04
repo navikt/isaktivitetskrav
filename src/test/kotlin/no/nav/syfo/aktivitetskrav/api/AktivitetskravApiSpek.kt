@@ -14,18 +14,13 @@ import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
-import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
-import no.nav.syfo.testhelper.generator.createAktivitetskravNy
-import no.nav.syfo.testhelper.generator.createAktivitetskravUnntak
-import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
+import no.nav.syfo.testhelper.generator.*
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.clients.producer.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
+import java.time.*
 import java.util.*
 import java.util.concurrent.Future
 
@@ -399,7 +394,11 @@ class AktivitetskravApiSpek : Spek({
                     it("Returns historikk when aktivitetskrav has status NY_VURDERING") {
                         aktivitetskravRepository.createAktivitetskrav(
                             nyAktivitetskrav.copy(
-                                createdAt = nowUTC().minusWeeks(2) // createdAt same date as stoppunkt
+                                createdAt = OffsetDateTime.of(
+                                    nyAktivitetskrav.stoppunktAt,
+                                    LocalTime.MIDNIGHT,
+                                    ZoneOffset.UTC
+                                ) // createdAt same date as stoppunkt
                             )
                         )
                         with(
