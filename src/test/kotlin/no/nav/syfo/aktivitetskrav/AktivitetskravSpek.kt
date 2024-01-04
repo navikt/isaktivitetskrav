@@ -59,7 +59,7 @@ class AktivitetskravSpek : Spek({
 
             val updatedAktivitetskrav = aktivitetskrav.updateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle)
 
-            updatedAktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+            updatedAktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
         }
     }
 

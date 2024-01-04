@@ -68,7 +68,7 @@ data class Aktivitetskrav(
         )
 
         fun stoppunktDato(tilfelleStart: LocalDate): LocalDate =
-            tilfelleStart.plusWeeks(AKTIVITETSKRAV_STOPPUNKT_WEEKS)
+            tilfelleStart.plusWeeks(AKTIVITETSKRAV_STOPPUNKT_WEEKS).minusDays(1)
     }
 }
 

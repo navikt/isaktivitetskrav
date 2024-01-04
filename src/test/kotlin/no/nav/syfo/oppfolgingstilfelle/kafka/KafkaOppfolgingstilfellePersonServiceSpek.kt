@@ -25,6 +25,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 import java.time.LocalDate
+import java.util.UUID
 import java.util.concurrent.Future
 
 private val sevenWeeksAgo = LocalDate.now().minusWeeks(7)
@@ -155,7 +156,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList.size shouldBeEqualTo 1
                     val aktivitetskrav = aktivitetskravList.first()
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                    aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
                     aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksNotGradert.referanseTilfelleBitUuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
@@ -187,7 +188,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList.size shouldBeEqualTo 1
                     val aktivitetskrav = aktivitetskravList.first()
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                    aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8)
+                    aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
                     aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksGradert.referanseTilfelleBitUuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
@@ -403,7 +404,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList.size shouldBeEqualTo 1
                     val latestAktivitetskrav = aktivitetskravList.first()
                     latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
                     latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
@@ -436,7 +437,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList.size shouldBeEqualTo 1
                     val latestAktivitetskrav = aktivitetskravList.first()
                     latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
                     latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
@@ -505,7 +506,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList.size shouldBeEqualTo 1
                     val latestAktivitetskrav = aktivitetskravList.first()
                     latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8)
+                    latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
                     latestAktivitetskrav.uuid shouldBeEqualTo automatiskOppfyltAktivitetskrav.uuid
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
@@ -798,6 +799,68 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo aktivitetskravStatus
                         aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo aktivitetskrav.uuid
                     }
+                }
+            }
+
+            describe("Oppfolgingstilfelle is exactly 56 days") {
+                val startDate = LocalDate.of(2023, 11, 8)
+                val endDate = LocalDate.of(2024, 1, 2)
+                val kafkaOppfolgingstilfelle56Days = createKafkaOppfolgingstilfellePerson(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = startDate,
+                    tilfelleEnd = endDate,
+                    gradert = false,
+                )
+                val secondKafkaOppfolgingstilfelle56Days = kafkaOppfolgingstilfelle56Days.copy(
+                    referanseTilfelleBitInntruffet = kafkaOppfolgingstilfelle56Days.referanseTilfelleBitInntruffet.plusDays(1),
+                    referanseTilfelleBitUuid = UUID.randomUUID().toString(),
+                )
+
+                it("creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting exactly 56 days") {
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelle56Days
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskrav = aktivitetskravList.first()
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                    aktivitetskrav.stoppunktAt shouldBeEqualTo endDate
+                    aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid
+                }
+
+                it("doesn't create Aktivitetskrav for second oppfolgingstilfelle lasting exactly 56 days") {
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaOppfolgingstilfelle56Days,
+                        secondKafkaOppfolgingstilfelle56Days,
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+
+                    aktivitetskravList.size shouldBeEqualTo 1
+                    val aktivitetskrav = aktivitetskravList.first()
+                    aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
+                    aktivitetskrav.stoppunktAt shouldBeEqualTo endDate
+                    aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid
                 }
             }
         }
