@@ -1,6 +1,7 @@
 package no.nav.syfo.client.pdfgen
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.aktivitetskrav.api.sanitizeForPdfGen
 import java.util.*
 
 data class VurderingPdfDTO private constructor(
@@ -11,7 +12,7 @@ data class VurderingPdfDTO private constructor(
             documentComponents: List<DocumentComponentDTO>
         ): VurderingPdfDTO =
             VurderingPdfDTO(
-                documentComponents = documentComponents
+                documentComponents = documentComponents.sanitizeForPdfGen()
             )
     }
 }

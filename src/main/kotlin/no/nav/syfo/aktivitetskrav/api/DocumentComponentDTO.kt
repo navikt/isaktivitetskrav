@@ -5,7 +5,21 @@ data class DocumentComponentDTO(
     val key: String? = null,
     val title: String?,
     val texts: List<String>,
-)
+) {
+    companion object {
+        internal val illegalCharacters = listOf('\u0002')
+    }
+}
+
+fun List<DocumentComponentDTO>.sanitizeForPdfGen(): List<DocumentComponentDTO> = this.map {
+    it.copy(
+        texts = it.texts.map { text ->
+            text.toCharArray()
+                .filter { char -> char !in DocumentComponentDTO.illegalCharacters }
+                .joinToString("")
+        }
+    )
+}
 
 enum class DocumentComponentType {
     HEADER_H1,
