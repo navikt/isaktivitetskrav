@@ -1,6 +1,7 @@
 package no.nav.syfo.client.pdfgen
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.aktivitetskrav.api.sanitizeForPdfGen
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -24,7 +25,7 @@ data class ForhandsvarselPdfDTO private constructor(
                 mottakerNavn = mottakerNavn,
                 mottakerFodselsnummer = mottakerPersonIdent.value,
                 datoSendt = LocalDate.now().format(formatter),
-                documentComponents = documentComponents
+                documentComponents = documentComponents.sanitizeForPdfGen()
             )
     }
 }
