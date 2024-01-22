@@ -3,7 +3,6 @@ package no.nav.syfo.client.dokarkiv
 import io.ktor.client.plugins.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
-import no.nav.syfo.client.dokarkiv.domain.JournalpostKanal
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
@@ -29,7 +28,6 @@ class DokarkivClientSpek : Spek({
                 tittel = "Forhåndsvarsel om stans av sykepenger",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                 pdf = pdf,
-                kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                 varselId = UUID.randomUUID()
             )
 
@@ -45,13 +43,12 @@ class DokarkivClientSpek : Spek({
                 tittel = "Forhåndsvarsel om stans av sykepenger",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                 pdf = pdf,
-                kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                 varselId = UserConstants.EXISTING_EKSTERN_REFERANSE_UUID,
             )
 
             assertFailsWith<ClientRequestException> {
                 runBlocking {
-                    val response = dokarkivClient.journalfor(journalpostRequest = journalpostRequestForhandsvarsel)
+                    dokarkivClient.journalfor(journalpostRequest = journalpostRequestForhandsvarsel)
                 }
             }
         }

@@ -81,9 +81,6 @@ fun createJournalpostRequest(
         idType = BrukerIdType.PERSON_IDENT,
     )
 
-    // På sikt avhengig av om bruker er reservert mot digital kommunikasjon eller ikke (må lagres med AktivitetskravVarsel?)
-    val kanal = JournalpostKanal.SENTRAL_UTSKRIFT
-
     val dokumentTittel = varsel.getDokumentTittel()
 
     val dokumenter = listOf(
@@ -107,6 +104,5 @@ fun createJournalpostRequest(
         bruker = bruker,
         dokumenter = dokumenter,
         eksternReferanseId = varsel.uuid.toString(),
-        kanal = kanal.value,
     )
 }

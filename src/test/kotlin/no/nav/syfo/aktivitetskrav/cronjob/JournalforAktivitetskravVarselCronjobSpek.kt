@@ -14,7 +14,6 @@ import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
-import no.nav.syfo.client.dokarkiv.domain.JournalpostKanal
 import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
@@ -129,7 +128,6 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     tittel = "Vurdering av aktivitetskravet",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                     pdf = pdf,
-                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                     varselId = varsel.uuid,
                 )
 
@@ -174,7 +172,6 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     tittel = "Vurdering av aktivitetskravet",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                     pdf = pdf,
-                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                     varselId = varsel.uuid,
                 )
 
@@ -219,7 +216,6 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     tittel = "Vurdering av aktivitetskravet",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                     pdf = pdf,
-                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                     varselId = varsel.uuid,
                 )
 
@@ -258,7 +254,6 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     tittel = "Forhåndsvarsel om stans av sykepenger",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                     pdf = pdf,
-                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                     varselId = varsel.uuid,
                 )
 
@@ -373,7 +368,6 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     tittel = "Forhåndsvarsel om stans av sykepenger",
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                     pdf = pdf,
-                    kanal = JournalpostKanal.SENTRAL_UTSKRIFT.value,
                     varselId = varsel.uuid,
                 )
 
