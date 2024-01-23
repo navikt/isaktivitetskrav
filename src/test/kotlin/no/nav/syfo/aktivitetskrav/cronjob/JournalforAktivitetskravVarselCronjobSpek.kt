@@ -15,6 +15,7 @@ import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
 import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
+import no.nav.syfo.client.dokarkiv.domain.JournalpostType
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
@@ -129,6 +130,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                     pdf = pdf,
                     varselId = varsel.uuid,
+                    journalpostType = JournalpostType.NOTAT.name,
                 )
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
@@ -173,6 +175,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                     pdf = pdf,
                     varselId = varsel.uuid,
+                    journalpostType = JournalpostType.NOTAT.name,
                 )
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
@@ -217,6 +220,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                     pdf = pdf,
                     varselId = varsel.uuid,
+                    journalpostType = JournalpostType.NOTAT.name,
                 )
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
@@ -255,6 +259,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                     pdf = pdf,
                     varselId = varsel.uuid,
+                    journalpostType = JournalpostType.UTGAAENDE.name,
                 )
 
                 coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
@@ -369,6 +374,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                     brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                     pdf = pdf,
                     varselId = varsel.uuid,
+                    journalpostType = JournalpostType.UTGAAENDE.name,
                 )
 
                 coEvery { dokarkivClient.journalfor(any()) } throws RuntimeException("Journalføring feilet")

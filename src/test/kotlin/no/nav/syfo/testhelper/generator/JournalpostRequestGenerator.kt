@@ -4,7 +4,13 @@ import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.testhelper.UserConstants
 import java.util.UUID
 
-fun generateJournalpostRequest(tittel: String, brevkodeType: BrevkodeType, pdf: ByteArray, varselId: UUID) = JournalpostRequest(
+fun generateJournalpostRequest(
+    tittel: String,
+    brevkodeType: BrevkodeType,
+    pdf: ByteArray,
+    varselId: UUID,
+    journalpostType: String,
+) = JournalpostRequest(
     avsenderMottaker = AvsenderMottaker.create(
         id = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
         idType = BrukerIdType.PERSON_IDENT,
@@ -29,5 +35,6 @@ fun generateJournalpostRequest(tittel: String, brevkodeType: BrevkodeType, pdf: 
             ),
         )
     ),
+    journalpostType = journalpostType,
     eksternReferanseId = varselId.toString(),
 )

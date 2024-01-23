@@ -99,6 +99,7 @@ fun createJournalpostRequest(
     )
 
     return JournalpostRequest(
+        journalpostType = varsel.getJournalpostType().name,
         avsenderMottaker = avsenderMottaker,
         tittel = dokumentTittel,
         bruker = bruker,
