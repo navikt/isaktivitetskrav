@@ -2,10 +2,9 @@ package no.nav.syfo.client.dokarkiv.domain
 
 const val JOURNALFORENDE_ENHET = 9999
 
-enum class JournalpostType(
-    val value: String,
-) {
-    UTGAAENDE("UTGAAENDE"),
+enum class JournalpostType {
+    UTGAAENDE,
+    NOTAT,
 }
 
 enum class JournalpostTema(
@@ -20,7 +19,7 @@ data class JournalpostRequest(
     val bruker: Bruker? = null,
     val dokumenter: List<Dokument>,
     val journalfoerendeEnhet: Int? = JOURNALFORENDE_ENHET,
-    val journalpostType: String = JournalpostType.UTGAAENDE.value,
+    val journalpostType: String,
     val tema: String = JournalpostTema.OPPFOLGING.value,
     val sak: Sak = Sak(),
     val eksternReferanseId: String,

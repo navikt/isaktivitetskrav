@@ -65,4 +65,5 @@ data class AktivitetskravVarsel internal constructor(
 
     fun getDokumentTittel() = this.type.getDokumentTittel()
     fun getBrevkode() = this.type.getBrevkode()
+    fun getJournalpostType() = this.type.getJournalpostType()
 }
