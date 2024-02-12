@@ -24,6 +24,7 @@ fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(
 enum class Arsak {
     OPPFOLGINGSPLAN_ARBEIDSGIVER,
     INFORMASJON_BEHANDLER,
+    INFORMASJON_SYKMELDT,
     DROFTES_MED_ROL,
     DROFTES_INTERNT,
     ANNET,
@@ -44,6 +45,7 @@ fun Arsak.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
             when (this) {
                 Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER -> VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver
                 Arsak.INFORMASJON_BEHANDLER -> VurderingArsak.Avvent.InformasjonBehandler
+                Arsak.INFORMASJON_SYKMELDT -> VurderingArsak.Avvent.InformasjonSykmeldt
                 Arsak.DROFTES_MED_ROL -> VurderingArsak.Avvent.DroftesMedROL
                 Arsak.DROFTES_INTERNT -> VurderingArsak.Avvent.DroftesInternt
                 Arsak.ANNET -> VurderingArsak.Avvent.Annet

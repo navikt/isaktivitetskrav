@@ -36,6 +36,7 @@ fun String.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
             when (this) {
                 "OPPFOLGINGSPLAN_ARBEIDSGIVER" -> VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver
                 "INFORMASJON_BEHANDLER" -> VurderingArsak.Avvent.InformasjonBehandler
+                "INFORMASJON_SYKMELDT" -> VurderingArsak.Avvent.InformasjonSykmeldt
                 "DROFTES_MED_ROL" -> VurderingArsak.Avvent.DroftesMedROL
                 "DROFTES_INTERNT" -> VurderingArsak.Avvent.DroftesInternt
                 "ANNET" -> VurderingArsak.Avvent.Annet

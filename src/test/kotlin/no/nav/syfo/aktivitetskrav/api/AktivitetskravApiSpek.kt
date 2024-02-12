@@ -135,6 +135,7 @@ class AktivitetskravApiSpek : Spek({
                             beskrivelse = "Avvent",
                             arsaker = listOf(
                                 VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonSykmeldt,
                                 VurderingArsak.Avvent.InformasjonBehandler,
                                 VurderingArsak.Avvent.DroftesMedROL,
                                 VurderingArsak.Avvent.DroftesInternt,
@@ -197,6 +198,7 @@ class AktivitetskravApiSpek : Spek({
                             oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                             oldestVurdering.arsaker.map { it.toVurderingArsak(AktivitetskravStatus.AVVENT) } shouldBeEqualTo listOf(
                                 VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
+                                VurderingArsak.Avvent.InformasjonSykmeldt,
                                 VurderingArsak.Avvent.InformasjonBehandler,
                                 VurderingArsak.Avvent.DroftesMedROL,
                                 VurderingArsak.Avvent.DroftesInternt,
