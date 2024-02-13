@@ -10,6 +10,7 @@ sealed class VurderingArsak(val value: String) {
     sealed class Avvent(value: String) : VurderingArsak(value) {
         data object OppfolgingsplanArbeidsgiver : Avvent("OPPFOLGINGSPLAN_ARBEIDSGIVER")
         data object InformasjonBehandler : Avvent("INFORMASJON_BEHANDLER")
+        data object InformasjonSykmeldt : Avvent("INFORMASJON_SYKMELDT")
         data object DroftesMedROL : Avvent("DROFTES_MED_ROL")
         data object DroftesInternt : Avvent("DROFTES_INTERNT")
         data object Annet : Avvent("ANNET")
