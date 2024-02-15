@@ -49,8 +49,10 @@ class AktivitetskravVurderingProducer(
             }
         } catch (e: Exception) {
             log.error(
-                "Exception was thrown when attempting to send KafkaAktivitetskravVurdering with id {}: ${e.message}",
-                key
+                "Exception was thrown when attempting to send KafkaAktivitetskravVurdering with key: {}, aktivitetskravUUID: {}, vurderingUUID: {}, ${e.message}",
+                key,
+                kafkaAktivitetskravVurdering.uuid,
+                kafkaAktivitetskravVurdering.sisteVurderingUuid,
             )
             throw e
         }
