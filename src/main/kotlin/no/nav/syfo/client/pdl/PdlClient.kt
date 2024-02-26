@@ -12,9 +12,7 @@ import no.nav.syfo.client.azuread.AzureAdToken
 import no.nav.syfo.client.httpClientDefault
 import no.nav.syfo.client.pdl.domain.*
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.util.ALLE_TEMA_HEADERVERDI
 import no.nav.syfo.util.NAV_CALL_ID_HEADER
-import no.nav.syfo.util.TEMA_HEADER
 import no.nav.syfo.util.bearerHeader
 import org.slf4j.LoggerFactory
 
@@ -50,7 +48,7 @@ class PdlClient(
         val response: HttpResponse = httpClient.post(pdlEnvironment.baseUrl) {
             header(HttpHeaders.Authorization, bearerHeader(token.accessToken))
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            header(TEMA_HEADER, ALLE_TEMA_HEADERVERDI)
+            header(BEHANDLINGSNUMMER_HEADER_KEY, BEHANDLINGSNUMMER_HEADER_VALUE)
             header(NAV_CALL_ID_HEADER, callId)
             header(IDENTER_HEADER, IDENTER_HEADER)
             setBody(request)
@@ -91,10 +89,8 @@ class PdlClient(
             COUNT_CALL_PDL_PERSON_CACHE_NAVN_MISS.increment()
             val token = azureAdClient.getSystemToken(pdlEnvironment.clientId)
                 ?: throw RuntimeException("Failed to send request to PDL: No token was found")
-            val navn = (
-                person(personIdent, token)?.fullName()
-                    ?: throw RuntimeException("PDL returned empty navn for given fnr")
-                )
+            val navn = person(personIdent, token)?.fullName()
+                ?: throw RuntimeException("PDL returned empty navn for given fnr")
             cache.set(key = cacheKey, value = navn, expireSeconds = CACHE_EXPIRE_SECONDS)
             navn
         }
@@ -111,7 +107,7 @@ class PdlClient(
             setBody(request)
             header(HttpHeaders.ContentType, "application/json")
             header(HttpHeaders.Authorization, bearerHeader(token.accessToken))
-            header(TEMA_HEADER, ALLE_TEMA_HEADERVERDI)
+            header(BEHANDLINGSNUMMER_HEADER_KEY, BEHANDLINGSNUMMER_HEADER_VALUE)
         }
 
         when (response.status) {
@@ -148,5 +144,10 @@ class PdlClient(
         private val CACHE_EXPIRE_SECONDS = 24L * 3600
         const val IDENTER_HEADER = "identer"
         private val logger = LoggerFactory.getLogger(PdlClient::class.java)
+
+        // Se behandlingskatalog https://behandlingskatalog.intern.nav.no/
+        // Behandling: Sykefraværsoppfølging: Vurdere behov for oppfølging og rett til sykepenger etter §§ 8-4 og 8-8
+        private const val BEHANDLINGSNUMMER_HEADER_KEY = "behandlingsnummer"
+        private const val BEHANDLINGSNUMMER_HEADER_VALUE = "B426"
     }
 }
