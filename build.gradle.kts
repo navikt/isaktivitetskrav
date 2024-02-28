@@ -12,13 +12,13 @@ object Versions {
     const val jedis = "5.1.0"
     const val kafka = "3.6.1"
     const val kluent = "1.73"
-    const val ktor = "2.3.7"
+    const val ktor = "2.3.8"
     const val logback = "1.4.14"
     const val logstashEncoder = "7.4"
     const val micrometerRegistry = "1.12.0"
     const val mockk = "1.13.8"
     const val nimbusJoseJwt = "9.37.2"
-    const val postgres = "42.6.0"
+    const val postgres = "42.7.2"
     val postgresEmbedded = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
     const val redisEmbedded = "0.7.3"
     const val spek = "2.0.19"
@@ -65,7 +65,7 @@ dependencies {
         implementation("org.apache.commons:commons-compress") {
             because("com.opentable.components:otj-pg-embedded:${Versions.postgresEmbedded} -> https://www.cve.org/CVERecord?id=CVE-2021-36090")
             version {
-                require("1.21")
+                require("1.26.0")
             }
         }
     }
