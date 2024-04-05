@@ -7,7 +7,7 @@ import no.nav.syfo.client.dokarkiv.domain.JournalpostType
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
-import org.amshove.kluent.internal.assertFailsWith
+import no.nav.syfo.testhelper.mock.conflictResponse
 import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -40,7 +40,7 @@ class DokarkivClientSpek : Spek({
             }
         }
 
-        it("handles conflict from api when eksternRefeanseId exists") {
+        it("handles conflict from api when eksternRefeanseId exists, and uses the existing journalpostId") {
             val journalpostRequestForhandsvarsel = generateJournalpostRequest(
                 tittel = "Forhåndsvarsel om stans av sykepenger",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
@@ -49,10 +49,12 @@ class DokarkivClientSpek : Spek({
                 journalpostType = JournalpostType.UTGAAENDE.name,
             )
 
-            assertFailsWith<ClientRequestException> {
-                runBlocking {
+            runBlocking {
+                val journalpostResponse =
                     dokarkivClient.journalfor(journalpostRequest = journalpostRequestForhandsvarsel)
-                }
+
+                journalpostResponse.journalpostId shouldBeEqualTo conflictResponse.journalpostId
+                journalpostResponse.journalstatus shouldBeEqualTo conflictResponse.journalstatus
             }
         }
     }

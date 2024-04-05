@@ -39,8 +39,15 @@ class DokarkivClient(
             COUNT_CALL_DOKARKIV_JOURNALPOST_SUCCESS.increment()
             journalpostResponse
         } catch (e: ClientRequestException) {
-            handleUnexpectedResponseException(e.response, e.message)
-            throw e
+            if (e.response.status == HttpStatusCode.Conflict) {
+                val journalpostResponse = e.response.body<JournalpostResponse>()
+                log.warn("Journalpost med id ${journalpostResponse.journalpostId} lagret fra før (409 Conflict)")
+                COUNT_CALL_DOKARKIV_JOURNALPOST_CONFLICT.increment()
+                journalpostResponse
+            } else {
+                handleUnexpectedResponseException(e.response, e.message)
+                throw e
+            }
         } catch (e: ServerResponseException) {
             handleUnexpectedResponseException(e.response, e.message)
             throw e
