@@ -58,8 +58,8 @@ data class Environment(
             baseUrl = getEnvVar("PDL_URL"),
             clientId = getEnvVar("PDL_CLIENT_ID"),
         ),
-        isaktivitetskravpdfgen = OpenClientEnvironment(
-            baseUrl = "http://isaktivitetskravpdfgen",
+        ispdfgen = OpenClientEnvironment(
+            baseUrl = "http://ispdfgen",
         ),
         dokarkiv = ClientEnvironment(
             baseUrl = getEnvVar("DOKARKIV_URL"),

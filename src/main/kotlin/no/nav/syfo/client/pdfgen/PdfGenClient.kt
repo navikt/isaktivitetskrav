@@ -61,7 +61,7 @@ class PdfGenClient(
         callId: String,
     ): ByteArray? {
         log.error(
-            "Error while requesting PDF from isaktivitetskravpdfgen with {}, {}, {}",
+            "Error while requesting PDF from ispdfgen with {}, {}, {}",
             StructuredArguments.keyValue("statusCode", response.status.value.toString()),
             StructuredArguments.keyValue("url", url),
             StructuredArguments.keyValue("callId", callId)
@@ -80,17 +80,17 @@ class PdfGenClient(
 }
 
 private object Metrics {
-    private const val CALL_PDFGEN_BASE = "${METRICS_NS}_call_isaktivitetskravpdfgen"
+    private const val CALL_PDFGEN_BASE = "${METRICS_NS}_call_ispdfgen"
 
     private const val CALL_PDFGEN_SUCCESS = "${CALL_PDFGEN_BASE}_success_count"
     private const val CALL_PDFGEN_FAIL = "${CALL_PDFGEN_BASE}_fail_count"
 
     val COUNT_CALL_PDFGEN_SUCCESS: Counter = Counter
         .builder(CALL_PDFGEN_SUCCESS)
-        .description("Counts the number of successful calls to isaktivitetskravpdfgen")
+        .description("Counts the number of successful calls to ispdfgen")
         .register(METRICS_REGISTRY)
     val COUNT_CALL_PDFGEN_FAIL: Counter = Counter
         .builder(CALL_PDFGEN_FAIL)
-        .description("Counts the number of failed calls to isaktivitetskravpdfgen")
+        .description("Counts the number of failed calls to ispdfgen")
         .register(METRICS_REGISTRY)
 }

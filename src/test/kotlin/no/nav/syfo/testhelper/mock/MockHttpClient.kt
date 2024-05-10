@@ -15,9 +15,11 @@ fun mockHttpClient(environment: Environment) = HttpClient(MockEngine) {
                 requestUrl.startsWith("/${environment.clients.istilgangskontroll.baseUrl}") -> tilgangskontrollResponse(
                     request
                 )
-                requestUrl.startsWith("/${environment.clients.isaktivitetskravpdfgen.baseUrl}") -> pdfGenClientMockResponse(
+
+                requestUrl.startsWith("/${environment.clients.ispdfgen.baseUrl}") -> pdfGenClientMockResponse(
                     request
                 )
+
                 requestUrl.startsWith("/${environment.clients.pdl.baseUrl}") -> pdlMockResponse(request)
                 requestUrl.startsWith("/${environment.clients.dokarkiv.baseUrl}") -> dokarkivMockResponse(request)
                 else -> error("Unhandled ${request.url.encodedPath}")

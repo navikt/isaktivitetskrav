@@ -54,8 +54,8 @@ fun testEnvironment() = Environment(
             baseUrl = "dokarkivUrl",
             clientId = "dokarkivClientId",
         ),
-        isaktivitetskravpdfgen = OpenClientEnvironment(
-            baseUrl = "isaktivitetskravpdfgenUrl",
+        ispdfgen = OpenClientEnvironment(
+            baseUrl = "ispdfgenUrl",
         ),
     ),
     arenaCutoff = LocalDate.now().minusDays(365),

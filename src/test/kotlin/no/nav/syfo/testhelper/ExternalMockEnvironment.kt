@@ -30,7 +30,7 @@ class ExternalMockEnvironment private constructor() {
         httpClient = mockHttpClient,
     )
     val pdfgenClient = PdfGenClient(
-        pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,
+        pdfGenBaseUrl = environment.clients.ispdfgen.baseUrl,
         httpClient = mockHttpClient,
     )
     val pdlClient = PdlClient(
