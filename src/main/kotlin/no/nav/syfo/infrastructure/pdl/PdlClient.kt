@@ -1,4 +1,4 @@
-package no.nav.syfo.client.pdl
+package no.nav.syfo.infrastructure.pdl
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -10,8 +10,8 @@ import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.azuread.AzureAdToken
 import no.nav.syfo.client.httpClientDefault
-import no.nav.syfo.client.pdl.domain.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.pdl.domain.*
 import no.nav.syfo.util.NAV_CALL_ID_HEADER
 import no.nav.syfo.util.bearerHeader
 import org.slf4j.LoggerFactory

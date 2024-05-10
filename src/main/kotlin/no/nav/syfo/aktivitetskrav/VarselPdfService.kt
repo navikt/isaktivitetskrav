@@ -5,7 +5,7 @@ import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.client.pdfgen.VurderingPdfDTO
-import no.nav.syfo.client.pdl.PdlClient
+import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 
 class VarselPdfService(

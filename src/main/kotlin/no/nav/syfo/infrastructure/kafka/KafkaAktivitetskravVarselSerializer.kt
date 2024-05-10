@@ -1,6 +1,6 @@
-package no.nav.syfo.aktivitetskrav.kafka
+package no.nav.syfo.infrastructure.kafka
 
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.util.configuredJacksonMapper
 import org.apache.kafka.common.serialization.Serializer
 

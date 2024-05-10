@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.database
+package no.nav.syfo.infrastructure.database
 
 import com.fasterxml.jackson.core.type.TypeReference
 import kotlinx.coroutines.Dispatchers
@@ -8,8 +8,8 @@ import no.nav.syfo.aktivitetskrav.IAktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.NoElementInsertedException
 import no.nav.syfo.application.database.toList

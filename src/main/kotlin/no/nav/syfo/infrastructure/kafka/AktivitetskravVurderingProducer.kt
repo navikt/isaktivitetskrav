@@ -1,8 +1,8 @@
-package no.nav.syfo.aktivitetskrav.kafka
+package no.nav.syfo.infrastructure.kafka
 
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.application.kafka.KafkaEnvironment
 import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import org.apache.kafka.clients.producer.KafkaProducer

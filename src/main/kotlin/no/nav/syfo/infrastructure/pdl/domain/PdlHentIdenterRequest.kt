@@ -1,4 +1,4 @@
-package no.nav.syfo.client.pdl.domain
+package no.nav.syfo.infrastructure.pdl.domain
 
 data class PdlHentIdenterRequest(
     val query: String,
