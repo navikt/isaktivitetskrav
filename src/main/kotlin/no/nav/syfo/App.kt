@@ -8,9 +8,8 @@ import io.ktor.server.netty.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.kafka.*
+import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.api.apiModule
@@ -22,9 +21,10 @@ import no.nav.syfo.application.kafka.kafkaAivenProducerConfig
 import no.nav.syfo.application.kafka.launchKafkaModule
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.pdfgen.PdfGenClient
-import no.nav.syfo.client.pdl.PdlClient
+import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.getWellKnown
+import no.nav.syfo.infrastructure.kafka.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.DefaultJedisClientConfig

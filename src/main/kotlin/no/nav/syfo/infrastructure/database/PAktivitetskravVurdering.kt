@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.database
+package no.nav.syfo.infrastructure.database
 
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering

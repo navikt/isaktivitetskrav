@@ -1,8 +1,8 @@
 package no.nav.syfo.identhendelse
 
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.client.pdl.PdlClient
+import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.identhendelse.kafka.COUNT_KAFKA_CONSUMER_PDL_AKTOR_UPDATES
 import no.nav.syfo.identhendelse.kafka.KafkaIdenthendelseDTO

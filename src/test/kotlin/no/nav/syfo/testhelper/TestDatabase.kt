@@ -5,6 +5,9 @@ import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.database.PAktivitetskravVarsel
+import no.nav.syfo.infrastructure.database.PAktivitetskravVarselPdf
+import no.nav.syfo.infrastructure.database.toPAktivitetskravVarsel
 import org.flywaydb.core.Flyway
 import java.sql.Connection
 import java.sql.ResultSet

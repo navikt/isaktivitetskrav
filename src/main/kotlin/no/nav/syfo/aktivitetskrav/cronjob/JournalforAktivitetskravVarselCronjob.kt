@@ -7,7 +7,7 @@ import no.nav.syfo.application.cronjob.Cronjob
 import no.nav.syfo.application.cronjob.CronjobResult
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.*
-import no.nav.syfo.client.pdl.PdlClient
+import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
 import org.slf4j.LoggerFactory
 

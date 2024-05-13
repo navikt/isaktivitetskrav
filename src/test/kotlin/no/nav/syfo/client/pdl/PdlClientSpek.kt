@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.cache.RedisStore
+import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import org.amshove.kluent.internal.assertFailsWith

@@ -4,11 +4,11 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
@@ -812,7 +812,9 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     gradert = false,
                 )
                 val secondKafkaOppfolgingstilfelle56Days = kafkaOppfolgingstilfelle56Days.copy(
-                    referanseTilfelleBitInntruffet = kafkaOppfolgingstilfelle56Days.referanseTilfelleBitInntruffet.plusDays(1),
+                    referanseTilfelleBitInntruffet = kafkaOppfolgingstilfelle56Days.referanseTilfelleBitInntruffet.plusDays(
+                        1
+                    ),
                     referanseTilfelleBitUuid = UUID.randomUUID().toString(),
                 )
 

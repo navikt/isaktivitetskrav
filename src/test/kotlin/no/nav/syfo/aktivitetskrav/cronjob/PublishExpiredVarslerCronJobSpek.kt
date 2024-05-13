@@ -5,11 +5,11 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
-import no.nav.syfo.aktivitetskrav.kafka.ExpiredVarselProducer
+import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
+import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
@@ -134,7 +134,10 @@ class PublishExpiredVarslerCronJobSpek : Spek({
             it("Does not publish anything to kafka when there is no expired varsler") {
                 val newAktivitetskrav = createAktivitetskravWithVurdering(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 val varsel =
-                    AktivitetskravVarsel.create(VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER, forhandsvarselDTO.document).copy(
+                    AktivitetskravVarsel.create(
+                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        forhandsvarselDTO.document
+                    ).copy(
                         svarfrist = LocalDate.now().plusWeeks(1)
                     )
 
@@ -170,7 +173,8 @@ class PublishExpiredVarslerCronJobSpek : Spek({
                     pdf = pdf,
                 )
 
-                aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = aktivitetskrav.vurderinger.first().uuid).shouldNotBeNull()
+                aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = aktivitetskrav.vurderinger.first().uuid)
+                    .shouldNotBeNull()
 
                 runBlocking {
                     val result = publishExpiredVarslerCronJob.runJob()

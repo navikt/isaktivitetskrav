@@ -3,11 +3,11 @@ package no.nav.syfo.aktivitetskrav
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.api.HistorikkDTO
 import no.nav.syfo.aktivitetskrav.api.createHistorikkDTOs
-import no.nav.syfo.aktivitetskrav.database.*
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.database.updateAktivitetskrav
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
 import java.time.LocalDate
