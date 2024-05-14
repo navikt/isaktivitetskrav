@@ -8,7 +8,7 @@ import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.leaderelection.LeaderPodClient
-import no.nav.syfo.client.pdl.PdlClient
+import no.nav.syfo.infrastructure.pdl.PdlClient
 
 fun launchCronjobModule(
     applicationState: ApplicationState,

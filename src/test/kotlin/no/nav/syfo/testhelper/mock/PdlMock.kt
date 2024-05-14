@@ -2,8 +2,8 @@ package no.nav.syfo.testhelper.mock
 
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
-import no.nav.syfo.client.pdl.domain.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.pdl.domain.*
 import no.nav.syfo.testhelper.UserConstants
 
 suspend fun MockRequestHandleScope.pdlMockResponse(request: HttpRequestData): HttpResponseData {
@@ -33,6 +33,7 @@ suspend fun MockRequestHandleScope.pdlMockResponse(request: HttpRequestData): Ht
                     )
                 )
             )
+
             else -> respond(generatePdlPersonResponse(generatePdlPersonNavn()))
         }
     }

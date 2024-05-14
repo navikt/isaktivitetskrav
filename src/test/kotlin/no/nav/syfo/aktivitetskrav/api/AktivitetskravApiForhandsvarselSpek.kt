@@ -5,10 +5,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy

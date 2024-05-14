@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.kafka.domain
+package no.nav.syfo.infrastructure.kafka.domain
 
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import java.time.LocalDate

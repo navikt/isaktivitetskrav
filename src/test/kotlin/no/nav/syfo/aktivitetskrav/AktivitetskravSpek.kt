@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT

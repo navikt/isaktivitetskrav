@@ -1,13 +1,15 @@
 package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.*
 import no.nav.syfo.application.exception.ConflictException
-import no.nav.syfo.aktivitetskrav.kafka.domain.ExpiredVarsel
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.kafka.AktivitetskravVarselProducer
+import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
 import java.util.*
 
 class AktivitetskravVarselService(

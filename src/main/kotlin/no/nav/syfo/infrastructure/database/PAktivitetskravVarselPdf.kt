@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.database
+package no.nav.syfo.infrastructure.database
 
 import java.time.OffsetDateTime
 import java.util.*

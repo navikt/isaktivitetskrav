@@ -1,4 +1,4 @@
-package no.nav.syfo.client.pdl
+package no.nav.syfo.infrastructure.pdl
 
 import io.micrometer.core.instrument.Counter
 import no.nav.syfo.application.metric.METRICS_NS

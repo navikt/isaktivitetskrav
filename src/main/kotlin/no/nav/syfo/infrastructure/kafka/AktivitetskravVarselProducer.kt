@@ -1,6 +1,6 @@
-package no.nav.syfo.aktivitetskrav.kafka
+package no.nav.syfo.infrastructure.kafka
 
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory

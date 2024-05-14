@@ -6,11 +6,11 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.database.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.aktivitetskrav.kafka.AktivitetskravVarselProducer
-import no.nav.syfo.aktivitetskrav.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.AktivitetskravVarselProducer
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
