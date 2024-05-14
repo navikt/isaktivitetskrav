@@ -69,7 +69,7 @@ fun main() {
         clientEnvironment = environment.clients.istilgangskontroll,
     )
     val pdfGenClient = PdfGenClient(
-        pdfGenBaseUrl = environment.clients.isaktivitetskravpdfgen.baseUrl,
+        pdfGenBaseUrl = environment.clients.ispdfgen.baseUrl,
     )
 
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(

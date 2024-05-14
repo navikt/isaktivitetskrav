@@ -53,7 +53,7 @@ spec:
         - host: "dokarkiv.dev-fss-pub.nais.io"
       rules:
         - application: istilgangskontroll
-        - application: isaktivitetskravpdfgen
+        - application: ispdfgen
   gcp:
     sqlInstances:
       - type: POSTGRES_14
