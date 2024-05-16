@@ -18,7 +18,7 @@ val micrometerRegistryVersion = "1.12.0"
 val mockkVersion = "1.13.8"
 val nimbusJoseJwtVersion = "9.37.2"
 val postgresVersion = "42.7.2"
-val postgresEmbeddedVersion = if (Os.isFamily(Os.FAMILY_MAC)) "1.0.0" else "0.13.4"
+val postgresEmbeddedVersion = "2.0.7"
 val redisEmbeddedVersion = "0.7.3"
 val spekVersion = "2.0.19"
 
@@ -58,10 +58,10 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
-    testImplementation("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion")
+    testImplementation("io.zonky.test:embedded-postgres:$postgresEmbeddedVersion")
     constraints {
         implementation("org.apache.commons:commons-compress") {
-            because("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion -> https://www.cve.org/CVERecord?id=CVE-2021-36090")
+            because("io.zonky.test:embedded-postgres:$postgresEmbeddedVersion -> https://www.cve.org/CVERecord?id=CVE-2021-36090")
             version {
                 require("1.26.0")
             }
