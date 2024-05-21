@@ -5,8 +5,8 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.infrastructure.database.AktivitetskravRepository
-import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer

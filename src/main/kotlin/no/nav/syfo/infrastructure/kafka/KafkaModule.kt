@@ -1,10 +1,10 @@
-package no.nav.syfo.application.kafka
+package no.nav.syfo.infrastructure.kafka
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
-import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.identhendelse.IdenthendelseService
 import no.nav.syfo.identhendelse.kafka.KafkaIdenthendelseService

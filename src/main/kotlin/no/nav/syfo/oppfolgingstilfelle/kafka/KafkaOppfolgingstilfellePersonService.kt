@@ -2,8 +2,8 @@ package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.application.database.DatabaseInterface
-import no.nav.syfo.application.kafka.KafkaConsumerService
+import no.nav.syfo.infrastructure.database.DatabaseInterface
+import no.nav.syfo.infrastructure.kafka.KafkaConsumerService
 import no.nav.syfo.oppfolgingstilfelle.domain.*
 import org.apache.kafka.clients.consumer.*
 import org.slf4j.LoggerFactory

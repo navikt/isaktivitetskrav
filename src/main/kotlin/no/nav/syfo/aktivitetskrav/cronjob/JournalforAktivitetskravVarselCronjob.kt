@@ -3,8 +3,8 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
-import no.nav.syfo.application.cronjob.Cronjob
-import no.nav.syfo.application.cronjob.CronjobResult
+import no.nav.syfo.infrastructure.cronjob.Cronjob
+import no.nav.syfo.infrastructure.cronjob.CronjobResult
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.infrastructure.pdl.PdlClient

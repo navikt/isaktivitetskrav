@@ -1,12 +1,12 @@
-package no.nav.syfo.infrastructure.database
+package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.aktivitetskrav.IAktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.application.database.DatabaseInterface
-import no.nav.syfo.application.database.NoElementInsertedException
-import no.nav.syfo.application.database.toList
+import no.nav.syfo.infrastructure.database.DatabaseInterface
+import no.nav.syfo.infrastructure.database.NoElementInsertedException
+import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.nowUTC
 import java.sql.Connection

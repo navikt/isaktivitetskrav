@@ -1,7 +1,8 @@
-package no.nav.syfo.infrastructure.database
+package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.application.database.*
+import no.nav.syfo.infrastructure.database.NoElementInsertedException
+import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
