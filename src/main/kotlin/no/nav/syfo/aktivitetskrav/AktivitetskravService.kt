@@ -7,7 +7,7 @@ import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.database.updateAktivitetskrav
+import no.nav.syfo.infrastructure.database.repository.updateAktivitetskrav
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
 import java.time.LocalDate

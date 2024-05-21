@@ -2,8 +2,8 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.application.cronjob.Cronjob
-import no.nav.syfo.application.cronjob.CronjobResult
+import no.nav.syfo.infrastructure.cronjob.Cronjob
+import no.nav.syfo.infrastructure.cronjob.CronjobResult
 import org.slf4j.LoggerFactory
 
 class PublishExpiredVarslerCronJob(

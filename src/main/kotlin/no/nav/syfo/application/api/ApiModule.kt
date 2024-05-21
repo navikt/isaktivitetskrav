@@ -9,7 +9,7 @@ import no.nav.syfo.aktivitetskrav.api.registerAktivitetskravApi
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.application.api.auth.*
-import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.application.metric.registerMetricApi
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.client.wellknown.WellKnown

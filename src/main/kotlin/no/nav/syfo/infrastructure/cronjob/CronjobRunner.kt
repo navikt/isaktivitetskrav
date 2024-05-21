@@ -1,4 +1,4 @@
-package no.nav.syfo.application.cronjob
+package no.nav.syfo.infrastructure.cronjob
 
 import kotlinx.coroutines.*
 import net.logstash.logback.argument.StructuredArguments

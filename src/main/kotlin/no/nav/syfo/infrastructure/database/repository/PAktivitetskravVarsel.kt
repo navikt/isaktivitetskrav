@@ -1,4 +1,4 @@
-package no.nav.syfo.infrastructure.database
+package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel

@@ -1,4 +1,4 @@
-package no.nav.syfo.application.kafka
+package no.nav.syfo.infrastructure.kafka
 
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.launchBackgroundTask

@@ -2,7 +2,7 @@ package no.nav.syfo.identhendelse.kafka
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.application.kafka.KafkaConsumerService
+import no.nav.syfo.infrastructure.kafka.KafkaConsumerService
 import no.nav.syfo.identhendelse.IdenthendelseService
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord

@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav
 
-import no.nav.syfo.infrastructure.database.PAktivitetskravVarsel
-import no.nav.syfo.infrastructure.database.VarselReferences
+import no.nav.syfo.infrastructure.database.repository.PAktivitetskravVarsel
+import no.nav.syfo.infrastructure.database.repository.VarselReferences
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering

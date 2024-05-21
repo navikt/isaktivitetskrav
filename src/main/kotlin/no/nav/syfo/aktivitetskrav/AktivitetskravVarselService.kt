@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
-import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel

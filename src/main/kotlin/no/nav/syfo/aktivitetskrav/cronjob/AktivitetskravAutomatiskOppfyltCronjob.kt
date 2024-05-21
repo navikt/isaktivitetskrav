@@ -3,9 +3,9 @@ package no.nav.syfo.aktivitetskrav.cronjob
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.domain.isNy
-import no.nav.syfo.application.cronjob.Cronjob
-import no.nav.syfo.application.cronjob.CronjobResult
-import no.nav.syfo.application.database.DatabaseInterface
+import no.nav.syfo.infrastructure.cronjob.Cronjob
+import no.nav.syfo.infrastructure.cronjob.CronjobResult
+import no.nav.syfo.infrastructure.database.DatabaseInterface
 import org.slf4j.LoggerFactory
 import java.util.UUID
 

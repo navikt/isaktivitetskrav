@@ -5,10 +5,10 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.infrastructure.database.AktivitetskravRepository
-import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
-import no.nav.syfo.infrastructure.database.createAktivitetskravVurdering
-import no.nav.syfo.infrastructure.database.updateAktivitetskrav
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
+import no.nav.syfo.infrastructure.database.repository.createAktivitetskravVurdering
+import no.nav.syfo.infrastructure.database.repository.updateAktivitetskrav
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.shouldBe
