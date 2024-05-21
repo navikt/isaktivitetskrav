@@ -1,7 +1,6 @@
 package no.nav.syfo.testhelper
 
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
-import no.nav.syfo.aktivitetskrav.database.*
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import no.nav.syfo.application.database.DatabaseInterface
 import no.nav.syfo.application.database.toList
 import no.nav.syfo.domain.PersonIdent
