@@ -2,7 +2,7 @@ name: Gradle dependency submission
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "**.gradle.kts"
   workflow_dispatch:
