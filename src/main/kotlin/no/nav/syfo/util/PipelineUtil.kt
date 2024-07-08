@@ -3,6 +3,8 @@ package no.nav.syfo.util
 import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
+import no.nav.syfo.application.exception.ForbiddenAccessVeilederException
+import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
 
 const val JWT_CLAIM_AZP = "azp"
@@ -26,3 +28,28 @@ fun ApplicationCall.getNAVIdent(): String {
 
 fun ApplicationCall.getBearerHeader(): String? =
     this.request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")
+
+suspend fun ApplicationCall.checkVeilederTilgang(
+    action: String,
+    veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
+    block: suspend () -> Unit,
+) {
+    val callId = getCallId()
+    val token = getBearerHeader()
+        ?: throw IllegalArgumentException("Failed to complete the following action: $action. No Authorization header supplied")
+    val personident = getPersonIdent()
+        ?: throw IllegalArgumentException("Failed to $action: No $NAV_PERSONIDENT_HEADER supplied in request header")
+
+    val hasAccess = veilederTilgangskontrollClient.hasAccess(
+        callId = callId,
+        personIdent = personident,
+        token = token,
+    )
+    if (!hasAccess) {
+        throw ForbiddenAccessVeilederException(
+            action = action,
+        )
+    } else {
+        block()
+    }
+}

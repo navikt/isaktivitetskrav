@@ -126,6 +126,9 @@ class AktivitetskravService(
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent, connection = connection)
             .map { it.toAktivitetskrav() }
 
+    fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): List<Aktivitetskrav> =
+        aktivitetskravRepository.getAktivitetskravForPersons(personidenter = personidenter)
+
     fun getAktivitetskravAfterCutoff(personIdent: PersonIdent): List<Aktivitetskrav> =
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
             .map { it.toAktivitetskrav() }

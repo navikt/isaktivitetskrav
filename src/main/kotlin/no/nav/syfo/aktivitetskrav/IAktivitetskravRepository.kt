@@ -18,6 +18,8 @@ interface IAktivitetskravRepository {
         connection: Connection? = null,
     ): List<PAktivitetskrav>
 
+    fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): List<Aktivitetskrav>
+
     fun getOutdatedAktivitetskrav(
         arenaCutoff: LocalDate,
         outdatedCutoff: LocalDate

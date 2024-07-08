@@ -26,7 +26,8 @@ import java.util.concurrent.Future
 
 class AktivitetskravApiSpek : Spek({
     val objectMapper: ObjectMapper = configuredJacksonMapper()
-    val urlAktivitetskravPerson = "$aktivitetskravApiBasePath/$aktivitetskravApiPersonidentPath"
+    val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
+    val urlAktivitetskravPerson = "$aktivitetskravApiBasePath/personident"
 
     val nyAktivitetskrav = createAktivitetskravNy(
         tilfelleStart = LocalDate.now().minusWeeks(10),
@@ -468,6 +469,86 @@ class AktivitetskravApiSpek : Spek({
                             historikkDTOs[0].status shouldBeEqualTo AktivitetskravStatus.LUKKET
                             historikkDTOs[1].status shouldBeEqualTo AktivitetskravStatus.NY
                         }
+                    }
+                }
+            }
+
+            describe("POST /get-vurderinger") {
+
+                val fritekst = "Et forhåndsvarsel"
+                val document = generateDocumentComponentDTO(fritekst = fritekst)
+                val forhandsvarselDTO = ForhandsvarselDTO(
+                    fritekst = fritekst,
+                    document = document,
+                )
+                val pdf = byteArrayOf(0x2E, 100)
+
+                fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList()) =
+                    AktivitetskravVurdering.create(
+                        status = status,
+                        createdBy = UserConstants.VEILEDER_IDENT,
+                        beskrivelse = "En test vurdering",
+                        arsaker = arsaker,
+                        frist = null,
+                    )
+
+                it("Returns NoContent 204 when persons have no aktivitetskrav") {
+                    with(
+                        handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                            setBody(objectMapper.writeValueAsString(GetVurderingerRequestBody(listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT.value))))
+                        }
+                    ) {
+                        response.status() shouldBeEqualTo HttpStatusCode.NoContent
+                    }
+                }
+
+                it("Return BadRequest 400 when no request payload is received") {
+                    with(
+                        handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                        }
+                    ) {
+                        response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                    }
+                }
+
+                it("Returns OK 200 when persons have aktivitetskrav with vurderinger and varsel") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    createVurdering(AktivitetskravStatus.AVVENT, listOf(VurderingArsak.Avvent.InformasjonSykmeldt))
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+                    val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
+                    val newVarsel = AktivitetskravVarsel.create(
+                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        forhandsvarselDTO.document
+                    )
+                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+                        firstAktivitetskrav,
+                        newVurdering,
+                        newVarsel,
+                        pdf
+                    )
+                    val personsWithAktivitetskrav =
+                        listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT.value, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
+
+                    with(
+                        handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                            setBody(objectMapper.writeValueAsString(GetVurderingerRequestBody(personidenter = personsWithAktivitetskrav)))
+                        }
+                    ) {
+                        response.status() shouldBeEqualTo HttpStatusCode.OK
+                        val responseContent = objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
+                        responseContent.size shouldBeEqualTo 1
+                        responseContent.first().vurderinger.size shouldBeEqualTo 2
+                        responseContent.first().vurderinger.find { it.varsel !== null } shouldNotBe null
                     }
                 }
             }
