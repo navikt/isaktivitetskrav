@@ -1,4 +1,4 @@
-package no.nav.syfo.application.database
+package no.nav.syfo.infrastructure.database
 
 import io.ktor.server.application.*
 import no.nav.syfo.application.*

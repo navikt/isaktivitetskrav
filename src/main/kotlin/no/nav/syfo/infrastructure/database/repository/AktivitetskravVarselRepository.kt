@@ -1,4 +1,4 @@
-package no.nav.syfo.infrastructure.database
+package no.nav.syfo.infrastructure.database.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
 import kotlinx.coroutines.Dispatchers
@@ -10,9 +10,9 @@ import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
-import no.nav.syfo.application.database.DatabaseInterface
-import no.nav.syfo.application.database.NoElementInsertedException
-import no.nav.syfo.application.database.toList
+import no.nav.syfo.infrastructure.database.DatabaseInterface
+import no.nav.syfo.infrastructure.database.NoElementInsertedException
+import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC

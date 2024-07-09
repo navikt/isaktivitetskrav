@@ -1,7 +1,9 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.application.kafka.*
+import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
+import no.nav.syfo.infrastructure.kafka.kafkaAivenConsumerConfig
+import no.nav.syfo.infrastructure.kafka.launchKafkaTask
 import no.nav.syfo.util.configuredJacksonMapper
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.Deserializer

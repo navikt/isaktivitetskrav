@@ -1,12 +1,12 @@
 package no.nav.syfo.testhelper
 
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
-import no.nav.syfo.application.database.DatabaseInterface
-import no.nav.syfo.application.database.toList
+import no.nav.syfo.infrastructure.database.DatabaseInterface
+import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.database.PAktivitetskravVarsel
-import no.nav.syfo.infrastructure.database.PAktivitetskravVarselPdf
-import no.nav.syfo.infrastructure.database.toPAktivitetskravVarsel
+import no.nav.syfo.infrastructure.database.repository.PAktivitetskravVarsel
+import no.nav.syfo.infrastructure.database.repository.PAktivitetskravVarselPdf
+import no.nav.syfo.infrastructure.database.repository.toPAktivitetskravVarsel
 import org.flywaydb.core.Flyway
 import java.sql.Connection
 import java.sql.ResultSet

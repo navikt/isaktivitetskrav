@@ -1,4 +1,4 @@
-package no.nav.syfo.application.database
+package no.nav.syfo.infrastructure.database
 
 data class DatabaseEnvironment(
     val host: String,

@@ -2,7 +2,7 @@ package no.nav.syfo.identhendelse
 
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.infrastructure.database.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData

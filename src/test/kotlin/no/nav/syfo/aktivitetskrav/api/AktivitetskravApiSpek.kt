@@ -8,9 +8,9 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.infrastructure.database.AktivitetskravRepository
-import no.nav.syfo.infrastructure.database.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
@@ -483,13 +483,13 @@ class AktivitetskravApiSpek : Spek({
                 )
                 val pdf = byteArrayOf(0x2E, 100)
 
-                fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList()) =
+                fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList(), frist: LocalDate? = null) =
                     AktivitetskravVurdering.create(
                         status = status,
                         createdBy = UserConstants.VEILEDER_IDENT,
                         beskrivelse = "En test vurdering",
                         arsaker = arsaker,
-                        frist = null,
+                        frist = frist,
                     )
 
                 it("Returns NoContent 204 when persons have no aktivitetskrav") {
@@ -518,11 +518,14 @@ class AktivitetskravApiSpek : Spek({
                 it("Returns OK 200 when persons have aktivitetskrav with vurderinger and varsel") {
                     val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                    createVurdering(AktivitetskravStatus.AVVENT, listOf(VurderingArsak.Avvent.InformasjonSykmeldt))
-                        .also {
-                            firstAktivitetskrav.vurder(it)
-                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
-                        }
+                    createVurdering(
+                        AktivitetskravStatus.AVVENT,
+                        listOf(VurderingArsak.Avvent.InformasjonSykmeldt),
+                        LocalDate.now().plusDays(1)
+                    ).also {
+                        firstAktivitetskrav.vurder(it)
+                        aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                    }
                     val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
                         VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
@@ -547,8 +550,42 @@ class AktivitetskravApiSpek : Spek({
                         response.status() shouldBeEqualTo HttpStatusCode.OK
                         val responseContent = objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
                         responseContent.size shouldBeEqualTo 1
-                        responseContent.first().vurderinger.size shouldBeEqualTo 2
-                        responseContent.first().vurderinger.find { it.varsel !== null } shouldNotBe null
+                        val aktivitetskrav = responseContent.first()
+                        aktivitetskrav.vurderinger.size shouldBeEqualTo 2
+                        val avventVurdering = aktivitetskrav.vurderinger.find { it.status == AktivitetskravStatus.AVVENT }
+                        val forhandsvarselVurdering = aktivitetskrav.vurderinger.find { it.status == AktivitetskravStatus.FORHANDSVARSEL }
+                        avventVurdering?.frist shouldNotBe null
+                        forhandsvarselVurdering?.varsel?.svarfrist shouldNotBe null
+                    }
+                }
+
+                it("Only returns aktivitetskrav for persons with access") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    val secondAktivitetskrav = Aktivitetskrav.create(UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
+                    val thirdAktivitetskrav = Aktivitetskrav.create(UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS)
+                    aktivitetskravRepository.createAktivitetskrav(thirdAktivitetskrav, UUID.randomUUID())
+                    val personsWithAktivitetskrav =
+                        listOf(
+                            UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
+                            UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value,
+                            UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS.value,
+                        )
+
+                    with(
+                        handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                            setBody(objectMapper.writeValueAsString(GetVurderingerRequestBody(personidenter = personsWithAktivitetskrav)))
+                        }
+                    ) {
+                        response.status() shouldBeEqualTo HttpStatusCode.OK
+                        val responseContent = objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
+                        responseContent.size shouldBeEqualTo 2
+                        responseContent.any { it.uuid == firstAktivitetskrav.uuid } shouldBe true
+                        responseContent.any { it.uuid == secondAktivitetskrav.uuid } shouldBe true
+                        responseContent.none { it.uuid == thirdAktivitetskrav.uuid } shouldBe true
                     }
                 }
             }
