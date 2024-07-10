@@ -3,6 +3,7 @@ package no.nav.syfo.aktivitetskrav
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
@@ -17,9 +18,11 @@ import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createAktivitetskravOppfylt
+import no.nav.syfo.testhelper.generator.createVurdering
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.getAktivitetskravVarselPdf
 import org.amshove.kluent.internal.assertFailsWith
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeEmpty
@@ -30,6 +33,7 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.util.UUID
 import java.util.concurrent.Future
 
 class AktivitetskravServiceSpek : Spek({
@@ -244,6 +248,28 @@ class AktivitetskravServiceSpek : Spek({
                     val varsel =
                         aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                     varsel.shouldBeNull()
+                }
+            }
+
+            describe("getAktivitetskravForPersons") {
+                it("gets aktivitetskrav with only the most recent vurdering for persons") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+                    createVurdering(AktivitetskravStatus.IKKE_OPPFYLT)
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+
+                    val aktivitetskravForPersons =
+                        aktivitetskravService.getAktivitetskravForPersons(listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT))
+                    aktivitetskravForPersons.first().vurderinger.size shouldBe 1
+                    aktivitetskravForPersons.first().vurderinger.first().status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
                 }
             }
         }

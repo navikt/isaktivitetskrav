@@ -515,17 +515,9 @@ class AktivitetskravApiSpek : Spek({
                     }
                 }
 
-                it("Returns OK 200 when persons have aktivitetskrav with vurderinger and varsel") {
+                it("Returns OK 200 when persons have aktivitetskrav with most recent vurdering and varsel") {
                     val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                    createVurdering(
-                        AktivitetskravStatus.AVVENT,
-                        listOf(VurderingArsak.Avvent.InformasjonSykmeldt),
-                        LocalDate.now().plusDays(1)
-                    ).also {
-                        firstAktivitetskrav.vurder(it)
-                        aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
-                    }
                     val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
                         VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
@@ -551,10 +543,8 @@ class AktivitetskravApiSpek : Spek({
                         val responseContent = objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
                         responseContent.size shouldBeEqualTo 1
                         val aktivitetskrav = responseContent.first()
-                        aktivitetskrav.vurderinger.size shouldBeEqualTo 2
-                        val avventVurdering = aktivitetskrav.vurderinger.find { it.status == AktivitetskravStatus.AVVENT }
+                        aktivitetskrav.vurderinger.size shouldBeEqualTo 1
                         val forhandsvarselVurdering = aktivitetskrav.vurderinger.find { it.status == AktivitetskravStatus.FORHANDSVARSEL }
-                        avventVurdering?.frist shouldNotBe null
                         forhandsvarselVurdering?.varsel?.svarfrist shouldNotBe null
                     }
                 }

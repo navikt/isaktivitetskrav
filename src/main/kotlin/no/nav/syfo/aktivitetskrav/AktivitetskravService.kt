@@ -128,6 +128,7 @@ class AktivitetskravService(
 
     fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): List<Aktivitetskrav> =
         aktivitetskravRepository.getAktivitetskravForPersons(personidenter = personidenter)
+            .mapMostRecentVurdering()
 
     fun getAktivitetskravAfterCutoff(personIdent: PersonIdent): List<Aktivitetskrav> =
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
@@ -165,3 +166,12 @@ class AktivitetskravService(
         )
     }
 }
+
+private fun List<Aktivitetskrav>.mapMostRecentVurdering() =
+    this.map { aktivitetskrav ->
+        aktivitetskrav.copy(
+            vurderinger = aktivitetskrav.vurderinger
+                .maxByOrNull { it.createdAt }
+                ?.let { listOf(it) } ?: emptyList()
+        )
+    }

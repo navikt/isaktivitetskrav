@@ -21,15 +21,6 @@ import java.util.UUID
 
 class AktivitetskravRepositorySpek : Spek({
 
-    fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList()) =
-        AktivitetskravVurdering.create(
-            status = status,
-            createdBy = UserConstants.VEILEDER_IDENT,
-            beskrivelse = "En test vurdering",
-            arsaker = arsaker,
-            frist = null,
-        )
-
     describe(AktivitetskravRepositorySpek::class.java.simpleName) {
         with(TestApplicationEngine()) {
             start()
