@@ -15,6 +15,7 @@ import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
+import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createAktivitetskravOppfylt
@@ -253,7 +254,7 @@ class AktivitetskravServiceSpek : Spek({
 
             describe("getAktivitetskravForPersons") {
                 it("gets aktivitetskrav with only the most recent vurdering for persons") {
-                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
                     createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
                         .also {
@@ -267,9 +268,9 @@ class AktivitetskravServiceSpek : Spek({
                         }
 
                     val aktivitetskravForPersons =
-                        aktivitetskravService.getAktivitetskravForPersons(listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT))
-                    aktivitetskravForPersons.first().vurderinger.size shouldBe 1
-                    aktivitetskravForPersons.first().vurderinger.first().status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
+                        aktivitetskravService.getAktivitetskravForPersons(listOf(ARBEIDSTAKER_PERSONIDENT))
+                    aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.vurderinger?.size shouldBe 1
+                    aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
                 }
             }
         }

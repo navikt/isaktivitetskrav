@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
@@ -149,18 +150,24 @@ fun Route.registerAktivitetskravApi(
                 callId = call.getCallId(),
             )
 
-            val aktivitetskravList = if (personerVeilederHasAccessTo.isNullOrEmpty()) {
-                emptyList()
-            } else {
-                aktivitetskravService.getAktivitetskravForPersons(
-                    personidenter = personerVeilederHasAccessTo,
-                )
-            }
+            val aktivitetskravvurderinger: Map<PersonIdent, Aktivitetskrav> =
+                if (personerVeilederHasAccessTo.isNullOrEmpty()) {
+                    emptyMap()
+                } else {
+                    aktivitetskravService.getAktivitetskravForPersons(
+                        personidenter = personerVeilederHasAccessTo,
+                    )
+                }
 
-            if (aktivitetskravList.isEmpty()) {
+            if (aktivitetskravvurderinger.isEmpty()) {
                 call.respond(HttpStatusCode.NoContent)
             } else {
-                val responseDTO = aktivitetskravList.map { AktivitetskravResponseDTO.from(it) }
+                val responseDTO =
+                    GetAktivitetskravForPersonsResponseDTO(
+                        aktivitetskravvurderinger = aktivitetskravvurderinger.map {
+                            it.key.value to AktivitetskravResponseDTO.from(it.value)
+                        }.toMap()
+                    )
                 call.respond(responseDTO)
             }
         }

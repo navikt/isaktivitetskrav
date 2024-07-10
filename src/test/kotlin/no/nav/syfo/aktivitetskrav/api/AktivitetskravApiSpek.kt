@@ -14,6 +14,10 @@ import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselReposi
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
+import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
+import no.nav.syfo.testhelper.UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT
+import no.nav.syfo.testhelper.UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS
+import no.nav.syfo.testhelper.UserConstants.VEILEDER_IDENT
 import no.nav.syfo.testhelper.generator.*
 import no.nav.syfo.util.*
 import org.amshove.kluent.*
@@ -35,7 +39,7 @@ class AktivitetskravApiSpek : Spek({
         createdAt = nowUTC().minusWeeks(6)
     )
     val nyAktivitetskravAnnenPerson = createAktivitetskravNy(
-        personIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT,
+        personIdent = OTHER_ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().minusWeeks(10),
     ).copy(
         createdAt = nowUTC().minusWeeks(2)
@@ -90,7 +94,7 @@ class AktivitetskravApiSpek : Spek({
             val validToken = generateJWT(
                 audience = externalMockEnvironment.environment.azure.appClientId,
                 issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-                navIdent = UserConstants.VEILEDER_IDENT,
+                navIdent = VEILEDER_IDENT,
             )
 
             describe("Get aktivitetskrav for person") {
@@ -103,7 +107,7 @@ class AktivitetskravApiSpek : Spek({
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -132,7 +136,7 @@ class AktivitetskravApiSpek : Spek({
 
                         val avventVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.AVVENT,
-                            createdBy = UserConstants.VEILEDER_IDENT,
+                            createdBy = VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
                                 VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
@@ -153,7 +157,7 @@ class AktivitetskravApiSpek : Spek({
                         val beskrivelse = "Oppfylt"
                         val oppfyltVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.OPPFYLT,
-                            createdBy = UserConstants.VEILEDER_IDENT,
+                            createdBy = VEILEDER_IDENT,
                             beskrivelse = beskrivelse,
                             arsaker = listOf(VurderingArsak.Oppfylt.Gradert),
                         )
@@ -169,7 +173,7 @@ class AktivitetskravApiSpek : Spek({
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -188,7 +192,7 @@ class AktivitetskravApiSpek : Spek({
 
                             latestVurdering.status shouldBeEqualTo AktivitetskravStatus.OPPFYLT
                             latestVurdering.beskrivelse shouldBeEqualTo beskrivelse
-                            latestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            latestVurdering.createdBy shouldBeEqualTo VEILEDER_IDENT
                             latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
                             latestVurdering.arsaker.first()
                                 .toVurderingArsak(AktivitetskravStatus.OPPFYLT) shouldBeEqualTo VurderingArsak.Oppfylt.Gradert
@@ -196,7 +200,7 @@ class AktivitetskravApiSpek : Spek({
 
                             oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                             oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
-                            oldestVurdering.createdBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                            oldestVurdering.createdBy shouldBeEqualTo VEILEDER_IDENT
                             oldestVurdering.arsaker.map { it.toVurderingArsak(AktivitetskravStatus.AVVENT) } shouldBeEqualTo listOf(
                                 VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
                                 VurderingArsak.Avvent.InformasjonSykmeldt,
@@ -231,7 +235,7 @@ class AktivitetskravApiSpek : Spek({
                         with(
                             handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -277,7 +281,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                                 setBody(objectMapper.writeValueAsString(newAktivitetskravDto))
                             }
                         ) {
@@ -299,7 +303,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
@@ -335,7 +339,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                                 setBody(objectMapper.writeValueAsString(NewAktivitetskravDTO(UUID.randomUUID())))
                             }
                         ) {
@@ -349,7 +353,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Post, aktivitetskravApiBasePath) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                                 setBody(objectMapper.writeValueAsString(NewAktivitetskravDTO(previousAktivitetskravUuid)))
                             }
                         ) {
@@ -368,7 +372,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Get, urlHistorikk) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -384,7 +388,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Get, urlHistorikk) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -408,7 +412,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Get, urlHistorikk) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -426,7 +430,7 @@ class AktivitetskravApiSpek : Spek({
                                 aktivitetskrav = nyAktivitetskrav,
                                 aktivitetskravVurdering = AktivitetskravVurdering.create(
                                     status = AktivitetskravStatus.UNNTAK,
-                                    createdBy = UserConstants.VEILEDER_IDENT,
+                                    createdBy = VEILEDER_IDENT,
                                     beskrivelse = "Unntak",
                                     arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
                                 ),
@@ -439,7 +443,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Get, urlHistorikk) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -459,7 +463,7 @@ class AktivitetskravApiSpek : Spek({
                             handleRequest(HttpMethod.Get, urlHistorikk) {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                                addHeader(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             }
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -486,7 +490,7 @@ class AktivitetskravApiSpek : Spek({
                 fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList(), frist: LocalDate? = null) =
                     AktivitetskravVurdering.create(
                         status = status,
-                        createdBy = UserConstants.VEILEDER_IDENT,
+                        createdBy = VEILEDER_IDENT,
                         beskrivelse = "En test vurdering",
                         arsaker = arsaker,
                         frist = frist,
@@ -497,7 +501,7 @@ class AktivitetskravApiSpek : Spek({
                         handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                            setBody(objectMapper.writeValueAsString(GetVurderingerRequestBody(listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT.value))))
+                            setBody(objectMapper.writeValueAsString(GetVurderingerRequestBody(listOf(ARBEIDSTAKER_PERSONIDENT.value))))
                         }
                     ) {
                         response.status() shouldBeEqualTo HttpStatusCode.NoContent
@@ -516,7 +520,7 @@ class AktivitetskravApiSpek : Spek({
                 }
 
                 it("Returns OK 200 when persons have aktivitetskrav with most recent vurdering and varsel") {
-                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
                     val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
@@ -529,39 +533,92 @@ class AktivitetskravApiSpek : Spek({
                         newVarsel,
                         pdf
                     )
-                    val personsWithAktivitetskrav =
-                        listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT.value, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value)
-
                     with(
                         handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                            setBody(objectMapper.writeValueAsString(GetVurderingerRequestBody(personidenter = personsWithAktivitetskrav)))
+                            setBody(
+                                objectMapper.writeValueAsString(
+                                    GetVurderingerRequestBody(personidenter = listOf(ARBEIDSTAKER_PERSONIDENT.value))
+                                )
+                            )
                         }
                     ) {
                         response.status() shouldBeEqualTo HttpStatusCode.OK
-                        val responseContent = objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
-                        responseContent.size shouldBeEqualTo 1
-                        val aktivitetskrav = responseContent.first()
-                        aktivitetskrav.vurderinger.size shouldBeEqualTo 1
-                        val forhandsvarselVurdering = aktivitetskrav.vurderinger.find { it.status == AktivitetskravStatus.FORHANDSVARSEL }
+                        val responseContent = objectMapper.readValue<GetAktivitetskravForPersonsResponseDTO>(response.content!!)
+                        responseContent.aktivitetskravvurderinger.size shouldBeEqualTo 1
+                        val aktivitetskrav = responseContent.aktivitetskravvurderinger[ARBEIDSTAKER_PERSONIDENT.value]
+                        aktivitetskrav?.vurderinger?.size shouldBeEqualTo 1
+                        val forhandsvarselVurdering = aktivitetskrav?.vurderinger?.find { it.status == AktivitetskravStatus.FORHANDSVARSEL }
                         forhandsvarselVurdering?.varsel?.svarfrist shouldNotBe null
                     }
                 }
 
-                it("Only returns aktivitetskrav for persons with access") {
-                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                it("Returns OK 200 for mulitple persons with most recent vurdering") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                    val secondAktivitetskrav = Aktivitetskrav.create(UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    createVurdering(
+                        status = AktivitetskravStatus.AVVENT,
+                        arsaker = listOf(VurderingArsak.Avvent.InformasjonSykmeldt)
+                    ).also {
+                        firstAktivitetskrav.vurder(it)
+                        aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                    }
+                    val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
+                    val newVarsel = AktivitetskravVarsel.create(
+                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        forhandsvarselDTO.document
+                    )
+                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+                        firstAktivitetskrav,
+                        newVurdering,
+                        newVarsel,
+                        pdf
+                    )
+                    val secondAktivitetskrav = Aktivitetskrav.create(OTHER_ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
-                    val thirdAktivitetskrav = Aktivitetskrav.create(UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS)
+                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also {
+                        secondAktivitetskrav.vurder(it)
+                        aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
+                    }
+                    createVurdering(AktivitetskravStatus.IKKE_OPPFYLT).also {
+                        secondAktivitetskrav.vurder(it)
+                        aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
+                    }
+                    with(
+                        handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
+                            setBody(
+                                objectMapper.writeValueAsString(
+                                    GetVurderingerRequestBody(
+                                        personidenter = listOf(ARBEIDSTAKER_PERSONIDENT.value, OTHER_ARBEIDSTAKER_PERSONIDENT.value)
+                                    )
+                                )
+                            )
+                        }
+                    ) {
+                        response.status() shouldBeEqualTo HttpStatusCode.OK
+                        val responseContent = objectMapper.readValue<GetAktivitetskravForPersonsResponseDTO>(response.content!!)
+                        responseContent.aktivitetskravvurderinger.size shouldBe 2
+                        val firstAktivitetskravResponse = responseContent.aktivitetskravvurderinger[ARBEIDSTAKER_PERSONIDENT.value]
+                        val secondAktivitetskravResponse = responseContent.aktivitetskravvurderinger[OTHER_ARBEIDSTAKER_PERSONIDENT.value]
+                        firstAktivitetskravResponse?.vurderinger?.size shouldBe 1
+                        secondAktivitetskravResponse?.vurderinger?.size shouldBe 1
+                        firstAktivitetskravResponse?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.FORHANDSVARSEL
+                        secondAktivitetskravResponse?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
+                    }
+                }
+
+                it("Only returns aktivitetskrav for persons with access") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    val secondAktivitetskrav = Aktivitetskrav.create(OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
+                    val thirdAktivitetskrav = Aktivitetskrav.create(PERSONIDENT_VEILEDER_NO_ACCESS)
                     aktivitetskravRepository.createAktivitetskrav(thirdAktivitetskrav, UUID.randomUUID())
                     val personsWithAktivitetskrav =
-                        listOf(
-                            UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
-                            UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT.value,
-                            UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS.value,
-                        )
+                        listOf(ARBEIDSTAKER_PERSONIDENT.value, OTHER_ARBEIDSTAKER_PERSONIDENT.value, PERSONIDENT_VEILEDER_NO_ACCESS.value)
 
                     with(
                         handleRequest(HttpMethod.Post, "$aktivitetskravApiBasePath/get-vurderinger") {
@@ -571,11 +628,11 @@ class AktivitetskravApiSpek : Spek({
                         }
                     ) {
                         response.status() shouldBeEqualTo HttpStatusCode.OK
-                        val responseContent = objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
-                        responseContent.size shouldBeEqualTo 2
-                        responseContent.any { it.uuid == firstAktivitetskrav.uuid } shouldBe true
-                        responseContent.any { it.uuid == secondAktivitetskrav.uuid } shouldBe true
-                        responseContent.none { it.uuid == thirdAktivitetskrav.uuid } shouldBe true
+                        val responseContent = objectMapper.readValue<GetAktivitetskravForPersonsResponseDTO>(response.content!!)
+                        responseContent.aktivitetskravvurderinger.size shouldBeEqualTo 2
+                        responseContent.aktivitetskravvurderinger.any { it.value.uuid == firstAktivitetskrav.uuid } shouldBe true
+                        responseContent.aktivitetskravvurderinger.any { it.value.uuid == secondAktivitetskrav.uuid } shouldBe true
+                        responseContent.aktivitetskravvurderinger.none { it.value.uuid == thirdAktivitetskrav.uuid } shouldBe true
                     }
                 }
             }
