@@ -4,15 +4,15 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
-import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
+import no.nav.syfo.application.exception.ConflictException
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
-import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -34,6 +34,7 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.Future
 
@@ -271,6 +272,22 @@ class AktivitetskravServiceSpek : Spek({
                         aktivitetskravService.getAktivitetskravForPersons(listOf(ARBEIDSTAKER_PERSONIDENT))
                     aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.vurderinger?.size shouldBe 1
                     aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
+                }
+
+                it("gets the most recently created aktivitetskrav") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                        .copy(createdAt = OffsetDateTime.now().minusDays(5))
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    val secondAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                        .copy(createdAt = OffsetDateTime.now().minusDays(2))
+                    aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
+                    val thirdAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                        .copy(createdAt = OffsetDateTime.now().minusDays(3))
+                    aktivitetskravRepository.createAktivitetskrav(thirdAktivitetskrav, UUID.randomUUID())
+
+                    val aktivitetskravForPersons =
+                        aktivitetskravService.getAktivitetskravForPersons(listOf(ARBEIDSTAKER_PERSONIDENT))
+                    aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.uuid shouldBeEqualTo secondAktivitetskrav.uuid
                 }
             }
         }

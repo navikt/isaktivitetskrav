@@ -45,8 +45,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
         database.connection.use { connection ->
             connection.prepareStatement(GET_AKTIVITETSKRAV_FOR_PERSONS_QUERY).use {
                 it.setString(1, personidenter.joinToString(transform = { it.value }, separator = ","))
-                val resultSet = it.executeQuery()
-                resultSet.toAktivitetskravWithVurderinger()
+                it.executeQuery().toAktivitetskravWithVurderinger()
             }.map { it.toAktivitetskrav() }
         }
 
