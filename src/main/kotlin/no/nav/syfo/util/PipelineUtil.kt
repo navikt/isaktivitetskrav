@@ -3,6 +3,7 @@ package no.nav.syfo.util
 import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.util.pipeline.PipelineContext
 import no.nav.syfo.application.exception.ForbiddenAccessVeilederException
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
@@ -29,15 +30,15 @@ fun ApplicationCall.getNAVIdent(): String {
 fun ApplicationCall.getBearerHeader(): String? =
     this.request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")
 
-suspend fun ApplicationCall.checkVeilederTilgang(
+suspend fun PipelineContext<out Unit, ApplicationCall>.checkVeilederTilgang(
     action: String,
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
     block: suspend () -> Unit,
 ) {
-    val callId = getCallId()
-    val token = getBearerHeader()
+    val callId = call.getCallId()
+    val token = call.getBearerHeader()
         ?: throw IllegalArgumentException("Failed to complete the following action: $action. No Authorization header supplied")
-    val personident = getPersonIdent()
+    val personident = call.getPersonIdent()
         ?: throw IllegalArgumentException("Failed to $action: No $NAV_PERSONIDENT_HEADER supplied in request header")
 
     val hasAccess = veilederTilgangskontrollClient.hasAccess(

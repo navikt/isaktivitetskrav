@@ -33,7 +33,7 @@ fun Route.registerAktivitetskravApi(
 ) {
     route(aktivitetskravApiBasePath) {
         get(aktivitetskravApiPersonidentPath) {
-            call.checkVeilederTilgang(
+            checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             ) {
@@ -53,7 +53,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         get(aktivitetskravApiHistorikkPath) {
-            call.checkVeilederTilgang(
+            checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             ) {
@@ -62,7 +62,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         post {
-            call.checkVeilederTilgang(
+            checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             ) {
@@ -83,7 +83,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
-            call.checkVeilederTilgang(
+            checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             ) {
@@ -113,7 +113,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
-            call.checkVeilederTilgang(
+            checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             ) {
