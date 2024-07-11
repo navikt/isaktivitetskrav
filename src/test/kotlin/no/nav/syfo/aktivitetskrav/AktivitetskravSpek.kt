@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.domain.*
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -136,32 +136,32 @@ class AktivitetskravSpek : Spek({
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
-            var kafkaAktivitetskravVurdering = KafkaAktivitetskravVurdering.from(updatedAktivitetskrav)
-            kafkaAktivitetskravVurdering.frist shouldBeEqualTo twoWeeksFromNow
+            var aktivitetskravVurderingRecord = AktivitetskravVurderingRecord.from(updatedAktivitetskrav)
+            aktivitetskravVurderingRecord.frist shouldBeEqualTo twoWeeksFromNow
 
             updatedAktivitetskrav = updatedAktivitetskrav.vurder(
                 aktivitetskravVurdering = oppfyltVurdering
             )
 
-            kafkaAktivitetskravVurdering = KafkaAktivitetskravVurdering.from(updatedAktivitetskrav)
+            aktivitetskravVurderingRecord = AktivitetskravVurderingRecord.from(updatedAktivitetskrav)
 
-            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
-            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Oppfylt"
-            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
-            kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
-            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
-            kafkaAktivitetskravVurdering.frist shouldBeEqualTo null
+            aktivitetskravVurderingRecord.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
+            aktivitetskravVurderingRecord.beskrivelse shouldBeEqualTo "Oppfylt"
+            aktivitetskravVurderingRecord.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
+            aktivitetskravVurderingRecord.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
+            aktivitetskravVurderingRecord.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
+            aktivitetskravVurderingRecord.frist shouldBeEqualTo null
         }
         it("updatedBy, sisteVurderingUuid, sistVurdert, frist and beskrivelse is null when not vurdert") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
 
-            val kafkaAktivitetskravVurdering = KafkaAktivitetskravVurdering.from(aktivitetskrav)
+            val aktivitetskravVurderingRecord = AktivitetskravVurderingRecord.from(aktivitetskrav)
 
-            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-            kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
-            kafkaAktivitetskravVurdering.frist shouldBeEqualTo null
-            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo null
+            aktivitetskravVurderingRecord.updatedBy shouldBeEqualTo null
+            aktivitetskravVurderingRecord.beskrivelse shouldBeEqualTo null
+            aktivitetskravVurderingRecord.sistVurdert shouldBeEqualTo null
+            aktivitetskravVurderingRecord.frist shouldBeEqualTo null
+            aktivitetskravVurderingRecord.sisteVurderingUuid shouldBeEqualTo null
         }
     }
 })

@@ -12,7 +12,7 @@ import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT
@@ -60,7 +60,7 @@ class AktivitetskravApiSpek : Spek({
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
-            val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+            val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
 
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,
@@ -287,7 +287,7 @@ class AktivitetskravApiSpek : Spek({
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                             val responseDTO = objectMapper.readValue<AktivitetskravResponseDTO>(response.content!!)
-                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
 
                             verify(exactly = 1) {
                                 kafkaProducer.send(capture(producerRecordSlot))
@@ -308,7 +308,7 @@ class AktivitetskravApiSpek : Spek({
                         ) {
                             response.status() shouldBeEqualTo HttpStatusCode.Created
                             val responseDTO = objectMapper.readValue<AktivitetskravResponseDTO>(response.content!!)
-                            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
 
                             verify(exactly = 1) {
                                 kafkaProducer.send(capture(producerRecordSlot))

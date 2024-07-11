@@ -8,7 +8,7 @@ import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
@@ -41,7 +41,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         val externalMockEnvironment = ExternalMockEnvironment.instance
         val database = externalMockEnvironment.database
         val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
-        val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+        val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
         val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
             producer = kafkaProducer,
         )
@@ -159,7 +159,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
                     aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksNotGradert.referanseTilfelleBitUuid
 
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskrav.personIdent.value
@@ -191,7 +191,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
                     aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksGradert.referanseTilfelleBitUuid
 
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskrav.personIdent.value
@@ -407,7 +407,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
                     latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
 
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
@@ -440,7 +440,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
                     latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
 
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
@@ -477,7 +477,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
                     latestAktivitetskrav.uuid shouldNotBeEqualTo automatiskOppfyltAktivitetskrav.uuid
 
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.NY.name
@@ -509,7 +509,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
                     latestAktivitetskrav.uuid shouldBeEqualTo automatiskOppfyltAktivitetskrav.uuid
 
-                    val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                     kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
@@ -585,7 +585,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
                         latestAktivitetskrav.stoppunktAt shouldNotBeEqualTo nyAktivitetskrav.stoppunktAt
 
-                        val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                        val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                         verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                         val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
@@ -615,7 +615,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                         latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
                         latestAktivitetskrav.stoppunktAt shouldNotBeEqualTo nyAktivitetskrav.stoppunktAt
 
-                        val kafkaRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                        val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                         verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                         val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
@@ -702,8 +702,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
                     aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
 
-                    val kafkaRecordSlot1 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
-                    val kafkaRecordSlot2 = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val kafkaRecordSlot1 = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
+                    val kafkaRecordSlot2 = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verifyOrder {
                         kafkaProducer.send(capture(kafkaRecordSlot1))
                         kafkaProducer.send(capture(kafkaRecordSlot2))

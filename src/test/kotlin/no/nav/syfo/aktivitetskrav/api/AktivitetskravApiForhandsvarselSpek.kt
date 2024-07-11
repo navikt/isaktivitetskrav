@@ -8,7 +8,7 @@ import io.mockk.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -38,7 +38,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
-            val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+            val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
 
             application.testApiModule(
                 externalMockEnvironment = externalMockEnvironment,

@@ -5,11 +5,12 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
-data class KafkaAktivitetskravVurdering(
+data class AktivitetskravVurderingRecord(
     val uuid: UUID,
     val personIdent: String,
     val createdAt: OffsetDateTime,
     val status: String,
+    val isFinal: Boolean,
     val beskrivelse: String?,
     val arsaker: List<String>,
     val stoppunktAt: LocalDate,
@@ -22,14 +23,15 @@ data class KafkaAktivitetskravVurdering(
     companion object {
         fun from(
             aktivitetskrav: Aktivitetskrav,
-            previousAktivitetskravUuid: UUID? = null
-        ): KafkaAktivitetskravVurdering {
+            previousAktivitetskravUuid: UUID? = null,
+        ): AktivitetskravVurderingRecord {
             val latestVurdering = aktivitetskrav.vurderinger.firstOrNull()
-            return KafkaAktivitetskravVurdering(
+            return AktivitetskravVurderingRecord(
                 uuid = aktivitetskrav.uuid,
                 personIdent = aktivitetskrav.personIdent.value,
                 createdAt = aktivitetskrav.createdAt,
                 status = aktivitetskrav.status.name,
+                isFinal = aktivitetskrav.status.isFinal,
                 beskrivelse = latestVurdering?.beskrivelse,
                 stoppunktAt = aktivitetskrav.stoppunktAt,
                 updatedBy = latestVurdering?.createdBy,
