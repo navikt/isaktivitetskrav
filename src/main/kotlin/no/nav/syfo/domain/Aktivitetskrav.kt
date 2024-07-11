@@ -1,12 +1,13 @@
-package no.nav.syfo.aktivitetskrav.domain
+package no.nav.syfo.domain
 
-import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import no.nav.syfo.util.isAfterOrEqual
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.collections.plus
+import kotlin.let
 
 const val AKTIVITETSKRAV_STOPPUNKT_WEEKS = 8L
 

@@ -1,8 +1,8 @@
 package no.nav.syfo.infrastructure.database.repository
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
+import no.nav.syfo.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.VurderingArsak
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*

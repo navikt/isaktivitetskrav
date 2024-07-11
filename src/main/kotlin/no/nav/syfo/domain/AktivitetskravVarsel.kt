@@ -1,8 +1,9 @@
-package no.nav.syfo.aktivitetskrav.domain
+package no.nav.syfo.domain
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.api.VarselResponseDTO
 import no.nav.syfo.util.nowUTC
+import java.lang.IllegalArgumentException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*

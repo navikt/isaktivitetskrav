@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.AktivitetskravStatus
 import java.time.LocalDateTime
 
 data class HistorikkDTO(

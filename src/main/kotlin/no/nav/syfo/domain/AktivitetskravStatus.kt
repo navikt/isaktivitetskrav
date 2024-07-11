@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.domain
+package no.nav.syfo.domain
 
 import java.util.*
 

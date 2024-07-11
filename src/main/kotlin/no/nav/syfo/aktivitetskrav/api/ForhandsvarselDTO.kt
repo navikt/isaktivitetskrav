@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravVurdering
 
 data class ForhandsvarselDTO(
     val fritekst: String,

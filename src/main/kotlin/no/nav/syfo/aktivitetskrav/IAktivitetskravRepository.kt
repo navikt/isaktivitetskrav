@@ -2,8 +2,8 @@ package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.infrastructure.database.repository.PAktivitetskrav
 import no.nav.syfo.infrastructure.database.repository.PAktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import java.sql.Connection
 import java.time.LocalDate
@@ -22,7 +22,7 @@ interface IAktivitetskravRepository {
 
     fun getOutdatedAktivitetskrav(
         arenaCutoff: LocalDate,
-        outdatedCutoff: LocalDate
+        outdatedCutoff: LocalDate,
     ): List<PAktivitetskrav>
 
     fun createAktivitetskrav(

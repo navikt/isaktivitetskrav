@@ -1,4 +1,4 @@
-package no.nav.syfo.aktivitetskrav.domain
+package no.nav.syfo.domain
 
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
 import no.nav.syfo.client.dokarkiv.domain.JournalpostType

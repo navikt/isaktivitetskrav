@@ -7,7 +7,7 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment

@@ -11,7 +11,7 @@ import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.*
 import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
 import no.nav.syfo.client.dokarkiv.domain.JournalpostResponse
@@ -84,7 +84,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             aktivitetskrav: Aktivitetskrav,
             pdf: ByteArray,
             varselType: VarselType,
-            document: List<DocumentComponentDTO>
+            document: List<DocumentComponentDTO>,
         ): AktivitetskravVarsel {
             val forhandsvarsel = AktivitetskravVarsel.create(varselType, document)
             aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(

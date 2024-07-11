@@ -2,7 +2,7 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
+import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.infrastructure.cronjob.Cronjob
 import no.nav.syfo.infrastructure.cronjob.CronjobResult
 import no.nav.syfo.client.dokarkiv.DokarkivClient
@@ -69,7 +69,7 @@ fun createJournalpostRequest(
     personIdent: PersonIdent,
     navn: String,
     pdf: ByteArray,
-    varsel: AktivitetskravVarsel
+    varsel: AktivitetskravVarsel,
 ): JournalpostRequest {
     val avsenderMottaker = AvsenderMottaker.create(
         id = personIdent.value,

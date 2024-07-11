@@ -2,7 +2,7 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.domain.isNy
+import no.nav.syfo.domain.isNy
 import no.nav.syfo.infrastructure.cronjob.Cronjob
 import no.nav.syfo.infrastructure.cronjob.CronjobResult
 import no.nav.syfo.infrastructure.database.DatabaseInterface

@@ -1,6 +1,7 @@
 package no.nav.syfo.infrastructure.database.repository
 
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.infrastructure.database.NoElementInsertedException
 import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.util.nowUTC

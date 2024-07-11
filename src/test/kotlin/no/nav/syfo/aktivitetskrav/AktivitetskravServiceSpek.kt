@@ -3,12 +3,12 @@ package no.nav.syfo.aktivitetskrav
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.VarselType
-import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
+import no.nav.syfo.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.VarselType
+import no.nav.syfo.domain.VurderingArsak
 import no.nav.syfo.application.exception.ConflictException
+import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer

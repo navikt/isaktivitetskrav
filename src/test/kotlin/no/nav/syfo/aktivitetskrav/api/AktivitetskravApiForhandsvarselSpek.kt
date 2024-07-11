@@ -6,7 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.domain.PersonIdent

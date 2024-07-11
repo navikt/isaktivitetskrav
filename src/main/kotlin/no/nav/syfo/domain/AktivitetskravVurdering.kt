@@ -1,9 +1,12 @@
-package no.nav.syfo.aktivitetskrav.domain
+package no.nav.syfo.domain
 
 import no.nav.syfo.util.nowUTC
+import java.lang.IllegalArgumentException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.also
+import kotlin.collections.isNotEmpty
 
 sealed class VurderingArsak(val value: String) {
 
@@ -44,7 +47,7 @@ data class AktivitetskravVurdering(
     val arsaker: List<VurderingArsak>,
     val beskrivelse: String?,
     val frist: LocalDate?,
-    val varsel: AktivitetskravVarsel?
+    val varsel: AktivitetskravVarsel?,
 ) {
 
     fun isFinal() = this.status.isFinal

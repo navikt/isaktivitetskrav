@@ -5,9 +5,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.IAktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.AktivitetskravVarsel
+import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.infrastructure.database.DatabaseInterface
@@ -82,7 +82,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) : 
         }
 
     override suspend fun updateExpiredVarselPublishedAt(
-        publishedExpiredVarsel: ExpiredVarsel
+        publishedExpiredVarsel: ExpiredVarsel,
     ): Int =
         withContext(Dispatchers.IO) {
             database.connection.use { connection ->
@@ -147,7 +147,7 @@ private const val queryCreateAktivitetskravVarsel =
 
 private fun Connection.createAktivitetskravVarsel(
     vurderingId: Int,
-    varsel: AktivitetskravVarsel
+    varsel: AktivitetskravVarsel,
 ): PAktivitetskravVarsel {
     val varsler = this.prepareStatement(queryCreateAktivitetskravVarsel).use {
         it.setString(1, varsel.uuid.toString())
