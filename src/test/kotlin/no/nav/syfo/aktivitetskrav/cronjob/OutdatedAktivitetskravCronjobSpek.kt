@@ -8,7 +8,7 @@ import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
@@ -24,7 +24,7 @@ import java.util.concurrent.Future
 class OutdatedAktivitetskravCronjobSpek : Spek({
     val externalMockEnvironment = ExternalMockEnvironment.instance
     val database = externalMockEnvironment.database
-    val kafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+    val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
 
     val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
     val outdatedCutoff = externalMockEnvironment.environment.outdatedCutoff
@@ -81,7 +81,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                 result.updated shouldBeEqualTo 1
             }
 
-            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
             verify(exactly = 1) {
                 kafkaProducer.send(capture(producerRecordSlot))
             }

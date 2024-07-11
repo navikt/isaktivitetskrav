@@ -13,7 +13,7 @@ import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
@@ -40,7 +40,7 @@ class AktivitetskravVarselServiceSpek : Spek({
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
-            val vurderingProducerMock = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+            val vurderingProducerMock = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
             val expiredVarselProducerMock = mockk<KafkaProducer<String, ExpiredVarsel>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(vurderingProducerMock)
@@ -101,7 +101,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                         varsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
                     }
 
-                    val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) {
                         vurderingProducerMock.send(capture(producerRecordSlot))
                     }

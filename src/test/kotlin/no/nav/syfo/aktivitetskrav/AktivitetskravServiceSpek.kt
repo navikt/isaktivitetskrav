@@ -12,7 +12,7 @@ import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
+import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
@@ -45,7 +45,7 @@ class AktivitetskravServiceSpek : Spek({
             start()
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
-            val vurderingProducerMock = mockk<KafkaProducer<String, KafkaAktivitetskravVurdering>>()
+            val vurderingProducerMock = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
             val aktivitetskravRepository = AktivitetskravRepository(database = database)
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(vurderingProducerMock)
@@ -81,7 +81,7 @@ class AktivitetskravServiceSpek : Spek({
                             previousAktivitetskrav = previousAktivitetskrav
                         )
                     val savedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(createdAktivitetskrav.uuid)
-                    val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
 
                     verify(exactly = 1) {
                         vurderingProducerMock.send(capture(producerRecordSlot))
@@ -106,7 +106,7 @@ class AktivitetskravServiceSpek : Spek({
                     val createdAktivitetskrav =
                         aktivitetskravService.createAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     val savedAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(createdAktivitetskrav.uuid)
-                    val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVurdering>>()
+                    val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
 
                     verify(exactly = 1) {
                         vurderingProducerMock.send(capture(producerRecordSlot))
