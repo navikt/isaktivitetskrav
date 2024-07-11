@@ -17,6 +17,7 @@ data class PAktivitetskravVurdering(
     val beskrivelse: String?,
     val arsaker: List<VurderingArsak>,
     val frist: LocalDate?,
+    val varsel: PAktivitetskravVarsel?,
 ) {
     fun toAktivitetskravVurdering() =
         AktivitetskravVurdering(
@@ -27,6 +28,7 @@ data class PAktivitetskravVurdering(
             arsaker = this.arsaker,
             beskrivelse = this.beskrivelse,
             frist = this.frist,
+            varsel = varsel?.toAktivitetkravVarsel(),
         )
 }
 

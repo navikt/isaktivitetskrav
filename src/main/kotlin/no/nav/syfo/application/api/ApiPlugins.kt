@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
@@ -64,10 +65,7 @@ fun Application.installStatusPages() {
                 is ResponseException -> {
                     cause.response.status
                 }
-                is IllegalArgumentException -> {
-                    HttpStatusCode.BadRequest
-                }
-                is ConflictException -> {
+                is IllegalArgumentException, is BadRequestException, is ConflictException -> {
                     HttpStatusCode.BadRequest
                 }
                 is ForbiddenAccessVeilederException -> {

@@ -6,8 +6,6 @@ import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.util.nowUTC
 import java.sql.*
 import java.sql.Date
-import java.time.OffsetDateTime
-import java.util.*
 
 const val queryCreateAktivitetskravVurdering =
     """
@@ -70,20 +68,4 @@ fun Connection.updateAktivitetskrav(
     }
 
     return updatedIds.first()
-}
-
-fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
-    val status = AktivitetskravStatus.valueOf(getString("status"))
-    return PAktivitetskravVurdering(
-        id = getInt("id"),
-        uuid = UUID.fromString(getString("uuid")),
-        aktivitetskravId = getInt("aktivitetskrav_id"),
-        createdAt = getObject("created_at", OffsetDateTime::class.java),
-        createdBy = getString("created_by"),
-        status = status,
-        beskrivelse = getString("beskrivelse"),
-        arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
-            .map { it.toVurderingArsak(status) },
-        frist = getDate("frist")?.toLocalDate(),
-    )
 }

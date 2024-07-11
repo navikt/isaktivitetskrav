@@ -3,7 +3,6 @@ package no.nav.syfo.aktivitetskrav.database
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
-import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.aktivitetskrav.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
@@ -14,6 +13,7 @@ import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldNotBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -28,10 +28,9 @@ class AktivitetskravRepositorySpek : Spek({
             val database = externalMockEnvironment.database
             val aktivitetskravRepository = AktivitetskravRepository(database = database)
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+            val pdf = byteArrayOf(0x2E, 100)
 
-            afterEachTest {
-                database.dropData()
-            }
+            afterEachTest { database.dropData() }
 
             describe("Successfully creates an aktivitetskrav with previous aktivitetskrav") {
                 val newAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
@@ -72,7 +71,6 @@ class AktivitetskravRepositorySpek : Spek({
                         forhandsvarselDTO.document
                     )
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
-                    val pdf = byteArrayOf(0x2E, 100)
 
                     val newVarsel = aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         aktivitetskrav = updatedAktivitetskrav,
@@ -226,6 +224,109 @@ class AktivitetskravRepositorySpek : Spek({
 
                     rowsUpdated shouldBe 1
                     runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() } shouldBeEqualTo emptyList()
+                }
+            }
+
+            describe("Successfully retrieves a list of aktivitetskrav belonging to a list of persons") {
+
+                val fritekst = "Et forhåndsvarsel"
+                val document = generateDocumentComponentDTO(fritekst = fritekst)
+                val forhandsvarselDTO = ForhandsvarselDTO(
+                    fritekst = fritekst,
+                    document = document,
+                )
+
+                it("Should retrieve aktivitetskrav without vurderinger for persons") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    val secondAktivitetskrav = Aktivitetskrav.create(UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
+                    val personsWithAktivitetskrav =
+                        listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+
+                    val storedAktivitetskrav = aktivitetskravRepository.getAktivitetskravForPersons(personsWithAktivitetskrav)
+
+                    storedAktivitetskrav.size shouldBeEqualTo 2
+                    val firstStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == firstAktivitetskrav.personIdent }
+                    val secondStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == secondAktivitetskrav.personIdent }
+                    firstStoredAktivitetskrav?.personIdent shouldBeEqualTo firstAktivitetskrav.personIdent
+                    secondStoredAktivitetskrav?.personIdent shouldBeEqualTo secondAktivitetskrav.personIdent
+                }
+
+                it("Should retrieve aktivitetskrav with vurderinger for persons") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    createVurdering(AktivitetskravStatus.AVVENT, listOf(VurderingArsak.Avvent.InformasjonSykmeldt))
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+                    createVurdering(AktivitetskravStatus.IKKE_OPPFYLT)
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+
+                    val secondAktivitetskrav = Aktivitetskrav.create(UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
+                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                        .also {
+                            secondAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
+                        }
+                    createVurdering(AktivitetskravStatus.OPPFYLT, listOf(VurderingArsak.Oppfylt.Friskmeldt))
+                        .also {
+                            secondAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
+                        }
+
+                    val personsWithAktivitetskrav =
+                        listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    val storedAktivitetskrav = aktivitetskravRepository.getAktivitetskravForPersons(personsWithAktivitetskrav)
+
+                    storedAktivitetskrav.size shouldBeEqualTo 2
+                    val firstStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == firstAktivitetskrav.personIdent }
+                    firstStoredAktivitetskrav?.personIdent shouldBeEqualTo firstAktivitetskrav.personIdent
+                    firstStoredAktivitetskrav?.vurderinger?.size shouldBeEqualTo 3
+
+                    val secondStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == secondAktivitetskrav.personIdent }
+                    secondStoredAktivitetskrav?.personIdent shouldBeEqualTo secondAktivitetskrav.personIdent
+                    secondStoredAktivitetskrav?.vurderinger?.size shouldBeEqualTo 2
+                }
+
+                it("Should retrieve aktivitetskrav with vurderinger and varsel for persons") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    createVurdering(AktivitetskravStatus.AVVENT, listOf(VurderingArsak.Avvent.InformasjonSykmeldt))
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+                    val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
+                    val newVarsel = AktivitetskravVarsel.create(
+                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        forhandsvarselDTO.document
+                    )
+                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+                        firstAktivitetskrav,
+                        newVurdering,
+                        newVarsel,
+                        pdf
+                    )
+                    val personsWithAktivitetskrav =
+                        listOf(UserConstants.ARBEIDSTAKER_PERSONIDENT, UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
+                    val storedAktivitetskrav = aktivitetskravRepository.getAktivitetskravForPersons(personsWithAktivitetskrav)
+
+                    storedAktivitetskrav.size shouldBeEqualTo 1
+                    val firstStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == firstAktivitetskrav.personIdent }
+                    firstStoredAktivitetskrav?.personIdent shouldBeEqualTo firstAktivitetskrav.personIdent
+                    firstStoredAktivitetskrav?.vurderinger?.size shouldBeEqualTo 2
+                    firstStoredAktivitetskrav?.vurderinger?.find { it.varsel !== null } shouldNotBe null
                 }
             }
         }

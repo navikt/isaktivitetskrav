@@ -44,6 +44,7 @@ data class AktivitetskravVurdering(
     val arsaker: List<VurderingArsak>,
     val beskrivelse: String?,
     val frist: LocalDate?,
+    val varsel: AktivitetskravVarsel?
 ) {
 
     fun isFinal() = this.status.isFinal
@@ -66,6 +67,7 @@ data class AktivitetskravVurdering(
                 beskrivelse = beskrivelse,
                 arsaker = arsaker,
                 frist = frist,
+                varsel = null,
             ).also { it.validate() }
         }
     }

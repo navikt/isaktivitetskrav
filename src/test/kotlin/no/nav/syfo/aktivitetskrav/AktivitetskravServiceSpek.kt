@@ -3,23 +3,27 @@ package no.nav.syfo.aktivitetskrav
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
-import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
+import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.aktivitetskrav.domain.VarselType
 import no.nav.syfo.aktivitetskrav.domain.VurderingArsak
+import no.nav.syfo.application.exception.ConflictException
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVurdering
-import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
+import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createAktivitetskravOppfylt
+import no.nav.syfo.testhelper.generator.createVurdering
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.getAktivitetskravVarselPdf
 import org.amshove.kluent.internal.assertFailsWith
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeEmpty
@@ -30,6 +34,8 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 import java.util.concurrent.Future
 
 class AktivitetskravServiceSpek : Spek({
@@ -244,6 +250,44 @@ class AktivitetskravServiceSpek : Spek({
                     val varsel =
                         aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                     varsel.shouldBeNull()
+                }
+            }
+
+            describe("getAktivitetskravForPersons") {
+                it("gets aktivitetskrav with only the most recent vurdering for persons") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+                    createVurdering(AktivitetskravStatus.IKKE_OPPFYLT)
+                        .also {
+                            firstAktivitetskrav.vurder(it)
+                            aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
+                        }
+
+                    val aktivitetskravForPersons =
+                        aktivitetskravService.getAktivitetskravForPersons(listOf(ARBEIDSTAKER_PERSONIDENT))
+                    aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.vurderinger?.size shouldBe 1
+                    aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
+                }
+
+                it("gets the most recently created aktivitetskrav") {
+                    val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                        .copy(createdAt = OffsetDateTime.now().minusDays(5))
+                    aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
+                    val secondAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                        .copy(createdAt = OffsetDateTime.now().minusDays(2))
+                    aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
+                    val thirdAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
+                        .copy(createdAt = OffsetDateTime.now().minusDays(3))
+                    aktivitetskravRepository.createAktivitetskrav(thirdAktivitetskrav, UUID.randomUUID())
+
+                    val aktivitetskravForPersons =
+                        aktivitetskravService.getAktivitetskravForPersons(listOf(ARBEIDSTAKER_PERSONIDENT))
+                    aktivitetskravForPersons[ARBEIDSTAKER_PERSONIDENT]?.uuid shouldBeEqualTo secondAktivitetskrav.uuid
                 }
             }
         }

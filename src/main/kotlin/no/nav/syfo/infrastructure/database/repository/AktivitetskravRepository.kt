@@ -1,6 +1,8 @@
 package no.nav.syfo.infrastructure.database.repository
 
+import com.fasterxml.jackson.core.type.TypeReference
 import no.nav.syfo.aktivitetskrav.IAktivitetskravRepository
+import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
@@ -8,6 +10,7 @@ import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.database.NoElementInsertedException
 import no.nav.syfo.infrastructure.database.toList
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
 import java.sql.Connection
 import java.sql.Date
@@ -38,6 +41,14 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
             it.getAktivitetskrav(personIdent = personIdent)
         }
 
+    override fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): List<Aktivitetskrav> =
+        database.connection.use { connection ->
+            connection.prepareStatement(GET_AKTIVITETSKRAV_FOR_PERSONS_QUERY).use {
+                it.setString(1, personidenter.joinToString(transform = { it.value }, separator = ","))
+                it.executeQuery().toAktivitetskravWithVurderinger()
+            }.map { it.toAktivitetskrav() }
+        }
+
     private fun Connection.getAktivitetskrav(
         personIdent: PersonIdent,
     ): List<PAktivitetskrav> = this.prepareStatement(GET_AKTIVITETSKRAV_BY_PERSONIDENT_QUERY).use {
@@ -50,7 +61,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
 
     override fun getOutdatedAktivitetskrav(
         arenaCutoff: LocalDate,
-        outdatedCutoff: LocalDate
+        outdatedCutoff: LocalDate,
     ): List<PAktivitetskrav> =
         database.connection.use { connection ->
             connection.prepareStatement(GET_AKTIVITETSKRAV_OUTDATED).use {
@@ -99,9 +110,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
         }
     }
 
-    override fun updateAktivitetskravStatus(
-        aktivitetskrav: Aktivitetskrav
-    ): PAktivitetskrav {
+    override fun updateAktivitetskravStatus(aktivitetskrav: Aktivitetskrav): PAktivitetskrav {
         val updatedAktivitetskravRecords = database.connection.use { connection ->
             val aktivitetskravRecords =
                 connection.prepareStatement(UPDATE_AKTIVITETSKRAV_STATUS).use { preparedStatement ->
@@ -164,7 +173,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
     }
 
     private fun Connection.getAktivitetskravVurderinger(
-        aktivitetskravId: Int
+        aktivitetskravId: Int,
     ): List<PAktivitetskravVurdering> =
         prepareStatement(GET_AKTIVITETSKRAV_VURDERINGER_QUERY).use {
             it.setInt(1, aktivitetskravId)
@@ -186,6 +195,30 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
             FROM AKTIVITETSKRAV_VURDERING
             WHERE aktivitetskrav_id = ?
             ORDER BY created_at DESC
+            """
+
+        private const val GET_AKTIVITETSKRAV_FOR_PERSONS_QUERY =
+            """
+            SELECT aktivitetskrav.id AS aktivitetskrav_id, aktivitetskrav.uuid AS aktivitetskrav_uuid,
+                aktivitetskrav.created_at AS aktivitetskrav_created_at, aktivitetskrav.updated_at AS aktivitetskrav_updated_at,
+                aktivitetskrav.personident AS aktivitetskrav_personident, aktivitetskrav.status AS aktivitetskrav_status,
+                aktivitetskrav.stoppunkt_at AS aktivitetskrav_stoppunkt_at,
+                aktivitetskrav.referanse_tilfelle_bit_uuid AS aktivitetskrav_referanse_tilfelle_bit_uuid,
+                aktivitetskrav.previous_aktivitetskrav_uuid AS aktivitetskrav_previous_aktivitetskrav_uuid,
+                vurdering.id AS vurdering_id, vurdering.uuid AS vurdering_uuid, vurdering.aktivitetskrav_id AS vurdering_aktivitetskrav_id,
+                vurdering.created_at AS vurdering_created_at, vurdering.created_by AS vurdering_created_by,
+                vurdering.status AS vurdering_status, vurdering.beskrivelse AS vurdering_beskrivelse,
+                vurdering.arsaker AS vurdering_arsaker, vurdering.frist AS vurdering_frist,
+                varsel.id AS varsel_id, varsel.uuid AS varsel_uuid, varsel.created_at AS varsel_created_at,
+                varsel.updated_at AS varsel_updated_at, varsel.aktivitetskrav_vurdering_id AS varsel_aktivitetskrav_vurdering_id,
+                varsel.journalpost_id AS varsel_journalpost_id, varsel.document AS varsel_document,
+                varsel.published_at AS varsel_published_at, varsel.svarfrist AS varsel_svarfrist,
+                varsel.expired_varsel_published_at AS varsel_expired_varsel_published_at, varsel.type AS varsel_type
+            FROM AKTIVITETSKRAV aktivitetskrav
+                LEFT JOIN AKTIVITETSKRAV_VURDERING vurdering ON vurdering.aktivitetskrav_id = aktivitetskrav.id
+                    LEFT JOIN AKTIVITETSKRAV_VARSEL varsel ON varsel.aktivitetskrav_vurdering_id = vurdering.id
+            WHERE aktivitetskrav.personident = ANY (string_to_array(?, ','))
+            ORDER BY aktivitetskrav.created_at DESC, vurdering.created_at DESC
             """
 
         private const val GET_AKTIVITETSKRAV_OUTDATED =
@@ -249,3 +282,90 @@ private fun ResultSet.toPAktivitetskrav(): PAktivitetskrav = PAktivitetskrav(
     referanseTilfelleBitUuid = getString("referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
     previousAktivitetskravUuid = getObject("previous_aktivitetskrav_uuid", UUID::class.java),
 )
+
+fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
+    val status = AktivitetskravStatus.valueOf(getString("status"))
+    return PAktivitetskravVurdering(
+        id = getInt("id"),
+        uuid = UUID.fromString(getString("uuid")),
+        aktivitetskravId = getInt("aktivitetskrav_id"),
+        createdAt = getObject("created_at", OffsetDateTime::class.java),
+        createdBy = getString("created_by"),
+        status = status,
+        beskrivelse = getString("beskrivelse"),
+        arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
+            .map { it.toVurderingArsak(status) },
+        frist = getDate("frist")?.toLocalDate(),
+        varsel = null,
+    )
+}
+
+private fun ResultSet.toAktivitetskravWithVurderinger(): List<PAktivitetskrav> {
+    val aktivitetskravMap = mutableMapOf<Int, PAktivitetskrav>()
+    while (this.next()) {
+        val varselUuid = getString("varsel_uuid")
+        val varsel = varselUuid?.let {
+            PAktivitetskravVarsel(
+                id = getInt("varsel_id"),
+                uuid = UUID.fromString(getString("varsel_uuid")),
+                createdAt = getObject("varsel_created_at", OffsetDateTime::class.java),
+                updatedAt = getObject("varsel_updated_at", OffsetDateTime::class.java),
+                aktivitetskravVurderingId = getInt("varsel_aktivitetskrav_vurdering_id"),
+                journalpostId = getString("varsel_journalpost_id"),
+                document = configuredJacksonMapper().readValue(
+                    getString("varsel_document"),
+                    object : TypeReference<List<DocumentComponentDTO>>() {}
+                ),
+                publishedAt = getObject("varsel_published_at", OffsetDateTime::class.java),
+                svarfrist = getDate("varsel_svarfrist")?.toLocalDate(),
+                expiredVarselPublishedAt = getObject("varsel_expired_varsel_published_at", OffsetDateTime::class.java),
+                type = getString("varsel_type"),
+            )
+        }
+        val vurderingUuid = getString("vurdering_uuid")
+        val vurdering =
+            vurderingUuid?.let {
+                val vurderingStatus = AktivitetskravStatus.valueOf(getString("vurdering_status"))
+                PAktivitetskravVurdering(
+                    id = getInt("vurdering_id"),
+                    uuid = UUID.fromString(vurderingUuid),
+                    aktivitetskravId = getInt("vurdering_aktivitetskrav_id"),
+                    createdAt = getObject("vurdering_created_at", OffsetDateTime::class.java),
+                    createdBy = getString("vurdering_created_by"),
+                    status = vurderingStatus,
+                    beskrivelse = getString("vurdering_beskrivelse"),
+                    arsaker = getString("vurdering_arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
+                        .map { it.toVurderingArsak(vurderingStatus) },
+                    frist = getDate("vurdering_frist")?.toLocalDate(),
+                    varsel = varsel,
+                )
+            }
+
+        val aktivitetskravId = getInt("aktivitetskrav_id")
+        if (aktivitetskravMap.containsKey(aktivitetskravId)) {
+            vurdering?.let { aktivitetskravMap.updateExistingWithNewVurdering(aktivitetskravId, it) }
+        } else {
+            val newAktivitetskravEntry =
+                PAktivitetskrav(
+                    id = aktivitetskravId,
+                    uuid = UUID.fromString(getString("aktivitetskrav_uuid")),
+                    personIdent = PersonIdent(getString("aktivitetskrav_personident")),
+                    createdAt = getObject("aktivitetskrav_created_at", OffsetDateTime::class.java),
+                    updatedAt = getObject("aktivitetskrav_updated_at", OffsetDateTime::class.java),
+                    status = AktivitetskravStatus.valueOf(getString("aktivitetskrav_status")),
+                    stoppunktAt = getDate("aktivitetskrav_stoppunkt_at").toLocalDate(),
+                    referanseTilfelleBitUuid = getString("aktivitetskrav_referanse_tilfelle_bit_uuid")?.let { UUID.fromString(it) },
+                    previousAktivitetskravUuid = getObject("aktivitetskrav_previous_aktivitetskrav_uuid", UUID::class.java),
+                    vurderinger = listOfNotNull(vurdering),
+                )
+            aktivitetskravMap.put(aktivitetskravId, newAktivitetskravEntry)
+        }
+    }
+    return aktivitetskravMap.values.toList()
+}
+
+private fun MutableMap<Int, PAktivitetskrav>.updateExistingWithNewVurdering(keyToUpdate: Int, newVurdering: PAktivitetskravVurdering) {
+    this[keyToUpdate]?.let { value ->
+        this.put(keyToUpdate, value.copy(vurderinger = value.vurderinger + listOf(newVurdering)))
+    }
+}

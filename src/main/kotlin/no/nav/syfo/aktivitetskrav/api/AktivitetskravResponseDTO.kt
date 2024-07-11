@@ -14,7 +14,18 @@ data class AktivitetskravResponseDTO(
     val vurderinger: List<AktivitetskravVurderingResponseDTO>,
 ) {
     companion object {
-        fun from(aktivitetskrav: Aktivitetskrav, vurderinger: List<AktivitetskravVurderingResponseDTO> = emptyList()) =
+
+        fun from(aktivitetskrav: Aktivitetskrav) =
+            AktivitetskravResponseDTO(
+                uuid = aktivitetskrav.uuid,
+                createdAt = aktivitetskrav.createdAt.toLocalDateTime(),
+                status = aktivitetskrav.status,
+                inFinalState = aktivitetskrav.isInFinalState(),
+                stoppunktAt = aktivitetskrav.stoppunktAt,
+                vurderinger = aktivitetskrav.vurderinger.map { AktivitetskravVurderingResponseDTO.from(it, it.varsel) }
+            )
+
+        fun from(aktivitetskrav: Aktivitetskrav, vurderinger: List<AktivitetskravVurderingResponseDTO>) =
             AktivitetskravResponseDTO(
                 uuid = aktivitetskrav.uuid,
                 createdAt = aktivitetskrav.createdAt.toLocalDateTime(),

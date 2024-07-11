@@ -126,6 +126,10 @@ class AktivitetskravService(
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent, connection = connection)
             .map { it.toAktivitetskrav() }
 
+    fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): Map<PersonIdent, Aktivitetskrav> =
+        aktivitetskravRepository.getAktivitetskravForPersons(personidenter = personidenter)
+            .mapMostRecentAktivitetskrav()
+
     fun getAktivitetskravAfterCutoff(personIdent: PersonIdent): List<Aktivitetskrav> =
         aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
             .map { it.toAktivitetskrav() }
@@ -162,3 +166,13 @@ class AktivitetskravService(
         )
     }
 }
+
+private fun List<Aktivitetskrav>.mapMostRecentAktivitetskrav() =
+    this.groupBy { it.personIdent }
+        .mapValues { it.value.maxBy { it.createdAt }.mapMostRecentVurdering() }
+
+private fun Aktivitetskrav.mapMostRecentVurdering() =
+    this.copy(
+        vurderinger = this.vurderinger.maxByOrNull { it.createdAt }
+            ?.let { listOf(it) } ?: emptyList()
+    )

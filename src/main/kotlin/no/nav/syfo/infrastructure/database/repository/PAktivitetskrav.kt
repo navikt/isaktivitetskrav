@@ -2,7 +2,6 @@ package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
 import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -30,16 +29,5 @@ data class PAktivitetskrav(
             status = status,
             stoppunktAt = stoppunktAt,
             vurderinger = vurderinger.map { it.toAktivitetskravVurdering() },
-        )
-
-    fun toAktivitetskrav(vurderinger: List<AktivitetskravVurdering>) =
-        Aktivitetskrav(
-            uuid = uuid,
-            personIdent = personIdent,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            status = status,
-            stoppunktAt = stoppunktAt,
-            vurderinger = vurderinger,
         )
 }
