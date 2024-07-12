@@ -1,6 +1,6 @@
 package no.nav.syfo.oppfolgingstilfelle.domain
 
-import no.nav.syfo.aktivitetskrav.domain.AKTIVITETSKRAV_STOPPUNKT_WEEKS
+import no.nav.syfo.domain.AKTIVITETSKRAV_STOPPUNKT_WEEKS
 import no.nav.syfo.domain.PersonIdent
 import java.time.*
 import java.time.temporal.ChronoUnit

@@ -7,9 +7,9 @@ import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVurdering
-import no.nav.syfo.aktivitetskrav.domain.VarselType
+import no.nav.syfo.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.VarselType
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel

@@ -1,7 +1,11 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.gjelder
+import no.nav.syfo.domain.isAutomatiskOppfylt
+import no.nav.syfo.domain.isNy
+import no.nav.syfo.domain.shouldUpdateStoppunkt
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.kafka.KafkaConsumerService
 import no.nav.syfo.oppfolgingstilfelle.domain.*

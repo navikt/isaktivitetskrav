@@ -1,6 +1,6 @@
 package no.nav.syfo.aktivitetskrav
 
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants

@@ -7,7 +7,7 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
 import no.nav.syfo.domain.PersonIdent
@@ -58,7 +58,7 @@ class PublishExpiredVarslerCronJobSpek : Spek({
         )
 
         fun createAktivitetskravWithVurdering(
-            personIdent: PersonIdent
+            personIdent: PersonIdent,
         ): Aktivitetskrav {
             val tenWeeksAgo = LocalDate.now().minusWeeks(10)
             val aktivitetskrav = createAktivitetskravNy(tenWeeksAgo, personIdent = personIdent)

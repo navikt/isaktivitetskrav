@@ -1,6 +1,8 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import no.nav.syfo.aktivitetskrav.domain.*
+import no.nav.syfo.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.VurderingArsak
 import java.time.LocalDate
 
 data class AktivitetskravVurderingRequestDTO(
@@ -8,7 +10,7 @@ data class AktivitetskravVurderingRequestDTO(
     val beskrivelse: String?,
     val arsaker: List<Arsak>,
     val frist: LocalDate? = null,
-    val document: List<DocumentComponentDTO>? = emptyList()
+    val document: List<DocumentComponentDTO>? = emptyList(),
 )
 
 fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(

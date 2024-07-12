@@ -1,7 +1,7 @@
 package no.nav.syfo.infrastructure.database.repository
 
-import no.nav.syfo.aktivitetskrav.domain.Aktivitetskrav
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravStatus
+import no.nav.syfo.domain.AktivitetskravStatus
+import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.OffsetDateTime

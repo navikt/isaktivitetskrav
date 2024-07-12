@@ -1,8 +1,8 @@
 package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.domain.AktivitetskravVarsel
-import no.nav.syfo.aktivitetskrav.domain.VarselType
+import no.nav.syfo.domain.VarselType
+import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.domain.PersonIdent
@@ -21,7 +21,7 @@ data class PAktivitetskravVarsel(
     val publishedAt: OffsetDateTime?,
     val svarfrist: LocalDate?,
     val expiredVarselPublishedAt: OffsetDateTime?,
-    val type: String
+    val type: String,
 ) {
     fun toAktivitetkravVarsel() = AktivitetskravVarsel.createFromDatabase(
         uuid = uuid,
