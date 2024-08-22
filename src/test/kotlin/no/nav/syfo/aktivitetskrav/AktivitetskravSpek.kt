@@ -53,6 +53,30 @@ class AktivitetskravSpek : Spek({
         }
     }
 
+    describe("shouldUpdateStoppunkt") {
+        it("true if stoppunkt changed and after arenaCutoff") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+            val shouldUpdate = aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle, arenaCutoff = LocalDate.now().minusWeeks(4))
+
+            shouldUpdate shouldBeEqualTo true
+        }
+        it("false if stoppunkt is unchanged") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+            val shouldUpdate = aktivitetskrav.shouldUpdateStoppunkt(
+                oppfolgingstilfelle = oppfolgingstilfelle.copy(tilfelleStart = tenWeeksAgo,),
+                arenaCutoff = LocalDate.now().minusWeeks(4)
+            )
+
+            shouldUpdate shouldBeEqualTo false
+        }
+        it("false if stoppunkt before arenaCutoff") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+            val shouldUpdate = aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle, arenaCutoff = LocalDate.now())
+
+            shouldUpdate shouldBeEqualTo false
+        }
+    }
+
     describe("updateStoppunkt") {
         it("updates stoppunktAt") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
