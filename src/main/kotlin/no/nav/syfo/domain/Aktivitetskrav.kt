@@ -85,9 +85,9 @@ fun Aktivitetskrav.isNy(): Boolean = this.status == AktivitetskravStatus.NY
 
 fun Aktivitetskrav.isInFinalState() = this.status.isFinal
 
-internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean {
+internal fun Aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle, arenaCutoff: LocalDate): Boolean {
     val updatedStoppunktDato = Aktivitetskrav.stoppunktDato(oppfolgingstilfelle.tilfelleStart)
-    return this.stoppunktAt != updatedStoppunktDato
+    return updatedStoppunktDato.isAfter(arenaCutoff) && this.stoppunktAt != updatedStoppunktDato
 }
 
 internal fun Aktivitetskrav.updateStoppunkt(oppfolgingstilfelle: Oppfolgingstilfelle): Aktivitetskrav {

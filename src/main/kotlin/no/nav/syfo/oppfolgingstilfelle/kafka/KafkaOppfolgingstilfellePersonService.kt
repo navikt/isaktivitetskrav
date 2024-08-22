@@ -100,7 +100,11 @@ class KafkaOppfolgingstilfellePersonService(
                 log.info("Found aktivitetskrav AUTOMATISK_OPPFYLT but Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid} not gradert - creating aktivitetskrav")
                 createAktivitetskrav(connection = connection, oppfolgingstilfelle = latestOppfolgingstilfelle)
                 COUNT_KAFKA_CONSUMER_OPPFOLGINGSTILFELLE_PERSON_AKTIVITETSKRAV_CREATED.increment()
-            } else if (latestAktivitetskravForTilfelle.shouldUpdateStoppunkt(latestOppfolgingstilfelle)) {
+            } else if (latestAktivitetskravForTilfelle.shouldUpdateStoppunkt(
+                    oppfolgingstilfelle = latestOppfolgingstilfelle,
+                    arenaCutoff = arenaCutoff
+                )
+            ) {
                 log.info("Updating stoppunkt for aktivitetskrav for Oppfolgingstilfelle with uuid ${latestOppfolgingstilfelle.uuid}")
                 aktivitetskravService.updateAktivitetskravStoppunkt(
                     connection = connection,
