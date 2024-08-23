@@ -73,5 +73,6 @@ data class VarselResponseDTO(
     val uuid: String,
     val createdAt: LocalDateTime,
     val svarfrist: LocalDate?,
+    val isExpired: Boolean,
     val document: List<DocumentComponentDTO>,
 )

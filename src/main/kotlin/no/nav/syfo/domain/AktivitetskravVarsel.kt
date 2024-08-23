@@ -18,6 +18,8 @@ data class AktivitetskravVarsel internal constructor(
     val isPublished: Boolean = false,
 ) {
 
+    private fun isExpired(): Boolean = svarfrist != null && !svarfrist.isAfter(LocalDate.now())
+
     companion object {
         fun create(
             type: VarselType,
@@ -61,6 +63,7 @@ data class AktivitetskravVarsel internal constructor(
         uuid = this.uuid.toString(),
         createdAt = this.createdAt.toLocalDateTime(),
         svarfrist = this.svarfrist,
+        isExpired = this.isExpired(),
         document = this.document,
     )
 
