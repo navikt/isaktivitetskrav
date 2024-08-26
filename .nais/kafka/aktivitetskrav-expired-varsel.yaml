@@ -2,6 +2,7 @@ apiVersion: kafka.nais.io/v1
 kind: Topic
 metadata:
   annotations:
+    kafka.nais.io/removeDataWhenResourceIsDeleted: "true"
     dcat.data.nav.no/title: "Utgatt aktivitetskrav-varsel for sykmeldte personer"
     dcat.data.nav.no/description: >-
       Topic inneholder informasjon om varsel der svarfrist har gatt ut.

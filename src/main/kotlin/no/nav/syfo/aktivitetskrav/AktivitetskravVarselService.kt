@@ -7,21 +7,18 @@ import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.domain.AktivitetskravVurdering
-import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.domain.VarselType
 import no.nav.syfo.domain.isInFinalState
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
 import java.util.*
 
 class AktivitetskravVarselService(
     private val aktivitetskravVarselRepository: AktivitetskravVarselRepository,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
     private val aktivitetskravVarselProducer: AktivitetskravVarselProducer,
-    private val expiredVarselProducer: ExpiredVarselProducer,
     private val varselPdfService: VarselPdfService,
 ) {
     fun getIkkeJournalforte(): List<Triple<PersonIdent, AktivitetskravVarsel, ByteArray>> {
@@ -88,15 +85,5 @@ class AktivitetskravVarselService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = updatedAktivitetskrav)
 
         return nyttForhandsvarsel.toAktivitetkravVarsel()
-    }
-
-    suspend fun getExpiredVarsler(): List<ExpiredVarsel> =
-        aktivitetskravVarselRepository.getExpiredVarsler().map { (personIdent, aktivitetskravUuid, varsel) ->
-            varsel.toExpiredVarsel(personIdent, aktivitetskravUuid)
-        }
-
-    suspend fun publishExpiredVarsel(expiredVarselToBePublished: ExpiredVarsel) {
-        expiredVarselProducer.publishExpiredVarsel(expiredVarselToBePublished)
-        aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarselToBePublished)
     }
 }

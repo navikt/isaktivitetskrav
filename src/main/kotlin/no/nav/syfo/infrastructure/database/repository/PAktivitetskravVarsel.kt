@@ -1,9 +1,7 @@
 package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.domain.VarselType
 import no.nav.syfo.domain.AktivitetskravVarsel
-import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
@@ -31,15 +29,6 @@ data class PAktivitetskravVarsel(
         svarfrist = svarfrist,
         isPublished = publishedAt != null,
         type = type,
-    )
-
-    fun toExpiredVarsel(personIdent: PersonIdent, aktivitetskravUuid: UUID) = ExpiredVarsel(
-        aktivitetskravUuid = aktivitetskravUuid,
-        varselUuid = uuid,
-        createdAt = createdAt.toLocalDateTime(),
-        personIdent = personIdent,
-        varselType = VarselType.valueOf(type),
-        svarfrist = svarfrist!!,
     )
 
     fun toKafkaAktivitetskravVarsel(references: VarselReferences) = KafkaAktivitetskravVarsel(

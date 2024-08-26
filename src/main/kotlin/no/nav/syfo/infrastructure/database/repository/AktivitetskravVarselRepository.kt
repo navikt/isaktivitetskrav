@@ -1,14 +1,11 @@
 package no.nav.syfo.infrastructure.database.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.aktivitetskrav.IAktivitetskravVarselRepository
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.domain.AktivitetskravVurdering
-import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.database.NoElementInsertedException
@@ -63,69 +60,6 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) : 
 
     override fun getVarselForVurdering(vurderingUuid: UUID) =
         database.getVarselForVurdering(vurderingUuid = vurderingUuid)
-
-    override suspend fun getExpiredVarsler(): List<Triple<PersonIdent, UUID, PAktivitetskravVarsel>> =
-        withContext(Dispatchers.IO) {
-            database.connection.use { connection ->
-                connection.prepareStatement(SELECT_EXPIRED_VARSLER)
-                    .use {
-                        it.executeQuery()
-                            .toList {
-                                Triple(
-                                    PersonIdent(getString("personident")),
-                                    UUID.fromString(getString("aktivitetskrav_uuid")),
-                                    toPAktivitetskravVarsel(),
-                                )
-                            }
-                    }
-            }
-        }
-
-    override suspend fun updateExpiredVarselPublishedAt(
-        publishedExpiredVarsel: ExpiredVarsel,
-    ): Int =
-        withContext(Dispatchers.IO) {
-            database.connection.use { connection ->
-                val rowsAffected =
-                    connection.prepareStatement(SET_EXPIRED_VARSEL_PUBLISHED_AT).use {
-                        it.setObject(1, nowUTC())
-                        it.setObject(2, nowUTC())
-                        it.setString(3, publishedExpiredVarsel.varselUuid.toString())
-                        it.executeUpdate()
-                    }
-                if (rowsAffected != 1) {
-                    throw SQLException("Expected one row to be updated, got update count $rowsAffected")
-                }
-                connection.commit()
-                rowsAffected
-            }
-        }
-
-    companion object {
-        private const val SELECT_EXPIRED_VARSLER =
-            """
-            SELECT a.personident, a.uuid as aktivitetskrav_uuid, varsel.*
-            FROM aktivitetskrav_varsel varsel
-                INNER JOIN aktivitetskrav_vurdering vurdering
-                    ON varsel.aktivitetskrav_vurdering_id = vurdering.id
-                INNER JOIN aktivitetskrav a ON a.id = vurdering.aktivitetskrav_id                
-            WHERE expired_varsel_published_at IS NULL
-                AND svarfrist <= NOW()
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM aktivitetskrav_vurdering vurdering
-                    WHERE vurdering.aktivitetskrav_id = a.id
-                        AND vurdering.created_at > varsel.created_at
-                        AND vurdering.status IN ('UNNTAK', 'OPPFYLT', 'IKKE_AKTUELL')
-                )
-            """
-        private const val SET_EXPIRED_VARSEL_PUBLISHED_AT =
-            """
-            UPDATE aktivitetskrav_varsel
-            SET expired_varsel_published_at = ?, updated_at = ?
-            WHERE uuid = ?
-        """
-    }
 }
 
 private const val queryCreateAktivitetskravVarsel =

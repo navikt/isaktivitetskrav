@@ -84,11 +84,6 @@ fun main() {
             )
         )
     )
-    val expiredVarselProducer = ExpiredVarselProducer(
-        producer = KafkaProducer(
-            kafkaAivenProducerConfig<ExpiredVarselSerializer>(kafkaEnvironment = environment.kafka)
-        )
-    )
 
     lateinit var aktivitetskravService: AktivitetskravService
     lateinit var aktivitetskravVarselService: AktivitetskravVarselService
@@ -121,7 +116,6 @@ fun main() {
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselProducer = aktivitetskravVarselProducer,
-                expiredVarselProducer = expiredVarselProducer,
                 varselPdfService = varselPdfService,
             )
             apiModule(
