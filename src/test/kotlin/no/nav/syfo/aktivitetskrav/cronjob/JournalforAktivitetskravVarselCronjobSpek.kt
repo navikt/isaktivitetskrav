@@ -67,7 +67,6 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             aktivitetskravVarselRepository = aktivitetskravVarselRepository,
             aktivitetskravVurderingProducer = mockk(),
             aktivitetskravVarselProducer = mockk(),
-            expiredVarselProducer = mockk(),
             varselPdfService = VarselPdfService(
                 pdfGenClient = externalMockEnvironment.pdfgenClient,
                 pdlClient = externalMockEnvironment.pdlClient,

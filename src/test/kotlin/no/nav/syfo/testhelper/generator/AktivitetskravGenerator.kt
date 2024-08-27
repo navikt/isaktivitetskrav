@@ -1,6 +1,5 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
@@ -78,47 +77,6 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
     )
 
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
-}
-
-fun createNAktivitetskrav(
-    n: Int,
-    personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-): List<Aktivitetskrav> {
-    val tenWeeksAgo = LocalDate.now().minusWeeks(10)
-    val allAktivitetskrav = mutableListOf<Aktivitetskrav>()
-    for (i in 1..n) {
-        val newAktivitetskrav =
-            Aktivitetskrav.create(personIdent, tenWeeksAgo)
-        allAktivitetskrav.add(newAktivitetskrav)
-    }
-    return allAktivitetskrav.toList()
-}
-
-fun createExpiredForhandsvarsel(document: List<DocumentComponentDTO>) =
-    AktivitetskravVarsel.create(VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER, document).copy(
-        svarfrist = LocalDate.now().minusWeeks(1)
-    )
-
-fun createVarsler(): List<AktivitetskravVarsel> {
-    val type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER
-    val document = generateDocumentComponentDTO(fritekst = "Et test varsel")
-    return listOf(
-        AktivitetskravVarsel.create(type, document).copy(
-            svarfrist = LocalDate.now().minusWeeks(1)
-        ),
-        AktivitetskravVarsel.create(type, document).copy(
-            svarfrist = LocalDate.now().minusDays(1)
-        ),
-        AktivitetskravVarsel.create(type, document).copy(
-            svarfrist = LocalDate.now()
-        ),
-        AktivitetskravVarsel.create(type, document).copy(
-            svarfrist = LocalDate.now().plusDays(1)
-        ),
-        AktivitetskravVarsel.create(type, document).copy(
-            svarfrist = LocalDate.now().plusWeeks(1)
-        ),
-    )
 }
 
 fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList()) =

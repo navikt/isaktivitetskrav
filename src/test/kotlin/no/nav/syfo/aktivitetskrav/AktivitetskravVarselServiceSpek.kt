@@ -4,25 +4,19 @@ import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
-import no.nav.syfo.aktivitetskrav.cronjob.pdf
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.domain.AktivitetskravStatus
-import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.VarselType
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.ExpiredVarselProducer
-import no.nav.syfo.infrastructure.kafka.domain.ExpiredVarsel
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.client.pdfgen.PdfGenClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
-import no.nav.syfo.testhelper.generator.createExpiredForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.generator.generateForhandsvarselPdfDTO
-import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -30,7 +24,6 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.Future
 
 class AktivitetskravVarselServiceSpek : Spek({
@@ -41,17 +34,14 @@ class AktivitetskravVarselServiceSpek : Spek({
             val externalMockEnvironment = ExternalMockEnvironment.instance
             val database = externalMockEnvironment.database
             val vurderingProducerMock = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
-            val expiredVarselProducerMock = mockk<KafkaProducer<String, ExpiredVarsel>>()
             val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
             val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(vurderingProducerMock)
-            val expiredVarselProducer = ExpiredVarselProducer(expiredVarselProducerMock)
             val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
             val aktivitetskravVarselService = AktivitetskravVarselService(
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 aktivitetskravVarselProducer = mockk(),
-                expiredVarselProducer = expiredVarselProducer,
                 varselPdfService = VarselPdfService(
                     pdfGenClient = externalMockEnvironment.pdfgenClient,
                     pdlClient = externalMockEnvironment.pdlClient,
@@ -59,12 +49,9 @@ class AktivitetskravVarselServiceSpek : Spek({
             )
 
             beforeEachTest {
-                clearMocks(vurderingProducerMock, expiredVarselProducerMock)
+                clearMocks(vurderingProducerMock)
                 coEvery {
                     vurderingProducerMock.send(any())
-                } returns mockk<Future<RecordMetadata>>(relaxed = true)
-                coEvery {
-                    expiredVarselProducerMock.send(any())
                 } returns mockk<Future<RecordMetadata>>(relaxed = true)
             }
 
@@ -117,7 +104,6 @@ class AktivitetskravVarselServiceSpek : Spek({
                     val aktivitetskravVarselServiceWithMockedPdfGenClient = AktivitetskravVarselService(
                         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                         aktivitetskravVarselProducer = mockk(),
-                        expiredVarselProducer = mockk(),
                         varselPdfService = VarselPdfService(
                             pdfGenClient = mockedPdfGenClient,
                             pdlClient = externalMockEnvironment.pdlClient,
@@ -148,66 +134,6 @@ class AktivitetskravVarselServiceSpek : Spek({
                             forhandsvarselPdfDTO = expectedForhandsvarselPdfRequestBody
                         )
                     }
-                }
-                it("Retrieves expired varsel which has svarfrist today or earlier and match inserted varsler") {
-                    val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
-                    val vurdering = AktivitetskravVurdering.create(
-                        status = AktivitetskravStatus.FORHANDSVARSEL,
-                        createdBy = UserConstants.VEILEDER_IDENT,
-                        beskrivelse = "En test vurdering",
-                        arsaker = emptyList(),
-                        frist = null,
-                    )
-                    val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
-                    aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                    val varsel = createExpiredForhandsvarsel(document)
-                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
-                        aktivitetskrav = updatedAktivitetskrav,
-                        varsel = varsel,
-                        newVurdering = vurdering,
-                        pdf = pdf,
-                    )
-                    val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }
-                    expiredVarslerToBePublished.size shouldBe 1
-
-                    expiredVarslerToBePublished.first().varselUuid shouldBeEqualTo varsel.uuid
-                    expiredVarslerToBePublished.first().svarfrist shouldBeEqualTo varsel.svarfrist
-                    expiredVarslerToBePublished.first().createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
-                        .truncatedTo(ChronoUnit.MINUTES)
-                }
-                it("Publishes expired varsel to kafka") {
-                    val newAktivitetskrav = createAktivitetskravNy(LocalDate.now().minusWeeks(10))
-                    val vurdering = AktivitetskravVurdering.create(
-                        status = AktivitetskravStatus.FORHANDSVARSEL,
-                        createdBy = UserConstants.VEILEDER_IDENT,
-                        beskrivelse = "En test vurdering",
-                        arsaker = emptyList(),
-                        frist = null,
-                    )
-                    val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
-                    aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                    val varsel = createExpiredForhandsvarsel(document)
-                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
-                        aktivitetskrav = updatedAktivitetskrav,
-                        varsel = varsel,
-                        newVurdering = vurdering,
-                        pdf = pdf,
-                    )
-                    val expiredVarslerToBePublished = runBlocking { aktivitetskravVarselService.getExpiredVarsler() }
-
-                    runBlocking {
-                        aktivitetskravVarselService.publishExpiredVarsel(expiredVarslerToBePublished.first())
-                    }
-
-                    val producerRecordSlot = slot<ProducerRecord<String, ExpiredVarsel>>()
-                    verify(exactly = 1) {
-                        expiredVarselProducerMock.send(capture(producerRecordSlot))
-                    }
-                    val expiredVarselRecord = producerRecordSlot.captured.value()
-                    expiredVarselRecord.varselUuid shouldBeEqualTo varsel.uuid
-                    expiredVarselRecord.svarfrist shouldBeEqualTo varsel.svarfrist
-                    expiredVarselRecord.createdAt.truncatedTo(ChronoUnit.MINUTES) shouldBeEqualTo varsel.createdAt.toLocalDateTime()
-                        .truncatedTo(ChronoUnit.MINUTES)
                 }
             }
         }

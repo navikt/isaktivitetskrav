@@ -1,16 +1,13 @@
 package no.nav.syfo.aktivitetskrav.database
 
 import io.ktor.server.testing.*
-import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.database.repository.createAktivitetskravVurdering
-import no.nav.syfo.infrastructure.database.repository.updateAktivitetskrav
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.*
-import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldNotBe
@@ -98,132 +95,6 @@ class AktivitetskravRepositorySpek : Spek({
                     newVarselPdf?.pdf?.get(0) shouldBeEqualTo pdf[0]
                     newVarselPdf?.pdf?.get(1) shouldBeEqualTo pdf[1]
                     newVarselPdf?.aktivitetskravVarselId shouldBeEqualTo newVarsel.id
-                }
-
-                it("Should retrieve expired varsler when svarfrist is one week ago or more") {
-                    val aktivitetskravList =
-                        createNAktivitetskrav(5)
-                            .map {
-                                val vurdering = AktivitetskravVurdering.create(
-                                    status = AktivitetskravStatus.FORHANDSVARSEL,
-                                    createdBy = UserConstants.VEILEDER_IDENT,
-                                    beskrivelse = "En test vurdering",
-                                    arsaker = emptyList(),
-                                    frist = null,
-                                )
-                                val updatedAktivitetskrav = it.vurder(vurdering)
-                                aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                                updatedAktivitetskrav
-                            }
-                    val varsler = createVarsler()
-                    for ((aktivitetkrav, varsel) in aktivitetskravList.zip(varsler)) {
-                        aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
-                            aktivitetskrav = aktivitetkrav,
-                            varsel = varsel,
-                            newVurdering = aktivitetkrav.vurderinger.first(),
-                            pdf = pdf,
-                        )
-                    }
-
-                    val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
-                        .map { (_, _, varsel) -> varsel }
-
-                    expiredVarsler.size shouldBeEqualTo 3
-                    expiredVarsler.any {
-                        it.svarfrist == LocalDate.now()
-                    } shouldBe true
-                    expiredVarsler.any {
-                        it.svarfrist == LocalDate.now().minusDays(1)
-                    } shouldBe true
-                    expiredVarsler.any {
-                        it.svarfrist == LocalDate.now().minusWeeks(1)
-                    } shouldBe true
-                }
-
-                it("Is not retrieving expired varsler which has OPPFYLT, UNNTAK or IKKE_AKTUELL status after they are created") {
-                    val createdAktivitetskravList =
-                        createNAktivitetskrav(5)
-                            .map {
-                                val vurdering = AktivitetskravVurdering.create(
-                                    status = AktivitetskravStatus.FORHANDSVARSEL,
-                                    createdBy = UserConstants.VEILEDER_IDENT,
-                                    beskrivelse = "En test vurdering",
-                                    arsaker = emptyList(),
-                                    frist = null,
-                                )
-                                val updatedAktivitetskrav = it.vurder(vurdering)
-                                aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                                updatedAktivitetskrav
-                            }
-                    val varsler =
-                        List(5) {
-                            createExpiredForhandsvarsel(document)
-                        }
-                    for ((aktivitetkrav, varsel) in createdAktivitetskravList.zip(varsler)) {
-                        aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
-                            aktivitetskrav = aktivitetkrav,
-                            varsel = varsel,
-                            newVurdering = aktivitetkrav.vurderinger.first(),
-                            pdf = pdf,
-                        )
-                    }
-                    val aktivitetskravOppfylt =
-                        createAktivitetskravOppfylt(createdAktivitetskravList[0])
-                    val aktivitetskravUnntak =
-                        createAktivitetskravUnntak(createdAktivitetskravList[1])
-                    val aktivitetskravIkkeAktuell =
-                        createAktivitetskravUnntak(createdAktivitetskravList[2])
-                    val aktivitetskravAvvent =
-                        createAktivitetskravAvvent(createdAktivitetskravList[3])
-
-                    database.connection.use { connection ->
-                        val oppfyltId = connection.updateAktivitetskrav(aktivitetskravOppfylt)
-                        val unntakId = connection.updateAktivitetskrav(aktivitetskravUnntak)
-                        val ikkeAktuellId = connection.updateAktivitetskrav(aktivitetskravIkkeAktuell)
-                        val avventId = connection.updateAktivitetskrav(aktivitetskravAvvent)
-                        connection.createAktivitetskravVurdering(oppfyltId, aktivitetskravOppfylt.vurderinger.first())
-                        connection.createAktivitetskravVurdering(unntakId, aktivitetskravUnntak.vurderinger.first())
-                        connection.createAktivitetskravVurdering(
-                            ikkeAktuellId,
-                            aktivitetskravIkkeAktuell.vurderinger.first()
-                        )
-                        connection.createAktivitetskravVurdering(avventId, aktivitetskravAvvent.vurderinger.first())
-                        connection.commit()
-                    }
-
-                    val expiredVarsler = runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }
-                        .map { (_, _, varsel) -> varsel }
-
-                    expiredVarsler.size shouldBeEqualTo 2
-                }
-
-                it("Should update varsel") {
-                    val aktivitetskrav = createAktivitetskravNy(tenWeeksAgo)
-                    val vurdering = AktivitetskravVurdering.create(
-                        status = AktivitetskravStatus.FORHANDSVARSEL,
-                        createdBy = UserConstants.VEILEDER_IDENT,
-                        beskrivelse = "En test vurdering",
-                        arsaker = emptyList(),
-                        frist = null,
-                    )
-                    val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                    aktivitetskravRepository.createAktivitetskrav(updatedAktivitetskrav)
-                    val varsel = createExpiredForhandsvarsel(document)
-                    aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
-                        aktivitetskrav = updatedAktivitetskrav,
-                        varsel = varsel,
-                        newVurdering = updatedAktivitetskrav.vurderinger.first(),
-                        pdf = pdf,
-                    )
-                    val expiredVarsler =
-                        runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() }.map { (personIdent, aktivitetskravUuid, varsel) ->
-                            varsel.toExpiredVarsel(personIdent, aktivitetskravUuid)
-                        }
-                    val rowsUpdated =
-                        runBlocking { aktivitetskravVarselRepository.updateExpiredVarselPublishedAt(expiredVarsler.first()) }
-
-                    rowsUpdated shouldBe 1
-                    runBlocking { aktivitetskravVarselRepository.getExpiredVarsler() } shouldBeEqualTo emptyList()
                 }
             }
 

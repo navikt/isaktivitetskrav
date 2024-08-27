@@ -35,7 +35,6 @@ fun Application.testApiModule(
 
         aktivitetskravVarselProducer = mockk(),
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
-        expiredVarselProducer = mockk(),
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
         azureAdClient = externalMockEnvironment.azureAdClient,
