@@ -1,0 +1,1 @@
+ALTER TABLE AKTIVITETSKRAV_VARSEL DROP COLUMN expired_varsel_published_at;

@@ -213,7 +213,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
                 varsel.updated_at AS varsel_updated_at, varsel.aktivitetskrav_vurdering_id AS varsel_aktivitetskrav_vurdering_id,
                 varsel.journalpost_id AS varsel_journalpost_id, varsel.document AS varsel_document,
                 varsel.published_at AS varsel_published_at, varsel.svarfrist AS varsel_svarfrist,
-                varsel.expired_varsel_published_at AS varsel_expired_varsel_published_at, varsel.type AS varsel_type
+                varsel.type AS varsel_type
             FROM AKTIVITETSKRAV aktivitetskrav
                 LEFT JOIN AKTIVITETSKRAV_VURDERING vurdering ON vurdering.aktivitetskrav_id = aktivitetskrav.id
                     LEFT JOIN AKTIVITETSKRAV_VARSEL varsel ON varsel.aktivitetskrav_vurdering_id = vurdering.id
@@ -318,7 +318,6 @@ private fun ResultSet.toAktivitetskravWithVurderinger(): List<PAktivitetskrav> {
                 ),
                 publishedAt = getObject("varsel_published_at", OffsetDateTime::class.java),
                 svarfrist = getDate("varsel_svarfrist")?.toLocalDate(),
-                expiredVarselPublishedAt = getObject("varsel_expired_varsel_published_at", OffsetDateTime::class.java),
                 type = getString("varsel_type"),
             )
         }

@@ -18,7 +18,6 @@ data class PAktivitetskravVarsel(
     val document: List<DocumentComponentDTO>,
     val publishedAt: OffsetDateTime?,
     val svarfrist: LocalDate?,
-    val expiredVarselPublishedAt: OffsetDateTime?,
     val type: String,
 ) {
     fun toAktivitetkravVarsel() = AktivitetskravVarsel.createFromDatabase(
