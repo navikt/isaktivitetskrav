@@ -152,7 +152,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             val aktivitetskravResponseDTO = responseDTOList.first()
                             val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
                             varselResponseDTO.shouldNotBeNull()
-                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate()
+                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate().plusDays(-1)
                         }
                     }
                 }

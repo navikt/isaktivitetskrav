@@ -31,7 +31,8 @@ data class AktivitetskravVarsel internal constructor(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),
                 journalpostId = null,
-                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now() else null,
+                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now()
+                    .plusDays(-1) else null,
                 document = document,
                 type = type,
             )
