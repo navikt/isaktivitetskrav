@@ -6,6 +6,7 @@ import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
 
+const val ARBEIDSGIVERPERIODE_DAYS = 16L
 private const val DAYS_IN_WEEK = 7
 
 data class Oppfolgingstilfelle(
@@ -26,6 +27,9 @@ fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
     durationInWeeks() >= AKTIVITETSKRAV_STOPPUNKT_WEEKS
 
 fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
+
+fun Oppfolgingstilfelle.isInactive(): Boolean =
+    LocalDate.now().isAfter(this.tilfelleEnd.plusDays(ARBEIDSGIVERPERIODE_DAYS))
 
 fun Oppfolgingstilfelle.durationInWeeks(): Long {
     val durationInDays = if (this.antallSykedager != null) {

@@ -138,7 +138,7 @@ class KafkaOppfolgingstilfellePersonService(
     private fun notRelevantForAktivitetskrav(oppfolgingstilfelle: Oppfolgingstilfelle): Boolean =
         !oppfolgingstilfelle.passererAktivitetskravStoppunkt() || oppfolgingstilfelle.dodsdato != null || oppfolgingstilfelle.tilfelleStart.isBefore(
             OLD_TILFELLE_CUTOFF
-        ) || oppfolgingstilfelle.tilfelleEnd.isBefore(arenaCutoff)
+        ) || oppfolgingstilfelle.isInactive()
 
     companion object {
         private val log = LoggerFactory.getLogger(KafkaOppfolgingstilfellePersonService::class.java)

@@ -803,8 +803,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             }
 
             describe("Oppfolgingstilfelle is exactly 56 days") {
-                val startDate = LocalDate.of(2023, 11, 8)
-                val endDate = LocalDate.of(2024, 1, 2)
+                val startDate = LocalDate.now().minusDays(5)
+                val endDate = LocalDate.now().plusDays(50)
                 val kafkaOppfolgingstilfelle56Days = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = startDate,
@@ -863,6 +863,36 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
                     aktivitetskrav.stoppunktAt shouldBeEqualTo endDate
                     aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid
+                }
+            }
+
+            describe("Inactive oppfolgingstilfelle") {
+                val startDate = LocalDate.now().minusDays(90)
+                val endDate = LocalDate.now().minusDays(17)
+                val kafkaInactiveOppfolgingstilfelle = createKafkaOppfolgingstilfellePerson(
+                    personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+                    tilfelleStart = startDate,
+                    tilfelleEnd = endDate,
+                    gradert = false,
+                )
+
+                it("does not create Aktivitetskrav(NY) for oppfolgingstilfelle ending more than 16 days ago") {
+                    mockKafkaConsumerOppfolgingstilfellePerson(
+                        kafkaInactiveOppfolgingstilfelle
+                    )
+
+                    kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+                        kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
+                    )
+
+                    verify(exactly = 1) {
+                        mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
+                    }
+
+                    val aktivitetskravList =
+                        aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+
+                    aktivitetskravList.shouldBeEmpty()
                 }
             }
         }
