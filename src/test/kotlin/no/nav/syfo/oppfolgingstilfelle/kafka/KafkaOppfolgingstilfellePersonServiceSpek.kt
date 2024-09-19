@@ -868,7 +868,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
 
             describe("Inactive oppfolgingstilfelle") {
                 val startDate = LocalDate.now().minusDays(90)
-                val endDate = LocalDate.now().minusDays(17)
+                val endDate = LocalDate.now().minusDays(31)
                 val kafkaInactiveOppfolgingstilfelle = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = startDate,
@@ -876,7 +876,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     gradert = false,
                 )
 
-                it("does not create Aktivitetskrav(NY) for oppfolgingstilfelle ending more than 16 days ago") {
+                it("does not create Aktivitetskrav(NY) for oppfolgingstilfelle ending more than 30 days ago") {
                     mockKafkaConsumerOppfolgingstilfellePerson(
                         kafkaInactiveOppfolgingstilfelle
                     )

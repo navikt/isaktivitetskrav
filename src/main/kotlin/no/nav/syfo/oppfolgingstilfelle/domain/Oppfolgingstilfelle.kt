@@ -2,11 +2,11 @@ package no.nav.syfo.oppfolgingstilfelle.domain
 
 import no.nav.syfo.domain.AKTIVITETSKRAV_STOPPUNKT_WEEKS
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.util.isMoreThanDaysAgo
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
 
-const val ARBEIDSGIVERPERIODE_DAYS = 16L
 private const val DAYS_IN_WEEK = 7
 
 data class Oppfolgingstilfelle(
@@ -28,8 +28,7 @@ fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
 
 fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
 
-fun Oppfolgingstilfelle.isInactive(): Boolean =
-    LocalDate.now().isAfter(this.tilfelleEnd.plusDays(ARBEIDSGIVERPERIODE_DAYS))
+fun Oppfolgingstilfelle.isInactive(): Boolean = this.tilfelleEnd isMoreThanDaysAgo 30
 
 fun Oppfolgingstilfelle.durationInWeeks(): Long {
     val durationInDays = if (this.antallSykedager != null) {
