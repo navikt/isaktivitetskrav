@@ -72,7 +72,7 @@ fun createJournalpostRequest(
     pdf: ByteArray,
     varsel: AktivitetskravVarsel,
 ): JournalpostRequest {
-    val journalpostType = varsel.type.getJournalpostType()
+    val journalpostType = varsel.getJournalpostType()
     val avsenderMottaker = if (journalpostType != JournalpostType.NOTAT) {
         AvsenderMottaker.create(
             id = personIdent.value,
