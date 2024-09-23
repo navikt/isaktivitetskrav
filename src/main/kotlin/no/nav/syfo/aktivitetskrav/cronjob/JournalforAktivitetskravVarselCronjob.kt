@@ -9,6 +9,7 @@ import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.domain.getJournalpostType
 import org.slf4j.LoggerFactory
 
 class JournalforAktivitetskravVarselCronjob(
@@ -71,11 +72,15 @@ fun createJournalpostRequest(
     pdf: ByteArray,
     varsel: AktivitetskravVarsel,
 ): JournalpostRequest {
-    val avsenderMottaker = AvsenderMottaker.create(
-        id = personIdent.value,
-        idType = BrukerIdType.PERSON_IDENT,
-        navn = navn,
-    )
+    val journalpostType = varsel.type.getJournalpostType()
+    val avsenderMottaker = if (journalpostType != JournalpostType.NOTAT) {
+        AvsenderMottaker.create(
+            id = personIdent.value,
+            idType = BrukerIdType.PERSON_IDENT,
+            navn = navn,
+        )
+    } else null
+
     val bruker = Bruker.create(
         id = personIdent.value,
         idType = BrukerIdType.PERSON_IDENT,
@@ -99,7 +104,7 @@ fun createJournalpostRequest(
     )
 
     return JournalpostRequest(
-        journalpostType = varsel.getJournalpostType().name,
+        journalpostType = journalpostType.name,
         avsenderMottaker = avsenderMottaker,
         tittel = dokumentTittel,
         bruker = bruker,

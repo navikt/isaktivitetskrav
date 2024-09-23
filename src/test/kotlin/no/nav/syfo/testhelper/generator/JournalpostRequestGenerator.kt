@@ -1,6 +1,8 @@
 package no.nav.syfo.testhelper.generator
 
+import no.nav.syfo.aktivitetskrav.cronjob.personIdent
 import no.nav.syfo.client.dokarkiv.domain.*
+import no.nav.syfo.domain.getJournalpostType
 import no.nav.syfo.testhelper.UserConstants
 import java.util.UUID
 
@@ -11,11 +13,13 @@ fun generateJournalpostRequest(
     varselId: UUID,
     journalpostType: String,
 ) = JournalpostRequest(
-    avsenderMottaker = AvsenderMottaker.create(
-        id = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
-        idType = BrukerIdType.PERSON_IDENT,
-        navn = UserConstants.PERSON_FULLNAME,
-    ),
+    avsenderMottaker = if (journalpostType != JournalpostType.NOTAT.name) {
+        AvsenderMottaker.create(
+            id = personIdent.value,
+            idType = BrukerIdType.PERSON_IDENT,
+            navn = UserConstants.PERSON_FULLNAME,
+        )
+    } else null,
     bruker = Bruker.create(
         id = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
         idType = BrukerIdType.PERSON_IDENT
