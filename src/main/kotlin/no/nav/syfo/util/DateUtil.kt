@@ -14,3 +14,5 @@ fun OffsetDateTime.millisekundOpplosning(): OffsetDateTime = this.truncatedTo(Ch
 fun OffsetDateTime.sekundOpplosning(): OffsetDateTime = this.truncatedTo(ChronoUnit.SECONDS)
 
 fun LocalDate.isAfterOrEqual(date: LocalDate) = !this.isBefore(date)
+
+infix fun LocalDate.isMoreThanDaysAgo(days: Long): Boolean = this.isBefore(LocalDate.now().minusDays(days))

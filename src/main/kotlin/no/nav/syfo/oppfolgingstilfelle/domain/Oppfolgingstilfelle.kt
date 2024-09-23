@@ -2,6 +2,7 @@ package no.nav.syfo.oppfolgingstilfelle.domain
 
 import no.nav.syfo.domain.AKTIVITETSKRAV_STOPPUNKT_WEEKS
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.util.isMoreThanDaysAgo
 import java.time.*
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -26,6 +27,8 @@ fun Oppfolgingstilfelle.passererAktivitetskravStoppunkt(): Boolean =
     durationInWeeks() >= AKTIVITETSKRAV_STOPPUNKT_WEEKS
 
 fun Oppfolgingstilfelle.isGradertAtTilfelleEnd(): Boolean = this.gradertAtTilfelleEnd == true
+
+fun Oppfolgingstilfelle.isInactive(): Boolean = this.tilfelleEnd isMoreThanDaysAgo 30
 
 fun Oppfolgingstilfelle.durationInWeeks(): Long {
     val durationInDays = if (this.antallSykedager != null) {
