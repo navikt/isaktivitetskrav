@@ -2,7 +2,6 @@ package no.nav.syfo.testhelper.generator
 
 import no.nav.syfo.aktivitetskrav.cronjob.personIdent
 import no.nav.syfo.client.dokarkiv.domain.*
-import no.nav.syfo.domain.getJournalpostType
 import no.nav.syfo.testhelper.UserConstants
 import java.util.UUID
 
