@@ -20,7 +20,7 @@ Applikasjon for vurdering av aktivitetskravet i sykefraværsoppfølgingen
 
 #### Requirements
 
-* JDK 17
+* JDK 21
 
 ### Build
 
