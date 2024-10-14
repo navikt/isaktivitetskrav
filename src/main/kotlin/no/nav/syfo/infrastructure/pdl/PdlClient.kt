@@ -60,7 +60,7 @@ class PdlClient(
                 return if (!pdlIdenterResponse.errors.isNullOrEmpty()) {
                     COUNT_CALL_PDL_IDENTER_FAIL.increment()
                     pdlIdenterResponse.errors.forEach {
-                        logger.error("Error while requesting IdentList from PersonDataLosningen: ${it.errorMessage()}")
+                        logger.warn("Error while requesting IdentList from PersonDataLosningen: ${it.errorMessage()}")
                     }
                     null
                 } else {
