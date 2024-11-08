@@ -4,6 +4,7 @@ import java.net.URI
 
 class RedisConfig(
     val redisUri: URI,
+    val redisDB: Int,
     val redisUsername: String,
     val redisPassword: String,
     val ssl: Boolean = true

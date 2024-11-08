@@ -32,7 +32,7 @@ spec:
     enabled: true
     path: /internal/metrics
   redis:
-    - instance: isaktivitetskrav
+    - instance: cache
       access: readwrite
   resources:
     limits:

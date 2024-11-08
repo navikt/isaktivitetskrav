@@ -38,9 +38,10 @@ data class Environment(
         aivenRegistryPassword = getEnvVar("KAFKA_SCHEMA_REGISTRY_PASSWORD"),
     ),
     val redisConfig: RedisConfig = RedisConfig(
-        redisUri = URI(getEnvVar("REDIS_URI_ISAKTIVITETSKRAV")),
-        redisUsername = getEnvVar("REDIS_USERNAME_ISAKTIVITETSKRAV"),
-        redisPassword = getEnvVar("REDIS_PASSWORD_ISAKTIVITETSKRAV"),
+        redisUri = URI(getEnvVar("REDIS_URI_CACHE")),
+        redisDB = 3, // se https://github.com/navikt/istilgangskontroll/blob/master/README.md
+        redisUsername = getEnvVar("REDIS_USERNAME_CACHE"),
+        redisPassword = getEnvVar("REDIS_PASSWORD_CACHE"),
     ),
     val arenaCutoff: LocalDate = LocalDate.parse(getEnvVar("ARENA_CUTOFF")),
     val automatiskOppfyltCronJobEnabled: Boolean = getEnvVar("AUTOMATISK_OPPFYLT_CRONJOB_ENABLED").toBoolean(),
