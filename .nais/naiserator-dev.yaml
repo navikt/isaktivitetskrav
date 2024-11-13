@@ -29,7 +29,7 @@ spec:
     failureThreshold: 3
   leaderElection: true
   redis:
-    - instance: isaktivitetskrav
+    - instance: cache
       access: readwrite
   prometheus:
     enabled: true
