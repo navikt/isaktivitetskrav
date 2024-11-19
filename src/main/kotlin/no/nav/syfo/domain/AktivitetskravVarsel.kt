@@ -5,6 +5,7 @@ import no.nav.syfo.aktivitetskrav.api.VarselResponseDTO
 import no.nav.syfo.util.nowUTC
 import java.lang.IllegalArgumentException
 import java.time.LocalDate
+import java.time.Month
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -26,16 +27,22 @@ data class AktivitetskravVarsel internal constructor(
             if (document.isEmpty()) {
                 throw IllegalArgumentException("Varsel can't have empty document")
             }
-
             return AktivitetskravVarsel(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),
                 journalpostId = null,
-                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) LocalDate.now()
-                    .plusWeeks(3) else null,
+                svarfrist = if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) calculateSvarfrist() else null,
                 document = document,
                 type = type,
             )
+        }
+
+        private fun calculateSvarfrist(): LocalDate {
+            val today = LocalDate.now()
+            val nov25 = LocalDate.of(today.year, Month.NOVEMBER, 25)
+            val dec16 = LocalDate.of(today.year, Month.DECEMBER, 16)
+            val weeks = if (nov25 < today && today < dec16) 6L else 3L
+            return today.plusWeeks(weeks)
         }
 
         fun createFromDatabase(

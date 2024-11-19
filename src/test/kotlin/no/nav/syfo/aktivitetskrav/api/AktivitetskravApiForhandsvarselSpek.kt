@@ -20,6 +20,7 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
+import java.time.Month
 import java.util.*
 import java.util.concurrent.Future
 
@@ -152,8 +153,11 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             val aktivitetskravResponseDTO = responseDTOList.first()
                             val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
                             varselResponseDTO.shouldNotBeNull()
-                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate()
-                                .plusWeeks(3)
+                            val today = varselResponseDTO.createdAt.toLocalDate()
+                            val nov25 = LocalDate.of(today.year, Month.NOVEMBER, 25)
+                            val dec16 = LocalDate.of(today.year, Month.DECEMBER, 16)
+                            val weeks = if (nov25 < today && today < dec16) 6L else 3L
+                            varselResponseDTO.svarfrist shouldBeEqualTo today.plusWeeks(weeks)
                         }
                     }
                 }
