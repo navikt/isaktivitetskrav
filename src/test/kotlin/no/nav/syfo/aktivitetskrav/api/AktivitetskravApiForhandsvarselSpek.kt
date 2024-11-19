@@ -151,13 +151,14 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             val responseDTOList =
                                 objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
                             val aktivitetskravResponseDTO = responseDTOList.first()
-                            val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
+                            val vurderingDTO = aktivitetskravResponseDTO.vurderinger.first()
+                            val varselResponseDTO = vurderingDTO.varsel
                             varselResponseDTO.shouldNotBeNull()
-                            val today = varselResponseDTO.createdAt.toLocalDate()
-                            val nov25 = LocalDate.of(today.year, Month.NOVEMBER, 25)
-                            val dec16 = LocalDate.of(today.year, Month.DECEMBER, 16)
-                            val weeks = if (nov25 < today && today < dec16) 6L else 3L
-                            varselResponseDTO.svarfrist shouldBeEqualTo today.plusWeeks(weeks)
+                            val vurderingAt = vurderingDTO.createdAt.toLocalDate()
+                            val nov25 = LocalDate.of(vurderingAt.year, Month.NOVEMBER, 25)
+                            val dec16 = LocalDate.of(vurderingAt.year, Month.DECEMBER, 16)
+                            val weeks = if (nov25 < vurderingAt && vurderingAt < dec16) 6L else 3L
+                            varselResponseDTO.svarfrist shouldBeEqualTo vurderingAt.plusWeeks(weeks)
                         }
                     }
                 }
