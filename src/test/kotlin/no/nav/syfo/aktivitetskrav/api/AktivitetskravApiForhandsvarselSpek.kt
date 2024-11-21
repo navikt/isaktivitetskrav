@@ -53,12 +53,14 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                 navIdent = UserConstants.VEILEDER_IDENT,
             )
             val fritekst = "Dette er et forhåndsvarsel"
+            val svarfrist = LocalDate.now().plusDays(30)
             val forhandsvarselDTO = ForhandsvarselDTO(
                 fritekst = fritekst,
                 document = generateDocumentComponentDTO(
                     fritekst = fritekst,
                     header = "Forhåndsvarsel"
-                )
+                ),
+                frist = svarfrist,
             )
 
             beforeEachTest {
@@ -150,10 +152,10 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                             val responseDTOList =
                                 objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
                             val aktivitetskravResponseDTO = responseDTOList.first()
-                            val varselResponseDTO = aktivitetskravResponseDTO.vurderinger.first().varsel
+                            val vurderingDTO = aktivitetskravResponseDTO.vurderinger.first()
+                            val varselResponseDTO = vurderingDTO.varsel
                             varselResponseDTO.shouldNotBeNull()
-                            varselResponseDTO.svarfrist shouldBeEqualTo varselResponseDTO.createdAt.toLocalDate()
-                                .plusWeeks(3)
+                            varselResponseDTO.svarfrist shouldBeEqualTo svarfrist
                         }
                     }
                 }

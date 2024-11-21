@@ -79,11 +79,15 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
 }
 
-fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList()) =
+fun createVurdering(
+    status: AktivitetskravStatus,
+    arsaker: List<VurderingArsak> = emptyList(),
+    frist: LocalDate? = null,
+) =
     AktivitetskravVurdering.create(
         status = status,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "En test vurdering",
         arsaker = arsaker,
-        frist = null,
+        frist = frist,
     )

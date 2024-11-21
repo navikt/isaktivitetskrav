@@ -484,6 +484,7 @@ class AktivitetskravApiSpek : Spek({
                 val forhandsvarselDTO = ForhandsvarselDTO(
                     fritekst = fritekst,
                     document = document,
+                    frist = LocalDate.now().plusDays(30),
                 )
                 val pdf = byteArrayOf(0x2E, 100)
 
@@ -524,8 +525,9 @@ class AktivitetskravApiSpek : Spek({
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
                     val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
-                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                        forhandsvarselDTO.document
+                        type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        frist = LocalDate.now().plusDays(30),
+                        document = forhandsvarselDTO.document,
                     )
                     aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         firstAktivitetskrav,
@@ -566,8 +568,9 @@ class AktivitetskravApiSpek : Spek({
                     }
                     val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
-                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                        forhandsvarselDTO.document
+                        type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        frist = LocalDate.now().plusDays(30),
+                        document = forhandsvarselDTO.document,
                     )
                     aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         firstAktivitetskrav,

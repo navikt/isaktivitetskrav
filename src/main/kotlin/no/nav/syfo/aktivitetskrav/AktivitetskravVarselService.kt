@@ -65,7 +65,8 @@ class AktivitetskravVarselService(
 
         val forhandsvarsel = AktivitetskravVarsel.create(
             type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-            document = forhandsvarselDTO.document
+            document = forhandsvarselDTO.document,
+            frist = forhandsvarselDTO.frist,
         )
         val pdf = varselPdfService.createVarselPdf(
             varsel = forhandsvarsel,
