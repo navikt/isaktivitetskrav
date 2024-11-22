@@ -95,7 +95,7 @@ class AktivitetskravService(
         if (aktivitetskravVurdering.requiresVarselPdf()) {
             val varsel = AktivitetskravVarsel.create(
                 type = aktivitetskravVurdering.status.toVarselType()!!,
-                document = document
+                document = document,
             )
             val pdf = varselPdfService.createVarselPdf(
                 personIdent = aktivitetskrav.personIdent,

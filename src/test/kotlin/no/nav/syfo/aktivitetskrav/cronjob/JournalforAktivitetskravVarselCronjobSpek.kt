@@ -85,7 +85,11 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             varselType: VarselType,
             document: List<DocumentComponentDTO>,
         ): AktivitetskravVarsel {
-            val forhandsvarsel = AktivitetskravVarsel.create(varselType, document)
+            val forhandsvarsel = AktivitetskravVarsel.create(
+                type = varselType,
+                frist = LocalDate.now().plusDays(30),
+                document = document,
+            )
             aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                 aktivitetskrav = aktivitetskrav,
                 varsel = forhandsvarsel,

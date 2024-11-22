@@ -43,7 +43,6 @@ class AktivitetskravRepositorySpek : Spek({
             }
 
             describe("Forhåndsvarsel") {
-                val tenWeeksAgo = LocalDate.now().minusWeeks(10)
                 val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                 val newAktivitetskrav = createAktivitetskravNy(
                     tilfelleStart = LocalDate.now(),
@@ -51,9 +50,11 @@ class AktivitetskravRepositorySpek : Spek({
                 )
                 val fritekst = "Et forhåndsvarsel"
                 val document = generateDocumentComponentDTO(fritekst = fritekst)
+                val frist = LocalDate.now().plusDays(30)
                 val forhandsvarselDTO = ForhandsvarselDTO(
                     fritekst = fritekst,
                     document = document,
+                    frist = frist,
                 )
 
                 beforeEachTest {
@@ -64,8 +65,9 @@ class AktivitetskravRepositorySpek : Spek({
                     val vurdering: AktivitetskravVurdering =
                         forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
                     val forhandsvarsel = AktivitetskravVarsel.create(
-                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                        forhandsvarselDTO.document
+                        type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        frist = LocalDate.now().plusDays(30),
+                        document = forhandsvarselDTO.document,
                     )
                     val updatedAktivitetskrav = newAktivitetskrav.vurder(vurdering)
 
@@ -90,6 +92,7 @@ class AktivitetskravRepositorySpek : Spek({
                     newVarsel.aktivitetskravVurderingId shouldBeEqualTo newVurdering.id
                     newVarsel.journalpostId shouldBeEqualTo null
                     newVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
+                    newVarsel.svarfrist shouldBeEqualTo frist
 
                     newVarselPdf?.pdf?.size shouldBeEqualTo pdf.size
                     newVarselPdf?.pdf?.get(0) shouldBeEqualTo pdf[0]
@@ -105,6 +108,7 @@ class AktivitetskravRepositorySpek : Spek({
                 val forhandsvarselDTO = ForhandsvarselDTO(
                     fritekst = fritekst,
                     document = document,
+                    frist = LocalDate.now().plusDays(30),
                 )
 
                 it("Should retrieve aktivitetskrav without vurderinger for persons") {
@@ -178,10 +182,15 @@ class AktivitetskravRepositorySpek : Spek({
                             firstAktivitetskrav.vurder(it)
                             aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
                         }
-                    val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
+                    val svarfrist = LocalDate.now().plusDays(30)
+                    val newVurdering = createVurdering(
+                        status = AktivitetskravStatus.FORHANDSVARSEL,
+                        frist = svarfrist,
+                    ).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
-                        VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                        forhandsvarselDTO.document
+                        type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                        document = forhandsvarselDTO.document,
+                        frist = svarfrist,
                     )
                     aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
                         firstAktivitetskrav,

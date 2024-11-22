@@ -70,6 +70,7 @@ class AktivitetskravVarselServiceSpek : Spek({
                 val forhandsvarselDTO = ForhandsvarselDTO(
                     fritekst = fritekst,
                     document = document,
+                    frist = LocalDate.now().plusDays(30),
                 )
                 it("Updates aktivitetskrav, creates aktivitetskravVurdering, creates aktivitetskravVarsel, creates aktivitetskravVarselPdf and send on kafka") {
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
