@@ -22,129 +22,125 @@ private val inaktivIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT
 
 class IdenthendelseServiceSpek : Spek({
     describe("${IdenthendelseService::class.java.simpleName}: handle") {
-        with(TestApplicationEngine()) {
-            start()
+        val externalMockEnvironment = ExternalMockEnvironment.instance
+        val database = externalMockEnvironment.database
+        val aktivitetskravRepository = AktivitetskravRepository(database)
 
-            val externalMockEnvironment = ExternalMockEnvironment.instance
-            val database = externalMockEnvironment.database
-            val aktivitetskravRepository = AktivitetskravRepository(database)
+        val identhendelseService = IdenthendelseService(
+            pdlClient = externalMockEnvironment.pdlClient,
+            aktivitetskravRepository = aktivitetskravRepository,
+        )
 
-            val identhendelseService = IdenthendelseService(
-                pdlClient = externalMockEnvironment.pdlClient,
-                aktivitetskravRepository = aktivitetskravRepository,
+        afterEachTest {
+            database.dropData()
+        }
+
+        describe("Aktivitetskrav eksisterer for person") {
+            val aktivitetskravNy = createAktivitetskravNy(
+                personIdent = inaktivIdent,
+                tilfelleStart = LocalDate.now().minusDays(50),
             )
-
-            afterEachTest {
-                database.dropData()
-            }
-
-            describe("Aktivitetskrav eksisterer for person") {
-                val aktivitetskravNy = createAktivitetskravNy(
+            val aktivitetskravAutomatiskOppfylt =
+                createAktivitetskravAutomatiskOppfylt(
                     personIdent = inaktivIdent,
-                    tilfelleStart = LocalDate.now().minusDays(50),
+                    tilfelleStart = LocalDate.now().minusDays(400),
                 )
-                val aktivitetskravAutomatiskOppfylt =
-                    createAktivitetskravAutomatiskOppfylt(
-                        personIdent = inaktivIdent,
-                        tilfelleStart = LocalDate.now().minusDays(400),
-                    )
-                beforeEachTest {
-                    aktivitetskravRepository.createAktivitetskrav(aktivitetskravNy)
-                    aktivitetskravRepository.createAktivitetskrav(aktivitetskravAutomatiskOppfylt)
-                }
-
-                it("Oppdaterer aktivitetskrav når person har fått ny ident") {
-                    val previousUpdatedAt =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent).first().updatedAt
-                    val kafkaIdenthendelseDTO =
-                        generateKafkaIdenthendelseDTO(
-                            aktivIdent = aktivIdent,
-                            inaktiveIdenter = listOf(inaktivIdent)
-                        )
-                    runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
-
-                    val aktivitetskravMedInaktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
-                    aktivitetskravMedInaktivIdent.size shouldBeEqualTo 0
-
-                    val aktivitetskravMedAktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
-                    aktivitetskravMedAktivIdent.size shouldBeEqualTo 2
-                    val updatedAktivitetskravNy = aktivitetskravMedAktivIdent.first()
-                    updatedAktivitetskravNy.updatedAt shouldBeGreaterThan previousUpdatedAt
-                }
-                it("Oppdaterer ingenting når person har fått ny ident uten gamle identer") {
-                    val kafkaIdenthendelseDTO =
-                        generateKafkaIdenthendelseDTO(
-                            aktivIdent = aktivIdent,
-                            inaktiveIdenter = emptyList()
-                        )
-                    runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
-
-                    val aktivitetskravMedInaktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
-                    aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
-
-                    val aktivitetskravMedAktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
-                    aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
-                }
-                it("Oppdaterer ingenting når person mangler aktiv ident") {
-                    val kafkaIdenthendelseDTO =
-                        generateKafkaIdenthendelseDTO(
-                            aktivIdent = null,
-                            inaktiveIdenter = listOf(inaktivIdent)
-                        )
-                    runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
-
-                    val aktivitetskravMedInaktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
-                    aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
-
-                    val aktivitetskravMedAktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
-                    aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
-                }
-                it("Kaster feil og oppdaterer ingenting når person har fått ny ident, men ident er ikke oppdatert i PDL") {
-                    val kafkaIdenthendelseDTO =
-                        generateKafkaIdenthendelseDTO(
-                            aktivIdent = aktivIdentIkkeOppdatert,
-                            inaktiveIdenter = listOf(inaktivIdent)
-                        )
-                    runBlocking {
-                        assertFailsWith(IllegalStateException::class) {
-                            identhendelseService.handle(
-                                kafkaIdenthendelseDTO
-                            )
-                        }
-                    }
-
-                    val aktivitetskravMedInaktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
-                    aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
-
-                    val aktivitetskravMedAktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdentIkkeOppdatert)
-                    aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
-                }
+            beforeEachTest {
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskravNy)
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskravAutomatiskOppfylt)
             }
-            describe("Aktivitetskrav eksisterer ikke for person") {
-                it("Oppdaterer ingenting når person har fått ny ident") {
-                    val kafkaIdenthendelseDTO =
-                        generateKafkaIdenthendelseDTO(
-                            aktivIdent = aktivIdent,
-                            inaktiveIdenter = listOf(inaktivIdent)
+
+            it("Oppdaterer aktivitetskrav når person har fått ny ident") {
+                val previousUpdatedAt =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent).first().updatedAt
+                val kafkaIdenthendelseDTO =
+                    generateKafkaIdenthendelseDTO(
+                        aktivIdent = aktivIdent,
+                        inaktiveIdenter = listOf(inaktivIdent)
+                    )
+                runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
+
+                val aktivitetskravMedInaktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
+                aktivitetskravMedInaktivIdent.size shouldBeEqualTo 0
+
+                val aktivitetskravMedAktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
+                aktivitetskravMedAktivIdent.size shouldBeEqualTo 2
+                val updatedAktivitetskravNy = aktivitetskravMedAktivIdent.first()
+                updatedAktivitetskravNy.updatedAt shouldBeGreaterThan previousUpdatedAt
+            }
+            it("Oppdaterer ingenting når person har fått ny ident uten gamle identer") {
+                val kafkaIdenthendelseDTO =
+                    generateKafkaIdenthendelseDTO(
+                        aktivIdent = aktivIdent,
+                        inaktiveIdenter = emptyList()
+                    )
+                runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
+
+                val aktivitetskravMedInaktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
+                aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
+
+                val aktivitetskravMedAktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
+                aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
+            }
+            it("Oppdaterer ingenting når person mangler aktiv ident") {
+                val kafkaIdenthendelseDTO =
+                    generateKafkaIdenthendelseDTO(
+                        aktivIdent = null,
+                        inaktiveIdenter = listOf(inaktivIdent)
+                    )
+                runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
+
+                val aktivitetskravMedInaktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
+                aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
+
+                val aktivitetskravMedAktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
+                aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
+            }
+            it("Kaster feil og oppdaterer ingenting når person har fått ny ident, men ident er ikke oppdatert i PDL") {
+                val kafkaIdenthendelseDTO =
+                    generateKafkaIdenthendelseDTO(
+                        aktivIdent = aktivIdentIkkeOppdatert,
+                        inaktiveIdenter = listOf(inaktivIdent)
+                    )
+                runBlocking {
+                    assertFailsWith(IllegalStateException::class) {
+                        identhendelseService.handle(
+                            kafkaIdenthendelseDTO
                         )
-                    runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
-
-                    val aktivitetskravMedInaktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
-                    aktivitetskravMedInaktivIdent.size shouldBeEqualTo 0
-
-                    val aktivitetskravMedAktivIdent =
-                        aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
-                    aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
+                    }
                 }
+
+                val aktivitetskravMedInaktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
+                aktivitetskravMedInaktivIdent.size shouldBeEqualTo 2
+
+                val aktivitetskravMedAktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdentIkkeOppdatert)
+                aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
+            }
+        }
+        describe("Aktivitetskrav eksisterer ikke for person") {
+            it("Oppdaterer ingenting når person har fått ny ident") {
+                val kafkaIdenthendelseDTO =
+                    generateKafkaIdenthendelseDTO(
+                        aktivIdent = aktivIdent,
+                        inaktiveIdenter = listOf(inaktivIdent)
+                    )
+                runBlocking { identhendelseService.handle(kafkaIdenthendelseDTO) }
+
+                val aktivitetskravMedInaktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = inaktivIdent)
+                aktivitetskravMedInaktivIdent.size shouldBeEqualTo 0
+
+                val aktivitetskravMedAktivIdent =
+                    aktivitetskravRepository.getAktivitetskrav(personIdent = aktivIdent)
+                aktivitetskravMedAktivIdent.size shouldBeEqualTo 0
             }
         }
     }

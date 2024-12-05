@@ -3,7 +3,7 @@ package no.nav.syfo.util
 import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.util.pipeline.PipelineContext
+import io.ktor.server.routing.*
 import no.nav.syfo.application.exception.ForbiddenAccessVeilederException
 import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.domain.PersonIdent
@@ -30,7 +30,7 @@ fun ApplicationCall.getNAVIdent(): String {
 fun ApplicationCall.getBearerHeader(): String? =
     this.request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")
 
-suspend fun PipelineContext<out Unit, ApplicationCall>.checkVeilederTilgang(
+suspend fun RoutingContext.checkVeilederTilgang(
     action: String,
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
     block: suspend () -> Unit,
