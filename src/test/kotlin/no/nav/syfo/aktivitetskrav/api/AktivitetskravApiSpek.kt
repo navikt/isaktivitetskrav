@@ -288,7 +288,6 @@ class AktivitetskravApiSpek : Spek({
                             bearerAuth(validToken)
                             header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                            setBody(newAktivitetskravDto)
                         }
                         response.status shouldBeEqualTo HttpStatusCode.Created
                         val responseDTO = response.body<AktivitetskravResponseDTO>()
@@ -580,13 +579,13 @@ class AktivitetskravApiSpek : Spek({
                     }
                     response.status shouldBeEqualTo HttpStatusCode.OK
                     val responseContent = response.body<GetAktivitetskravForPersonsResponseDTO>()
-                    responseContent.aktivitetskravvurderinger.size shouldBe 2
+                    responseContent.aktivitetskravvurderinger.size shouldBeEqualTo 2
                     val firstAktivitetskravResponse = responseContent.aktivitetskravvurderinger[ARBEIDSTAKER_PERSONIDENT.value]
                     val secondAktivitetskravResponse = responseContent.aktivitetskravvurderinger[OTHER_ARBEIDSTAKER_PERSONIDENT.value]
-                    firstAktivitetskravResponse?.vurderinger?.size shouldBe 1
-                    secondAktivitetskravResponse?.vurderinger?.size shouldBe 1
-                    firstAktivitetskravResponse?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.FORHANDSVARSEL
-                    secondAktivitetskravResponse?.vurderinger?.first()?.status shouldBe AktivitetskravStatus.IKKE_OPPFYLT
+                    firstAktivitetskravResponse?.vurderinger?.size shouldBeEqualTo 1
+                    secondAktivitetskravResponse?.vurderinger?.size shouldBeEqualTo 1
+                    firstAktivitetskravResponse?.vurderinger?.first()?.status shouldBeEqualTo AktivitetskravStatus.FORHANDSVARSEL
+                    secondAktivitetskravResponse?.vurderinger?.first()?.status shouldBeEqualTo AktivitetskravStatus.IKKE_OPPFYLT
                 }
             }
 

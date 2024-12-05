@@ -102,7 +102,7 @@ object PodApiSpek : Spek({
                     database = database,
                     applicationState = ApplicationState(alive = true, ready = true),
                 )
-                val response = client.get("/internal/is_alive")
+                val response = client.get("/internal/is_ready")
                 response.status shouldBeEqualTo HttpStatusCode.InternalServerError
                 response.bodyAsText() shouldNotBeEqualTo null
             }
