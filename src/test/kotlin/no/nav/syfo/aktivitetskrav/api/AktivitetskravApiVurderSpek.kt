@@ -1,6 +1,7 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import io.ktor.client.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
@@ -10,7 +11,6 @@ import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.domain.*
-import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
@@ -28,8 +28,6 @@ import java.util.*
 import java.util.concurrent.Future
 
 class AktivitetskravApiVurderSpek : Spek({
-    val objectMapper: ObjectMapper = configuredJacksonMapper()
-
     val nyAktivitetskrav = createAktivitetskravNy(
         tilfelleStart = LocalDate.now().minusWeeks(10),
     ).copy(
@@ -38,104 +36,97 @@ class AktivitetskravApiVurderSpek : Spek({
     val aktivitetskravUuid = nyAktivitetskrav.uuid
 
     describe(AktivitetskravApiVurderSpek::class.java.simpleName) {
-        with(TestApplicationEngine()) {
-            start()
-            val externalMockEnvironment = ExternalMockEnvironment.instance
-            val database = externalMockEnvironment.database
-            val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
-
-            application.testApiModule(
-                externalMockEnvironment = externalMockEnvironment,
-                aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
-                    producer = kafkaProducer,
-                ),
-            )
-            val aktivitetskravRepository = AktivitetskravRepository(database)
-            val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-            val aktivitetskravService = AktivitetskravService(
-                aktivitetskravRepository = aktivitetskravRepository,
-                aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-                aktivitetskravVurderingProducer = mockk(relaxed = true),
-                arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
-                varselPdfService = VarselPdfService(
-                    pdfGenClient = externalMockEnvironment.pdfgenClient,
-                    pdlClient = externalMockEnvironment.pdlClient,
-                )
-
-            )
-            val validToken = generateJWT(
-                audience = externalMockEnvironment.environment.azure.appClientId,
-                issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-                navIdent = UserConstants.VEILEDER_IDENT,
+        val externalMockEnvironment = ExternalMockEnvironment.instance
+        val database = externalMockEnvironment.database
+        val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
+        val aktivitetskravRepository = AktivitetskravRepository(database)
+        val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+        val aktivitetskravService = AktivitetskravService(
+            aktivitetskravRepository = aktivitetskravRepository,
+            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+            aktivitetskravVurderingProducer = mockk(relaxed = true),
+            arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+            varselPdfService = VarselPdfService(
+                pdfGenClient = externalMockEnvironment.pdfgenClient,
+                pdlClient = externalMockEnvironment.pdlClient,
             )
 
-            beforeEachTest {
-                clearMocks(kafkaProducer)
-                coEvery {
-                    kafkaProducer.send(any())
-                } returns mockk<Future<RecordMetadata>>(relaxed = true)
-                aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
+        )
+        val validToken = generateJWT(
+            audience = externalMockEnvironment.environment.azure.appClientId,
+            issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
+            navIdent = UserConstants.VEILEDER_IDENT,
+        )
+
+        beforeEachTest {
+            clearMocks(kafkaProducer)
+            coEvery {
+                kafkaProducer.send(any())
+            } returns mockk<Future<RecordMetadata>>(relaxed = true)
+            aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
+        }
+        afterEachTest {
+            database.dropData()
+        }
+
+        suspend fun HttpClient.postEndreVurdering(
+            aktivitetskravUuid: UUID,
+            vurderingDTO: AktivitetskravVurderingRequestDTO,
+            personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+        ) = run {
+            val urlVurderAktivitetskrav =
+                "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+            post(urlVurderAktivitetskrav) {
+                bearerAuth(validToken)
+                header(NAV_PERSONIDENT_HEADER, personIdent.value)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(vurderingDTO)
             }
-            afterEachTest {
-                database.dropData()
-            }
+        }
 
-            fun postEndreVurdering(
-                aktivitetskravUuid: UUID,
-                vurderingDTO: AktivitetskravVurderingRequestDTO,
-                personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-            ) = run {
-                val urlVurderAktivitetskrav =
-                    "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
-                handleRequest(HttpMethod.Post, urlVurderAktivitetskrav) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                    addHeader(NAV_PERSONIDENT_HEADER, personIdent.value)
-                    setBody(objectMapper.writeValueAsString(vurderingDTO))
-                }
-            }
+        describe("Vurder aktivitetskrav for person") {
+            val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
+                status = AktivitetskravStatus.OPPFYLT,
+                beskrivelse = "Aktivitetskravet er oppfylt",
+                arsaker = listOf(Arsak.FRISKMELDT),
+                document = generateDocumentComponentDTO("Aktivitetskravet er oppfylt")
+            )
 
-            describe("Vurder aktivitetskrav for person") {
-                val vurderingOppfyltRequestDTO = AktivitetskravVurderingRequestDTO(
-                    status = AktivitetskravStatus.OPPFYLT,
-                    beskrivelse = "Aktivitetskravet er oppfylt",
-                    arsaker = listOf(Arsak.FRISKMELDT),
-                    document = generateDocumentComponentDTO("Aktivitetskravet er oppfylt")
-                )
-
-                describe("Happy path") {
-                    it("Updates Aktivitetskrav with vurdering and produces to Kafka if request is succesful") {
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingOppfyltRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
-                            verify(exactly = 1) {
-                                kafkaProducer.send(capture(producerRecordSlot))
-                            }
-
-                            val latestAktivitetskrav =
-                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                                    .first()
-                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status
-                            latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
-
-                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
-
-                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                            kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
-                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
-                            kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
+            describe("Happy path") {
+                it("Updates Aktivitetskrav with vurdering and produces to Kafka if request is succesful") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingOppfyltRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.OK
+                        val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
+                        verify(exactly = 1) {
+                            kafkaProducer.send(capture(producerRecordSlot))
                         }
+
+                        val latestAktivitetskrav =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                .first()
+                        latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status
+                        latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
+
+                        val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+
+                        val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                        kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
+                        kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                        kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
+                        kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                        kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
+                        kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                     }
-                    it("Updates Aktivitetskrav already vurdert with new vurdering and produces to Kafka if request is succesful") {
+                }
+                it("Updates Aktivitetskrav already vurdert with new vurdering and produces to Kafka if request is succesful") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val avventVurdering = AktivitetskravVurdering.create(
                             status = AktivitetskravStatus.AVVENT,
                             createdBy = UserConstants.VEILEDER_IDENT,
@@ -155,38 +146,37 @@ class AktivitetskravApiVurderSpek : Spek({
                                 callId = "",
                             )
                         }
-
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingOppfyltRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
-                            verify(exactly = 1) {
-                                kafkaProducer.send(capture(producerRecordSlot))
-                            }
-
-                            val latestAktivitetskrav =
-                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                                    .first()
-                            latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status
-                            latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
-
-                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
-
-                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                            kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
-                            kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                            kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                            kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
-                            kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
-                            kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
-                            kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingOppfyltRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.OK
+                        val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
+                        verify(exactly = 1) {
+                            kafkaProducer.send(capture(producerRecordSlot))
                         }
+
+                        val latestAktivitetskrav =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                .first()
+                        latestAktivitetskrav.status shouldBeEqualTo vurderingOppfyltRequestDTO.status
+                        latestAktivitetskrav.updatedAt shouldBeGreaterThan latestAktivitetskrav.createdAt
+
+                        val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+
+                        val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                        kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
+                        kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
+                        kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
+                        kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
+                        kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
+                        kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
+                        kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
                     }
-                    it("Updates Aktivitetskrav with Avvent-vurdering and frist and produces to Kafka if request is successful") {
+                }
+                it("Updates Aktivitetskrav with Avvent-vurdering and frist and produces to Kafka if request is successful") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val oneWeekFromNow = LocalDate.now().plusWeeks(1)
                         val vurderingAvventRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.AVVENT,
@@ -194,158 +184,148 @@ class AktivitetskravApiVurderSpek : Spek({
                             arsaker = listOf(Arsak.INFORMASJON_BEHANDLER),
                             frist = oneWeekFromNow,
                         )
-
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingAvventRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
-                            verify(exactly = 1) {
-                                kafkaProducer.send(capture(producerRecordSlot))
-                            }
-
-                            val latestAktivitetskrav =
-                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                                    .first()
-                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
-                            latestAktivitetskravVurdering.frist shouldBeEqualTo oneWeekFromNow
-
-                            val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
-                            kafkaAktivitetskravVurdering.frist shouldBeEqualTo latestAktivitetskravVurdering.frist
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingAvventRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.OK
+                        val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
+                        verify(exactly = 1) {
+                            kafkaProducer.send(capture(producerRecordSlot))
                         }
+
+                        val latestAktivitetskrav =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                .first()
+                        val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+                        latestAktivitetskravVurdering.frist shouldBeEqualTo oneWeekFromNow
+
+                        val kafkaAktivitetskravVurdering = producerRecordSlot.captured.value()
+                        kafkaAktivitetskravVurdering.frist shouldBeEqualTo latestAktivitetskravVurdering.frist
                     }
-                    it("Updates Aktivitetskrav with Unntak-vurdering and varsel if request is successful") {
+                }
+                it("Updates Aktivitetskrav with Unntak-vurdering and varsel if request is successful") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val unntakVurderingRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.UNNTAK,
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
                             document = generateDocumentComponentDTO("Litt fritekst")
                         )
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = unntakVurderingRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.OK
 
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = unntakVurderingRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
+                        val latestAktivitetskrav =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                                .first()
+                        val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+                        latestAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.UNNTAK
 
-                            val latestAktivitetskrav =
-                                aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-                                    .first()
-                            val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
-                            latestAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.UNNTAK
-
-                            val varsel =
-                                aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestAktivitetskravVurdering.uuid)
-                            varsel.shouldNotBeNull()
-                        }
+                        val varsel =
+                            aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestAktivitetskravVurdering.uuid)
+                        varsel.shouldNotBeNull()
                     }
                 }
-                describe("Unhappy path") {
-                    val urlVurderExistingAktivitetskrav =
-                        "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
-                    it("Returns status Unauthorized if no token is supplied") {
-                        testMissingToken(urlVurderExistingAktivitetskrav, HttpMethod.Post)
+            }
+            describe("Unhappy path") {
+                val urlVurderExistingAktivitetskrav =
+                    "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                it("Returns status Unauthorized if no token is supplied") {
+                    testMissingToken(urlVurderExistingAktivitetskrav, HttpMethod.Post)
+                }
+                it("returns status Forbidden if denied access to person") {
+                    testDeniedPersonAccess(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                }
+                it("returns status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
+                    testMissingPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                }
+                it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
+                    testInvalidPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                }
+                it("returns status BadRequest if no vurdering exists for uuid-param") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = UUID.randomUUID(),
+                            vurderingDTO = vurderingOppfyltRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("returns status Forbidden if denied access to person") {
-                        testDeniedPersonAccess(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                }
+                it("returns status BadRequest if $NAV_PERSONIDENT_HEADER differs from personIdent for vurdering") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingOppfyltRequestDTO,
+                            personIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("returns status BadRequest if no $NAV_PERSONIDENT_HEADER is supplied") {
-                        testMissingPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
-                    }
-                    it("returns status BadRequest if $NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied") {
-                        testInvalidPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
-                    }
-                    it("returns status BadRequest if no vurdering exists for uuid-param") {
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = UUID.randomUUID(),
-                                vurderingDTO = vurderingOppfyltRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
-                    }
-                    it("returns status BadRequest if $NAV_PERSONIDENT_HEADER differs from personIdent for vurdering") {
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingOppfyltRequestDTO,
-                                personIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
-                    }
-                    it("returns status BadRequest if vurdering is missing arsak") {
+                }
+                it("returns status BadRequest if vurdering is missing arsak") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val vurderingMissingArsakRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.OPPFYLT,
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = emptyList(),
                         )
-
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = aktivitetskravUuid,
-                                vurderingDTO = vurderingMissingArsakRequestDTO
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = aktivitetskravUuid,
+                            vurderingDTO = vurderingMissingArsakRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("returns status BadRequest if vurdering has invalid arsak") {
+                }
+                it("returns status BadRequest if vurdering has invalid arsak") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val vurderingInvalidArsakRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.UNNTAK,
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = listOf(Arsak.TILTAK),
                         )
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingInvalidArsakRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+                    }
+                }
+                it("returns status BadRequest if existing vurdering is final") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingOppfyltRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.OK
 
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingInvalidArsakRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                        val responseNew = client.postEndreVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingOppfyltRequestDTO,
+                        )
+                        responseNew.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("returns status BadRequest if existing vurdering is final") {
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingOppfyltRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                        }
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = nyAktivitetskrav.uuid,
-                                vurderingDTO = vurderingOppfyltRequestDTO,
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
-                    }
-                    it("returns status BadRequest if UNNTAK is missing document") {
+                }
+                it("returns status BadRequest if UNNTAK is missing document") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val vurderingUnntakMissingDocumentRequestDTO = AktivitetskravVurderingRequestDTO(
                             status = AktivitetskravStatus.UNNTAK,
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
                         )
-
-                        with(
-                            postEndreVurdering(
-                                aktivitetskravUuid = aktivitetskravUuid,
-                                vurderingDTO = vurderingUnntakMissingDocumentRequestDTO
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                        val responseNew = client.postEndreVurdering(
+                            aktivitetskravUuid = aktivitetskravUuid,
+                            vurderingDTO = vurderingUnntakMissingDocumentRequestDTO,
+                        )
+                        responseNew.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
                 }
             }

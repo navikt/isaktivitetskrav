@@ -37,305 +37,301 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
     val pdf = byteArrayOf(23)
     val defaultJournalpostId = "9"
 
-    with(TestApplicationEngine()) {
-        start()
+    val externalMockEnvironment = ExternalMockEnvironment.instance
+    val database = externalMockEnvironment.database
 
-        val externalMockEnvironment = ExternalMockEnvironment.instance
-        val database = externalMockEnvironment.database
+    val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+    val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
-        val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-        val aktivitetskravRepository = AktivitetskravRepository(database = database)
+    val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
+    val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
+        kafkaProducer = aktivitetskravVarselKafkaProducer,
+    )
+    val aktivitetskravVarselService = AktivitetskravVarselService(
+        aktivitetskravVarselRepository = aktivitetskravVarselRepository,
+        aktivitetskravVurderingProducer = mockk(),
+        aktivitetskravVarselProducer = aktivitetskravVarselProducer,
+        varselPdfService = VarselPdfService(
+            pdfGenClient = externalMockEnvironment.pdfgenClient,
+            pdlClient = externalMockEnvironment.pdlClient,
+        ),
+    )
 
-        val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
-        val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
-            kafkaProducer = aktivitetskravVarselKafkaProducer,
+    val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
+        aktivitetskravVarselService = aktivitetskravVarselService,
+    )
+
+    fun createVarsel(
+        aktivitetskrav: Aktivitetskrav,
+        pdf: ByteArray,
+        journalpostId: String? = defaultJournalpostId,
+        varselType: VarselType,
+        document: List<DocumentComponentDTO>,
+    ): AktivitetskravVarsel {
+        val varsel = AktivitetskravVarsel.create(
+            type = varselType,
+            frist = LocalDate.now().plusDays(30),
+            document = document,
         )
-        val aktivitetskravVarselService = AktivitetskravVarselService(
-            aktivitetskravVarselRepository = aktivitetskravVarselRepository,
-            aktivitetskravVurderingProducer = mockk(),
-            aktivitetskravVarselProducer = aktivitetskravVarselProducer,
-            varselPdfService = VarselPdfService(
-                pdfGenClient = externalMockEnvironment.pdfgenClient,
-                pdlClient = externalMockEnvironment.pdlClient,
-            ),
+        aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
+            aktivitetskrav = aktivitetskrav,
+            varsel = varsel,
+            newVurdering = aktivitetskrav.vurderinger.first(),
+            pdf = pdf,
         )
-
-        val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
-            aktivitetskravVarselService = aktivitetskravVarselService,
-        )
-
-        fun createVarsel(
-            aktivitetskrav: Aktivitetskrav,
-            pdf: ByteArray,
-            journalpostId: String? = defaultJournalpostId,
-            varselType: VarselType,
-            document: List<DocumentComponentDTO>,
-        ): AktivitetskravVarsel {
-            val varsel = AktivitetskravVarsel.create(
-                type = varselType,
-                frist = LocalDate.now().plusDays(30),
-                document = document,
-            )
-            aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
-                aktivitetskrav = aktivitetskrav,
-                varsel = varsel,
-                newVurdering = aktivitetskrav.vurderinger.first(),
-                pdf = pdf,
-            )
-            if (journalpostId != null) {
-                aktivitetskravVarselRepository.updateJournalpostId(varsel, journalpostId)
-            }
-            return varsel
+        if (journalpostId != null) {
+            aktivitetskravVarselRepository.updateJournalpostId(varsel, journalpostId)
         }
+        return varsel
+    }
 
+    beforeEachTest {
+        clearMocks(aktivitetskravVarselKafkaProducer)
+        coEvery {
+            aktivitetskravVarselKafkaProducer.send(any())
+        } returns mockk<Future<RecordMetadata>>(relaxed = true)
+    }
+    afterEachTest {
+        database.dropData()
+    }
+
+    describe("${PubliserAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
         beforeEachTest {
-            clearMocks(aktivitetskravVarselKafkaProducer)
-            coEvery {
-                aktivitetskravVarselKafkaProducer.send(any())
-            } returns mockk<Future<RecordMetadata>>(relaxed = true)
-        }
-        afterEachTest {
-            database.dropData()
+            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
         }
 
-        describe("${PubliserAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
-            beforeEachTest {
-                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+        it("Publiserer journalfort forhandsvarsel") {
+            val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                document = forhandsvarselDTO.document,
+            )
+            val varslerBefore = database.getVarsler(personIdent)
+            varslerBefore.size shouldBeEqualTo 1
+            varslerBefore.first().publishedAt shouldBe null
+
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 1
+            }
+            val varsler = database.getVarsler(personIdent)
+            varsler.size shouldBeEqualTo 1
+            val first = varsler.first()
+            first.uuid shouldBeEqualTo varslerBefore.first().uuid
+            first.updatedAt shouldBeGreaterThan first.createdAt
+            first.publishedAt shouldNotBe null
+
+            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            verify(exactly = 1) {
+                aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
 
-            it("Publiserer journalfort forhandsvarsel") {
-                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
-                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                createVarsel(
-                    aktivitetskrav = updatedAktivitetskrav,
-                    pdf = pdf,
-                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                    document = forhandsvarselDTO.document,
-                )
-                val varslerBefore = database.getVarsler(personIdent)
-                varslerBefore.size shouldBeEqualTo 1
-                varslerBefore.first().publishedAt shouldBe null
+            val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
+            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
+            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
+            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
+            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
+            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
+            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
+            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
+            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
+            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
+        }
+        it("Publiserer ikke forhandsvarsel som ikke er journalfort") {
+            val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                document = forhandsvarselDTO.document,
+                journalpostId = null,
+            )
+            val varslerBefore = database.getVarsler(personIdent)
+            varslerBefore.size shouldBeEqualTo 1
+            varslerBefore.first().publishedAt shouldBe null
 
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 1
-                }
-                val varsler = database.getVarsler(personIdent)
-                varsler.size shouldBeEqualTo 1
-                val first = varsler.first()
-                first.uuid shouldBeEqualTo varslerBefore.first().uuid
-                first.updatedAt shouldBeGreaterThan first.createdAt
-                first.publishedAt shouldNotBe null
-
-                val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
-                verify(exactly = 1) {
-                    aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
-                }
-
-                val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-                kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-                kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-                kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-                kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-                kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-                kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-                kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-                kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-                kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 0
             }
-            it("Publiserer ikke forhandsvarsel som ikke er journalfort") {
-                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
-                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                createVarsel(
-                    aktivitetskrav = updatedAktivitetskrav,
-                    pdf = pdf,
-                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                    document = forhandsvarselDTO.document,
-                    journalpostId = null,
-                )
-                val varslerBefore = database.getVarsler(personIdent)
-                varslerBefore.size shouldBeEqualTo 1
-                varslerBefore.first().publishedAt shouldBe null
+            val varsler = database.getVarsler(personIdent)
+            varsler.size shouldBeEqualTo 1
+            val first = varsler.first()
+            first.uuid shouldBeEqualTo varslerBefore.first().uuid
+            first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
+            first.publishedAt shouldBe null
+        }
+        it("Publiserer ikke forhandsvarsel som allerede er publisert") {
+            val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
+                document = forhandsvarselDTO.document,
+            )
+            val varslerBefore = database.getVarsler(personIdent)
+            varslerBefore.size shouldBeEqualTo 1
+            varslerBefore.first().publishedAt shouldBe null
 
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 0
-                }
-                val varsler = database.getVarsler(personIdent)
-                varsler.size shouldBeEqualTo 1
-                val first = varsler.first()
-                first.uuid shouldBeEqualTo varslerBefore.first().uuid
-                first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
-                first.publishedAt shouldBe null
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 1
             }
-            it("Publiserer ikke forhandsvarsel som allerede er publisert") {
-                val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
-                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                createVarsel(
-                    aktivitetskrav = updatedAktivitetskrav,
-                    pdf = pdf,
-                    varselType = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
-                    document = forhandsvarselDTO.document,
-                )
-                val varslerBefore = database.getVarsler(personIdent)
-                varslerBefore.size shouldBeEqualTo 1
-                varslerBefore.first().publishedAt shouldBe null
-
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 1
-                }
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 0
-                }
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 0
             }
-            it("Publiserer journalført varsel for UNNTAK") {
-                val fritekst = "Aktivitetskravet er oppfylt"
-                val vurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.UNNTAK,
-                    beskrivelse = fritekst,
-                    arsaker = listOf(VurderingArsak.Unntak.MedisinskeGrunner),
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                )
-                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                val varsel = createVarsel(
-                    aktivitetskrav = updatedAktivitetskrav,
-                    pdf = pdf,
-                    varselType = VarselType.UNNTAK,
-                    document = generateDocumentComponentDTO(fritekst),
-                )
+        }
+        it("Publiserer journalført varsel for UNNTAK") {
+            val fritekst = "Aktivitetskravet er oppfylt"
+            val vurdering = AktivitetskravVurdering.create(
+                status = AktivitetskravStatus.UNNTAK,
+                beskrivelse = fritekst,
+                arsaker = listOf(VurderingArsak.Unntak.MedisinskeGrunner),
+                createdBy = UserConstants.VEILEDER_IDENT,
+            )
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            val varsel = createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.UNNTAK,
+                document = generateDocumentComponentDTO(fritekst),
+            )
 
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 1
-                }
-                val varsler = database.getVarsler(personIdent)
-                varsler.size shouldBeEqualTo 1
-                val first = varsler.first()
-                first.uuid shouldBeEqualTo varsel.uuid
-                first.updatedAt shouldBeGreaterThan first.createdAt
-                first.publishedAt shouldNotBe null
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 1
+            }
+            val varsler = database.getVarsler(personIdent)
+            varsler.size shouldBeEqualTo 1
+            val first = varsler.first()
+            first.uuid shouldBeEqualTo varsel.uuid
+            first.updatedAt shouldBeGreaterThan first.createdAt
+            first.publishedAt shouldNotBe null
 
-                val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
-                verify(exactly = 1) {
-                    aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
-                }
-
-                val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-                kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-                kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-                kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-                kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-                kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-                kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-                kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-                kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-                kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.UNNTAK.name
+            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            verify(exactly = 1) {
+                aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
 
-            it("Publiserer journalført varsel for OPPFYLT") {
-                val fritekst = "Aktivitetskravet er oppfylt"
-                val vurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.OPPFYLT,
-                    beskrivelse = fritekst,
-                    arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                )
-                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                val varsel = createVarsel(
-                    aktivitetskrav = updatedAktivitetskrav,
-                    pdf = pdf,
-                    varselType = VarselType.OPPFYLT,
-                    document = generateDocumentComponentDTO(fritekst),
-                )
+            val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
+            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
+            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
+            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
+            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
+            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
+            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
+            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
+            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
+            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.UNNTAK.name
+        }
 
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 1
-                }
-                val varsler = database.getVarsler(personIdent)
-                varsler.size shouldBeEqualTo 1
-                val first = varsler.first()
-                first.uuid shouldBeEqualTo varsel.uuid
-                first.updatedAt shouldBeGreaterThan first.createdAt
-                first.publishedAt shouldNotBe null
+        it("Publiserer journalført varsel for OPPFYLT") {
+            val fritekst = "Aktivitetskravet er oppfylt"
+            val vurdering = AktivitetskravVurdering.create(
+                status = AktivitetskravStatus.OPPFYLT,
+                beskrivelse = fritekst,
+                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
+                createdBy = UserConstants.VEILEDER_IDENT,
+            )
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            val varsel = createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.OPPFYLT,
+                document = generateDocumentComponentDTO(fritekst),
+            )
 
-                val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
-                verify(exactly = 1) {
-                    aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
-                }
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 1
+            }
+            val varsler = database.getVarsler(personIdent)
+            varsler.size shouldBeEqualTo 1
+            val first = varsler.first()
+            first.uuid shouldBeEqualTo varsel.uuid
+            first.updatedAt shouldBeGreaterThan first.createdAt
+            first.publishedAt shouldNotBe null
 
-                val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-                kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-                kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-                kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-                kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-                kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-                kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-                kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-                kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-                kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.OPPFYLT.name
+            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            verify(exactly = 1) {
+                aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
 
-            it("Publiserer journalført varsel for IKKE AKTUELL") {
-                val fritekst = "Aktivitetskravet er ikke aktuelt"
-                val vurdering = AktivitetskravVurdering.create(
-                    status = AktivitetskravStatus.IKKE_AKTUELL,
-                    beskrivelse = fritekst,
-                    arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
-                    createdBy = UserConstants.VEILEDER_IDENT,
-                )
-                val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
-                val varsel = createVarsel(
-                    aktivitetskrav = updatedAktivitetskrav,
-                    pdf = pdf,
-                    varselType = VarselType.IKKE_AKTUELL,
-                    document = generateDocumentComponentDTO(fritekst),
-                )
+            val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
+            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
+            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
+            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
+            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
+            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
+            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
+            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
+            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
+            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.OPPFYLT.name
+        }
 
-                runBlocking {
-                    val result = publiserAktivitetskravVarselCronjob.runJob()
-                    result.failed shouldBeEqualTo 0
-                    result.updated shouldBeEqualTo 1
-                }
-                val varsler = database.getVarsler(personIdent)
-                varsler.size shouldBeEqualTo 1
-                val first = varsler.first()
-                first.uuid shouldBeEqualTo varsel.uuid
-                first.updatedAt shouldBeGreaterThan first.createdAt
-                first.publishedAt shouldNotBe null
+        it("Publiserer journalført varsel for IKKE AKTUELL") {
+            val fritekst = "Aktivitetskravet er ikke aktuelt"
+            val vurdering = AktivitetskravVurdering.create(
+                status = AktivitetskravStatus.IKKE_AKTUELL,
+                beskrivelse = fritekst,
+                arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
+                createdBy = UserConstants.VEILEDER_IDENT,
+            )
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            val varsel = createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.IKKE_AKTUELL,
+                document = generateDocumentComponentDTO(fritekst),
+            )
 
-                val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
-                verify(exactly = 1) {
-                    aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
-                }
-
-                val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-                kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-                kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-                kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-                kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-                kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-                kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-                kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-                kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-                kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-                kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.IKKE_AKTUELL.name
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 1
             }
+            val varsler = database.getVarsler(personIdent)
+            varsler.size shouldBeEqualTo 1
+            val first = varsler.first()
+            first.uuid shouldBeEqualTo varsel.uuid
+            first.updatedAt shouldBeGreaterThan first.createdAt
+            first.publishedAt shouldNotBe null
+
+            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            verify(exactly = 1) {
+                aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
+            }
+
+            val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
+            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
+            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
+            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
+            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
+            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
+            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
+            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
+            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
+            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.IKKE_AKTUELL.name
         }
     }
 })

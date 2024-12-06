@@ -1,13 +1,13 @@
 package no.nav.syfo.aktivitetskrav.api
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.domain.*
-import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
@@ -24,7 +24,6 @@ import java.util.*
 import java.util.concurrent.Future
 
 class AktivitetskravApiForhandsvarselSpek : Spek({
-    val objectMapper: ObjectMapper = configuredJacksonMapper()
     val urlAktivitetskravPerson = "$aktivitetskravApiBasePath/$aktivitetskravApiPersonidentPath"
 
     val nyAktivitetskrav = createAktivitetskravNy(
@@ -34,175 +33,167 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
     )
 
     describe(AktivitetskravApiForhandsvarselSpek::class.java.simpleName) {
-        with(TestApplicationEngine()) {
-            start()
-            val externalMockEnvironment = ExternalMockEnvironment.instance
-            val database = externalMockEnvironment.database
-            val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
-
-            application.testApiModule(
-                externalMockEnvironment = externalMockEnvironment,
-                aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
-                    producer = kafkaProducer,
-                ),
-            )
-            val aktivitetskravRepository = AktivitetskravRepository(database)
-            val validToken = generateJWT(
-                audience = externalMockEnvironment.environment.azure.appClientId,
-                issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-                navIdent = UserConstants.VEILEDER_IDENT,
-            )
-            val fritekst = "Dette er et forhåndsvarsel"
-            val svarfrist = LocalDate.now().plusDays(30)
-            val forhandsvarselDTO = ForhandsvarselDTO(
+        val externalMockEnvironment = ExternalMockEnvironment.instance
+        val database = externalMockEnvironment.database
+        val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
+        val aktivitetskravRepository = AktivitetskravRepository(database)
+        val validToken = generateJWT(
+            audience = externalMockEnvironment.environment.azure.appClientId,
+            issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
+            navIdent = UserConstants.VEILEDER_IDENT,
+        )
+        val fritekst = "Dette er et forhåndsvarsel"
+        val svarfrist = LocalDate.now().plusDays(30)
+        val forhandsvarselDTO = ForhandsvarselDTO(
+            fritekst = fritekst,
+            document = generateDocumentComponentDTO(
                 fritekst = fritekst,
-                document = generateDocumentComponentDTO(
-                    fritekst = fritekst,
-                    header = "Forhåndsvarsel"
-                ),
-                frist = svarfrist,
-            )
+                header = "Forhåndsvarsel"
+            ),
+            frist = svarfrist,
+        )
 
-            beforeEachTest {
-                clearMocks(kafkaProducer)
-                coEvery {
-                    kafkaProducer.send(any())
-                } returns mockk<Future<RecordMetadata>>(relaxed = true)
-            }
-            afterEachTest {
-                database.dropData()
-            }
+        beforeEachTest {
+            clearMocks(kafkaProducer)
+            coEvery {
+                kafkaProducer.send(any())
+            } returns mockk<Future<RecordMetadata>>(relaxed = true)
+        }
+        afterEachTest {
+            database.dropData()
+        }
 
-            fun postForhandsvarsel(
-                aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
-                arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-                newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
-            ) = run {
-                val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
-                handleRequest(HttpMethod.Post, url) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                    addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
-                    setBody(objectMapper.writeValueAsString(newForhandsvarselDTO))
-                }
+        suspend fun HttpClient.postForhandsvarsel(
+            aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+            arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+            newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
+        ) = run {
+            val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
+            post(url) {
+                bearerAuth(validToken)
+                header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(newForhandsvarselDTO)
             }
+        }
 
-            fun postAvvent(
-                aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
-                arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-            ) = run {
-                val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
-                handleRequest(HttpMethod.Post, url) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                    addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
-                    setBody(
-                        objectMapper.writeValueAsString(
-                            AktivitetskravVurderingRequestDTO(
-                                status = AktivitetskravStatus.AVVENT,
-                                beskrivelse = "venter litt",
-                                arsaker = listOf(Arsak.ANNET),
-                            )
-                        )
+        suspend fun HttpClient.postAvvent(
+            aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+            arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+        ) = run {
+            val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+            post(url) {
+                bearerAuth(validToken)
+                header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    AktivitetskravVurderingRequestDTO(
+                        status = AktivitetskravStatus.AVVENT,
+                        beskrivelse = "venter litt",
+                        arsaker = listOf(Arsak.ANNET),
                     )
-                }
+                )
             }
+        }
 
-            fun postUnntak(
-                aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
-                arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-            ) = run {
-                val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
-                handleRequest(HttpMethod.Post, url) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                    addHeader(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
-                    setBody(
-                        objectMapper.writeValueAsString(
-                            AktivitetskravVurderingRequestDTO(
-                                status = AktivitetskravStatus.UNNTAK,
-                                beskrivelse = "venter litt",
-                                arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
-                                document = generateDocumentComponentDTO("Litt fritekst"),
-                            )
-                        )
+        suspend fun HttpClient.postUnntak(
+            aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
+            arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+        ) = run {
+            val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+            post(url) {
+                bearerAuth(validToken)
+                header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    AktivitetskravVurderingRequestDTO(
+                        status = AktivitetskravStatus.UNNTAK,
+                        beskrivelse = "venter litt",
+                        arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
+                        document = generateDocumentComponentDTO("Litt fritekst"),
                     )
+                )
+            }
+        }
+
+        describe("Forhåndsvarsel") {
+            beforeEachTest { aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav) }
+            describe("Happy path") {
+                it("Successfully creates a new forhandsvarsel") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+
+                        val postResponse = client.postForhandsvarsel()
+                        postResponse.status shouldBeEqualTo HttpStatusCode.Created
+                        val createdForhandsvarsel = postResponse.body<AktivitetskravVarsel>()
+                        createdForhandsvarsel.document shouldBeEqualTo forhandsvarselDTO.document
+
+                        val response = client.get(urlAktivitetskravPerson) {
+                            bearerAuth(validToken)
+                            header(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
+                        }
+                        response.status shouldBeEqualTo HttpStatusCode.OK
+
+                        val responseDTOList = response.body<List<AktivitetskravResponseDTO>>()
+                        val aktivitetskravResponseDTO = responseDTOList.first()
+                        val vurderingDTO = aktivitetskravResponseDTO.vurderinger.first()
+                        val varselResponseDTO = vurderingDTO.varsel
+                        varselResponseDTO.shouldNotBeNull()
+                        varselResponseDTO.svarfrist shouldBeEqualTo svarfrist
+                    }
                 }
             }
 
-            describe("Forhåndsvarsel") {
-                beforeEachTest { aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav) }
-                describe("Happy path") {
-                    it("Successfully creates a new forhandsvarsel") {
-                        with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.Created
-                            val createdForhandsvarsel =
-                                objectMapper.readValue(response.content, AktivitetskravVarsel::class.java)
-                            createdForhandsvarsel.document shouldBeEqualTo forhandsvarselDTO.document
-                        }
-
-                        with(
-                            handleRequest(HttpMethod.Get, urlAktivitetskravPerson) {
-                                addHeader(HttpHeaders.Authorization, bearerHeader(validToken))
-                                addHeader(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
-                            }
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-
-                            val responseDTOList =
-                                objectMapper.readValue<List<AktivitetskravResponseDTO>>(response.content!!)
-                            val aktivitetskravResponseDTO = responseDTOList.first()
-                            val vurderingDTO = aktivitetskravResponseDTO.vurderinger.first()
-                            val varselResponseDTO = vurderingDTO.varsel
-                            varselResponseDTO.shouldNotBeNull()
-                            varselResponseDTO.svarfrist shouldBeEqualTo svarfrist
-                        }
+            describe("Unhappy path") {
+                it("Can't find aktivitetskrav for given uuid") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postForhandsvarsel(
+                            aktivitetskravUuid = UUID.randomUUID(),
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
                 }
 
-                describe("Unhappy path") {
-                    it("Can't find aktivitetskrav for given uuid") {
-                        with(
-                            postForhandsvarsel(
-                                aktivitetskravUuid = UUID.randomUUID(),
-                            )
-                        ) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
-                    }
-
-                    it("Fails if document is empty") {
+                it("Fails if document is empty") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val varselWithoutDocument = forhandsvarselDTO.copy(document = emptyList())
-                        with(postForhandsvarsel(newForhandsvarselDTO = varselWithoutDocument)) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                        val response = client.postForhandsvarsel(newForhandsvarselDTO = varselWithoutDocument)
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("Fails if already forhandsvarsel") {
-                        with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.Created
-                        }
-                        with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                }
+                it("Fails if already forhandsvarsel") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postForhandsvarsel()
+                        response.status shouldBeEqualTo HttpStatusCode.Created
+
+                        val newResponse = client.postForhandsvarsel()
+                        newResponse.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("Fails if already forhandsvarsel before") {
-                        with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.Created
-                        }
-                        with(postAvvent()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                        }
-                        with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                }
+                it("Fails if already forhandsvarsel before") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postForhandsvarsel()
+                        response.status shouldBeEqualTo HttpStatusCode.Created
+
+                        val avventResponse = client.postAvvent()
+                        avventResponse.status shouldBeEqualTo HttpStatusCode.OK
+
+                        val newResponse = client.postForhandsvarsel()
+                        newResponse.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
-                    it("Fails if already unntak") {
-                        with(postUnntak()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.OK
-                        }
-                        with(postForhandsvarsel()) {
-                            response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                        }
+                }
+                it("Fails if already unntak") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val response = client.postUnntak()
+                        response.status shouldBeEqualTo HttpStatusCode.OK
+
+                        val newResponse = client.postForhandsvarsel()
+                        newResponse.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
                 }
             }

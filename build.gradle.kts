@@ -1,19 +1,19 @@
 group = "no.nav.syfo"
 version = "0.0.1"
 
-val confluentVersion = "7.7.1"
-val flywayVersion = "9.22.3"
+val confluentVersion = "7.7.2"
+val flywayVersion = "10.17.2"
 val hikariVersion = "5.1.0"
-val jacksonDataTypeVersion = "2.17.2"
+val jacksonDataTypeVersion = "2.18.0"
 val jedisVersion = "5.1.5"
-val kafkaVersion = "3.6.1"
+val kafkaVersion = "3.9.0"
 val kluentVersion = "1.73"
-val ktorVersion = "2.3.12"
-val logbackVersion = "1.5.8"
+val ktorVersion = "3.0.2"
+val logbackVersion = "1.5.12"
 val logstashEncoderVersion = "7.4"
 val micrometerRegistryVersion = "1.12.8"
 val mockkVersion = "1.13.12"
-val nimbusJoseJwtVersion = "9.41.1"
+val nimbusJoseJwtVersion = "9.47"
 val postgresVersion = "42.7.4"
 val postgresEmbeddedVersion = "2.0.7"
 val redisEmbeddedVersion = "0.7.3"
@@ -22,7 +22,7 @@ val spekVersion = "2.0.19"
 plugins {
     kotlin("jvm") version "2.0.20"
     id("com.gradleup.shadow") version "8.3.1"
-    id("org.jlleitschuh.gradle.ktlint") version "11.4.2"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
 }
 
 repositories {
@@ -54,16 +54,8 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
-    implementation("org.flywaydb:flyway-core:$flywayVersion")
+    implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     testImplementation("io.zonky.test:embedded-postgres:$postgresEmbeddedVersion")
-    constraints {
-        implementation("org.apache.commons:commons-compress") {
-            because("io.zonky.test:embedded-postgres:$postgresEmbeddedVersion -> https://www.cve.org/CVERecord?id=CVE-2021-36090")
-            version {
-                require("1.26.0")
-            }
-        }
-    }
 
     // (De-)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDataTypeVersion")
@@ -77,26 +69,41 @@ dependencies {
         exclude(group = "log4j")
     }
     implementation("org.apache.kafka:kafka_2.13:$kafkaVersion", excludeLog4j)
+    constraints {
+        implementation("org.apache.zookeeper:zookeeper") {
+            because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://www.cve.org/CVERecord?id=CVE-2023-44981")
+            version {
+                require("3.9.3")
+            }
+        }
+        implementation("org.bitbucket.b_c:jose4j") {
+            because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://github.com/advisories/GHSA-6qvw-249j-h44c")
+            version {
+                require("0.9.6")
+            }
+        }
+    }
+
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion", excludeLog4j)
     constraints {
         implementation("org.apache.avro:avro") {
-            because("org.apache.avro:avro:1.11.0 -> https://www.cve.org/CVERecord?id=CVE-2023-39410")
+            because("io.confluent:kafka-avro-serializer:$confluentVersion -> https://www.cve.org/CVERecord?id=CVE-2023-39410")
             version {
-                require("1.11.3")
+                require("1.11.4")
             }
         }
-        implementation("com.google.guava:guava") {
-            because("com.google.guava:guava:30.1.1-jre -> https://www.cve.org/CVERecord?id=CVE-2020-8908")
+        implementation("org.apache.commons:commons-compress") {
+            because("org.apache.commons:commons-compress:1.22 -> https://www.cve.org/CVERecord?id=CVE-2012-2098")
             version {
-                require("32.1.3-jre")
+                require("1.27.1")
             }
         }
     }
 
     // Tests
-    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
-    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
+    testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusJoseJwtVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
@@ -119,6 +126,7 @@ tasks {
     }
 
     shadowJar {
+        mergeServiceFiles()
         archiveBaseName.set("app")
         archiveClassifier.set("")
         archiveVersion.set("")

@@ -90,13 +90,22 @@ fun main() {
     lateinit var aktivitetskravVarselService: AktivitetskravVarselService
     lateinit var aktivitetskravRepository: AktivitetskravRepository
 
-    val applicationEngineEnvironment = applicationEngineEnvironment {
+    val applicationEngineEnvironment = applicationEnvironment {
         log = logger
         config = HoconApplicationConfig(ConfigFactory.load())
-        connector {
-            port = applicationPort
-        }
-        module {
+    }
+    val server = embeddedServer(
+        Netty,
+        environment = applicationEngineEnvironment,
+        configure = {
+            connector {
+                port = applicationPort
+            }
+            connectionGroupSize = 8
+            workerGroupSize = 8
+            callGroupSize = 16
+        },
+        module = {
             databaseModule(
                 databaseEnvironment = environment.database,
             )
@@ -128,39 +137,30 @@ fun main() {
                 aktivitetskravVarselService = aktivitetskravVarselService,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
             )
+
+            monitor.subscribe(ApplicationStarted) {
+                applicationState.ready = true
+                logger.info("Application is ready, running Java VM ${Runtime.version()}")
+                launchKafkaModule(
+                    applicationState = applicationState,
+                    environment = environment,
+                    database = applicationDatabase,
+                    pdlClient = pdlClient,
+                    aktivitetskravService = aktivitetskravService,
+                    aktivitetskravRepository = aktivitetskravRepository,
+                )
+                launchCronjobModule(
+                    applicationState = applicationState,
+                    environment = environment,
+                    database = applicationDatabase,
+                    aktivitetskravService = aktivitetskravService,
+                    aktivitetskravVarselService = aktivitetskravVarselService,
+                    pdlClient = pdlClient,
+                    azureAdClient = azureAdClient,
+                )
+            }
         }
-    }
-
-    applicationEngineEnvironment.monitor.subscribe(ApplicationStarted) {
-        applicationState.ready = true
-        logger.info("Application is ready, running Java VM ${Runtime.version()}")
-        launchKafkaModule(
-            applicationState = applicationState,
-            environment = environment,
-            database = applicationDatabase,
-            pdlClient = pdlClient,
-            aktivitetskravService = aktivitetskravService,
-            aktivitetskravRepository = aktivitetskravRepository,
-        )
-        launchCronjobModule(
-            applicationState = applicationState,
-            environment = environment,
-            database = applicationDatabase,
-            aktivitetskravService = aktivitetskravService,
-            aktivitetskravVarselService = aktivitetskravVarselService,
-            pdlClient = pdlClient,
-            azureAdClient = azureAdClient,
-        )
-    }
-
-    val server = embeddedServer(
-        factory = Netty,
-        environment = applicationEngineEnvironment,
-    ) {
-        connectionGroupSize = 8
-        workerGroupSize = 8
-        callGroupSize = 16
-    }
+    )
 
     Runtime.getRuntime().addShutdownHook(
         Thread {
