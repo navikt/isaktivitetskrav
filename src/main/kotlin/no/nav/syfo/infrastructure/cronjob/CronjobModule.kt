@@ -52,7 +52,7 @@ fun launchCronjobModule(
         dokarkivClient = dokarkivClient,
         pdlClient = pdlClient
     )
-    cronjobs.add(journalforAktivitetskravVarselCronjob)
+    // cronjobs.add(journalforAktivitetskravVarselCronjob)
 
     val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
         aktivitetskravVarselService = aktivitetskravVarselService,
