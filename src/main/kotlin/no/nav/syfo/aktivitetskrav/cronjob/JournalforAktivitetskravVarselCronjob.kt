@@ -17,8 +17,8 @@ class JournalforAktivitetskravVarselCronjob(
     private val dokarkivClient: DokarkivClient,
     private val pdlClient: PdlClient,
 ) : Cronjob {
-    override val initialDelayMinutes: Long = 2
-    override val intervalDelayMinutes: Long = 10
+    override val initialDelayMinutes: Long = 365*24
+    override val intervalDelayMinutes: Long = 365*24
 
     override suspend fun run() {
         val result = runJob()
