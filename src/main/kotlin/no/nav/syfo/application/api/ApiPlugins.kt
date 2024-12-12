@@ -65,8 +65,11 @@ fun Application.installStatusPages() {
                 is ResponseException -> {
                     cause.response.status
                 }
-                is IllegalArgumentException, is BadRequestException, is ConflictException -> {
+                is IllegalArgumentException, is BadRequestException -> {
                     HttpStatusCode.BadRequest
+                }
+                is ConflictException -> {
+                    HttpStatusCode.Conflict
                 }
                 is ForbiddenAccessVeilederException -> {
                     HttpStatusCode.Forbidden

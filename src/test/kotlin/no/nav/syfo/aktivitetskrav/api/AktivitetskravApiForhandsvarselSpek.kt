@@ -170,7 +170,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                         response.status shouldBeEqualTo HttpStatusCode.Created
 
                         val newResponse = client.postForhandsvarsel()
-                        newResponse.status shouldBeEqualTo HttpStatusCode.BadRequest
+                        newResponse.status shouldBeEqualTo HttpStatusCode.Conflict
                     }
                 }
                 it("Fails if already forhandsvarsel before") {
@@ -183,7 +183,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                         avventResponse.status shouldBeEqualTo HttpStatusCode.OK
 
                         val newResponse = client.postForhandsvarsel()
-                        newResponse.status shouldBeEqualTo HttpStatusCode.BadRequest
+                        newResponse.status shouldBeEqualTo HttpStatusCode.Conflict
                     }
                 }
                 it("Fails if already unntak") {
@@ -193,7 +193,7 @@ class AktivitetskravApiForhandsvarselSpek : Spek({
                         response.status shouldBeEqualTo HttpStatusCode.OK
 
                         val newResponse = client.postForhandsvarsel()
-                        newResponse.status shouldBeEqualTo HttpStatusCode.BadRequest
+                        newResponse.status shouldBeEqualTo HttpStatusCode.Conflict
                     }
                 }
             }

@@ -329,7 +329,7 @@ class AktivitetskravApiSpek : Spek({
                         response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
                 }
-                it("returns status BadRequest if previous aktivitetskrav is not final") {
+                it("returns status Conflict if previous aktivitetskrav is not final") {
                     testApplication {
                         val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
@@ -342,7 +342,7 @@ class AktivitetskravApiSpek : Spek({
                             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             setBody(NewAktivitetskravDTO(previousAktivitetskravUuid))
                         }
-                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+                        response.status shouldBeEqualTo HttpStatusCode.Conflict
                     }
                 }
             }

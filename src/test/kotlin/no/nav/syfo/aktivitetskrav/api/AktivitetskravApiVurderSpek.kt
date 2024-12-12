@@ -297,7 +297,7 @@ class AktivitetskravApiVurderSpek : Spek({
                         response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
                 }
-                it("returns status BadRequest if existing vurdering is final") {
+                it("returns status Conflict if existing vurdering is final") {
                     testApplication {
                         val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                         val response = client.postEndreVurdering(
@@ -310,7 +310,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingOppfyltRequestDTO,
                         )
-                        responseNew.status shouldBeEqualTo HttpStatusCode.BadRequest
+                        responseNew.status shouldBeEqualTo HttpStatusCode.Conflict
                     }
                 }
                 it("returns status BadRequest if UNNTAK is missing document") {
