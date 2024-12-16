@@ -28,21 +28,6 @@ fun launchCronjobModule(
     )
     val cronjobs = mutableListOf<Cronjob>()
 
-    if (environment.automatiskOppfyltCronJobEnabled) {
-        val aktivitetskravAutomatiskOppfyltCronjob = AktivitetskravAutomatiskOppfyltCronjob(
-            database = database,
-            aktivitetskravService = aktivitetskravService,
-        )
-        cronjobs.add(aktivitetskravAutomatiskOppfyltCronjob)
-    }
-    if (environment.nyCronjobEnabled) {
-        val aktivitetskravNyCronjob = AktivitetskravNyCronjob(
-            database = database,
-            aktivitetskravService = aktivitetskravService,
-        )
-        cronjobs.add(aktivitetskravNyCronjob)
-    }
-
     val dokarkivClient = DokarkivClient(
         azureAdClient = azureAdClient,
         dokarkivEnvironment = environment.clients.dokarkiv,
