@@ -88,10 +88,6 @@ spec:
       value: "https://pdl-api.prod-fss-pub.nais.io/graphql"
     - name: ARENA_CUTOFF
       value: "2023-03-10"
-    - name: AUTOMATISK_OPPFYLT_CRONJOB_ENABLED
-      value: "false"
-    - name: NY_CRONJOB_ENABLED
-      value: "false"
     - name: JOURNALFORING_CRONJOB_ENABLED
       value: "true"
     - name: DOKARKIV_CLIENT_ID

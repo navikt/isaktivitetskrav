@@ -61,8 +61,6 @@ fun testEnvironment() = Environment(
     ),
     arenaCutoff = LocalDate.now().minusDays(365),
     electorPath = "electorPath",
-    automatiskOppfyltCronJobEnabled = true,
-    nyCronjobEnabled = true,
     journalforingCronjobEnabled = true,
     outdatedCutoff = LocalDate.now().minusMonths(6),
     outdatedCronJobEnabled = true,
