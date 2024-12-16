@@ -47,12 +47,14 @@ fun launchCronjobModule(
         azureAdClient = azureAdClient,
         dokarkivEnvironment = environment.clients.dokarkiv,
     )
-    val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
-        aktivitetskravVarselService = aktivitetskravVarselService,
-        dokarkivClient = dokarkivClient,
-        pdlClient = pdlClient
-    )
-    cronjobs.add(journalforAktivitetskravVarselCronjob)
+    if (environment.journalforingCronjobEnabled) {
+        val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
+            aktivitetskravVarselService = aktivitetskravVarselService,
+            dokarkivClient = dokarkivClient,
+            pdlClient = pdlClient
+        )
+        cronjobs.add(journalforAktivitetskravVarselCronjob)
+    }
 
     val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
         aktivitetskravVarselService = aktivitetskravVarselService,

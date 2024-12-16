@@ -92,6 +92,8 @@ spec:
       value: "false"
     - name: NY_CRONJOB_ENABLED
       value: "false"
+    - name: JOURNALFORING_CRONJOB_ENABLED
+      value: "true"
     - name: DOKARKIV_CLIENT_ID
       value: "prod-fss.teamdokumenthandtering.dokarkiv"
     - name: DOKARKIV_URL
