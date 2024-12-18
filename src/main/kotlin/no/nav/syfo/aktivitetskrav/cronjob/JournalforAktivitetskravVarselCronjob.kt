@@ -9,13 +9,13 @@ import no.nav.syfo.client.dokarkiv.DokarkivClient
 import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.domain.getJournalpostType
 import org.slf4j.LoggerFactory
 
 class JournalforAktivitetskravVarselCronjob(
     private val aktivitetskravVarselService: AktivitetskravVarselService,
     private val dokarkivClient: DokarkivClient,
     private val pdlClient: PdlClient,
+    private val isJournalforingRetryEnabled: Boolean,
 ) : Cronjob {
     override val initialDelayMinutes: Long = 2
     override val intervalDelayMinutes: Long = 10
@@ -42,16 +42,24 @@ class JournalforAktivitetskravVarselCronjob(
                     pdf = pdf,
                     varsel = varsel,
                 )
-
-                dokarkivClient.journalfor(
-                    journalpostRequest = journalpostRequest,
-                ).also {
-                    aktivitetskravVarselService.setJournalfort(
-                        varsel = varsel,
-                        journalpostId = it.journalpostId.toString()
-                    )
-                    result.updated++
+                val journalpostId = try {
+                    dokarkivClient.journalfor(journalpostRequest).journalpostId
+                } catch (exc: Exception) {
+                    if (isJournalforingRetryEnabled) {
+                        throw exc
+                    } else {
+                        log.error("Journalforing failed, skipping retry (should only happen in dev-gcp)", exc)
+                        // Defaulting'en til DEFAULT_FAILED_JP_ID skal bare forekomme i dev-gcp:
+                        // Har dette fordi vi ellers spammer ned dokarkiv med forsøk på å journalføre
+                        // på personer som mangler aktør-id.
+                        DEFAULT_FAILED_JP_ID
+                    }
                 }
+                aktivitetskravVarselService.setJournalfort(
+                    varsel = varsel,
+                    journalpostId = journalpostId.toString(),
+                )
+                result.updated++
             } catch (e: Exception) {
                 log.error("Exception caught while attempting journalforing of varsel", e)
                 result.failed++
@@ -62,6 +70,7 @@ class JournalforAktivitetskravVarselCronjob(
     }
 
     companion object {
+        private const val DEFAULT_FAILED_JP_ID = 0
         private val log = LoggerFactory.getLogger(JournalforAktivitetskravVarselCronjob::class.java)
     }
 }

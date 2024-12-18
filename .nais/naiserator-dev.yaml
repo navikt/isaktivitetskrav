@@ -88,7 +88,7 @@ spec:
       value: "https://pdl-api.dev-fss-pub.nais.io/graphql"
     - name: ARENA_CUTOFF
       value: "2023-02-01"
-    - name: JOURNALFORING_CRONJOB_ENABLED
+    - name: JOURNALFORING_RETRY_ENABLED
       value: "false"
     - name: DOKARKIV_CLIENT_ID
       value: "dev-fss.teamdokumenthandtering.dokarkiv-q1"

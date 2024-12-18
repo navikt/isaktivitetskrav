@@ -32,14 +32,13 @@ fun launchCronjobModule(
         azureAdClient = azureAdClient,
         dokarkivEnvironment = environment.clients.dokarkiv,
     )
-    if (environment.journalforingCronjobEnabled) {
-        val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
-            aktivitetskravVarselService = aktivitetskravVarselService,
-            dokarkivClient = dokarkivClient,
-            pdlClient = pdlClient
-        )
-        cronjobs.add(journalforAktivitetskravVarselCronjob)
-    }
+    val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
+        aktivitetskravVarselService = aktivitetskravVarselService,
+        dokarkivClient = dokarkivClient,
+        pdlClient = pdlClient,
+        isJournalforingRetryEnabled = environment.isJournalforingRetryEnabled,
+    )
+    cronjobs.add(journalforAktivitetskravVarselCronjob)
 
     val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
         aktivitetskravVarselService = aktivitetskravVarselService,
