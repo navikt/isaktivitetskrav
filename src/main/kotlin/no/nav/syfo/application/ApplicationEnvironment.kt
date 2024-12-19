@@ -44,7 +44,7 @@ data class Environment(
         redisPassword = getEnvVar("REDIS_PASSWORD_CACHE"),
     ),
     val arenaCutoff: LocalDate = LocalDate.parse(getEnvVar("ARENA_CUTOFF")),
-    val journalforingCronjobEnabled: Boolean = getEnvVar("JOURNALFORING_CRONJOB_ENABLED").toBoolean(),
+    val isJournalforingRetryEnabled: Boolean = getEnvVar("JOURNALFORING_RETRY_ENABLED").toBoolean(),
     val outdatedCutoff: LocalDate = LocalDate.parse(getEnvVar("OUTDATED_AKTIVITETSKRAV_CUTOFF")),
     val outdatedCronJobEnabled: Boolean = getEnvVar("OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),

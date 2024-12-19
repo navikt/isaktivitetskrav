@@ -74,6 +74,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         dokarkivClient = dokarkivClient,
         pdlClient = externalMockEnvironment.pdlClient,
         aktivitetskravVarselService = aktivitetskravVarselService,
+        isJournalforingRetryEnabled = externalMockEnvironment.environment.isJournalforingRetryEnabled,
     )
 
     fun createVarsel(
