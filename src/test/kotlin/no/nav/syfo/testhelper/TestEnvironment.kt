@@ -1,7 +1,7 @@
 package no.nav.syfo.testhelper
 
 import no.nav.syfo.application.*
-import no.nav.syfo.application.cache.RedisConfig
+import no.nav.syfo.application.cache.ValkeyConfig
 import no.nav.syfo.infrastructure.database.DatabaseEnvironment
 import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
 import no.nav.syfo.client.ClientEnvironment
@@ -35,11 +35,11 @@ fun testEnvironment() = Environment(
         aivenRegistryUser = "registryuser",
         aivenRegistryPassword = "registrypassword",
     ),
-    redisConfig = RedisConfig(
-        redisUri = URI("http://localhost:6379"),
-        redisDB = 0,
-        redisUsername = "redisUser",
-        redisPassword = "redisPassword",
+    valkeyConfig = ValkeyConfig(
+        valkeyUri = URI("http://localhost:6379"),
+        valkeyDB = 0,
+        valkeyUsername = "valkeyUser",
+        valkeyPassword = "valkeyPassword",
         ssl = false,
     ),
     clients = ClientsEnvironment(

@@ -5,7 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import no.nav.syfo.application.cache.RedisStore
+import no.nav.syfo.application.cache.ValkeyStore
 import no.nav.syfo.client.ClientEnvironment
 import no.nav.syfo.client.azuread.AzureAdClient
 import no.nav.syfo.client.azuread.AzureAdToken
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 class PdlClient(
     private val azureAdClient: AzureAdClient,
     private val pdlEnvironment: ClientEnvironment,
-    private val cache: RedisStore,
+    private val cache: ValkeyStore,
     private val httpClient: HttpClient = httpClientDefault(),
 ) {
 
