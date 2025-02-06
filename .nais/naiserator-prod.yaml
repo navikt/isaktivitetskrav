@@ -31,7 +31,7 @@ spec:
   prometheus:
     enabled: true
     path: /internal/metrics
-  redis:
+  valkey:
     - instance: cache
       access: readwrite
   resources:

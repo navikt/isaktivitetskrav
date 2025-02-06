@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.application.cache.RedisStore
+import no.nav.syfo.application.cache.ValkeyStore
 import no.nav.syfo.infrastructure.pdl.PdlClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
@@ -16,7 +16,7 @@ import org.spekframework.spek2.style.specification.describe
 
 class PdlClientSpek : Spek({
     val externalMockEnvironment = ExternalMockEnvironment.instance
-    val cacheMock = mockk<RedisStore>(relaxed = true)
+    val cacheMock = mockk<ValkeyStore>(relaxed = true)
     val pdlClient = PdlClient(
         azureAdClient = externalMockEnvironment.azureAdClient,
         pdlEnvironment = externalMockEnvironment.environment.clients.pdl,

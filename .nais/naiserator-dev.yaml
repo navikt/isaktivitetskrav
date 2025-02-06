@@ -28,7 +28,7 @@ spec:
     timeout: 5
     failureThreshold: 3
   leaderElection: true
-  redis:
+  valkey:
     - instance: cache
       access: readwrite
   prometheus:
