@@ -13,7 +13,6 @@ data class ForhandsvarselDTO(
         status = AktivitetskravStatus.FORHANDSVARSEL,
         createdBy = veilederIdent,
         beskrivelse = this.fritekst,
-        arsaker = emptyList(),
         frist = this.frist,
     )
 }

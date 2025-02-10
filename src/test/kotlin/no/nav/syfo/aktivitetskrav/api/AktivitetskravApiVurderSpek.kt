@@ -2,17 +2,18 @@ package no.nav.syfo.aktivitetskrav.api
 
 import io.ktor.client.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.domain.*
+import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
-import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
@@ -69,11 +70,11 @@ class AktivitetskravApiVurderSpek : Spek({
             database.dropData()
         }
 
-        suspend fun HttpClient.postEndreVurdering(
+        suspend fun HttpClient.postVurdering(
             aktivitetskravUuid: UUID,
             vurderingDTO: AktivitetskravVurderingRequestDTO,
             personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
-        ) = run {
+        ): HttpResponse = run {
             val urlVurderAktivitetskrav =
                 "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
             post(urlVurderAktivitetskrav) {
@@ -96,7 +97,7 @@ class AktivitetskravApiVurderSpek : Spek({
                 it("Updates Aktivitetskrav with vurdering and produces to Kafka if request is succesful") {
                     testApplication {
                         val client = setupApiAndClient(kafkaProducer = kafkaProducer)
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingOppfyltRequestDTO,
                         )
@@ -146,7 +147,7 @@ class AktivitetskravApiVurderSpek : Spek({
                                 callId = "",
                             )
                         }
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingOppfyltRequestDTO,
                         )
@@ -184,7 +185,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             arsaker = listOf(Arsak.INFORMASJON_BEHANDLER),
                             frist = oneWeekFromNow,
                         )
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingAvventRequestDTO,
                         )
@@ -213,7 +214,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
                             document = generateDocumentComponentDTO("Litt fritekst")
                         )
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = unntakVurderingRequestDTO,
                         )
@@ -249,7 +250,7 @@ class AktivitetskravApiVurderSpek : Spek({
                 it("returns status BadRequest if no vurdering exists for uuid-param") {
                     testApplication {
                         val client = setupApiAndClient(kafkaProducer = kafkaProducer)
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = UUID.randomUUID(),
                             vurderingDTO = vurderingOppfyltRequestDTO,
                         )
@@ -259,7 +260,7 @@ class AktivitetskravApiVurderSpek : Spek({
                 it("returns status BadRequest if $NAV_PERSONIDENT_HEADER differs from personIdent for vurdering") {
                     testApplication {
                         val client = setupApiAndClient(kafkaProducer = kafkaProducer)
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingOppfyltRequestDTO,
                             personIdent = UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT,
@@ -275,7 +276,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = emptyList(),
                         )
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = aktivitetskravUuid,
                             vurderingDTO = vurderingMissingArsakRequestDTO,
                         )
@@ -290,7 +291,7 @@ class AktivitetskravApiVurderSpek : Spek({
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = listOf(Arsak.TILTAK),
                         )
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingInvalidArsakRequestDTO,
                         )
@@ -300,13 +301,13 @@ class AktivitetskravApiVurderSpek : Spek({
                 it("returns status Conflict if existing vurdering is final") {
                     testApplication {
                         val client = setupApiAndClient(kafkaProducer = kafkaProducer)
-                        val response = client.postEndreVurdering(
+                        val response = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingOppfyltRequestDTO,
                         )
                         response.status shouldBeEqualTo HttpStatusCode.OK
 
-                        val responseNew = client.postEndreVurdering(
+                        val responseNew = client.postVurdering(
                             aktivitetskravUuid = nyAktivitetskrav.uuid,
                             vurderingDTO = vurderingOppfyltRequestDTO,
                         )
@@ -321,11 +322,57 @@ class AktivitetskravApiVurderSpek : Spek({
                             beskrivelse = "Aktivitetskravet er oppfylt",
                             arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
                         )
-                        val responseNew = client.postEndreVurdering(
+                        val responseNew = client.postVurdering(
                             aktivitetskravUuid = aktivitetskravUuid,
                             vurderingDTO = vurderingUnntakMissingDocumentRequestDTO,
                         )
                         responseNew.status shouldBeEqualTo HttpStatusCode.BadRequest
+                    }
+                }
+            }
+
+            describe("Innstilling om stans vurdering") {
+                it("Creates stans vurdering and returns 200 OK") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val vurderingInnstillingOmStansRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.INNSTILLING_OM_STANS,
+                            beskrivelse = "Stans fordi personen ikke er syk",
+                            stansFom = LocalDate.now(),
+                            document = generateDocumentComponentDTO("Stans fordi personen ikke er syk")
+                        )
+                        val response = client.postVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingInnstillingOmStansRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.OK
+                        val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
+                        verify(exactly = 1) {
+                            kafkaProducer.send(capture(producerRecordSlot))
+                        }
+
+                        val latestAktivitetskrav =
+                            aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT).first()
+                        val latestAktivitetskravVurdering = latestAktivitetskrav.vurderinger.first()
+                        latestAktivitetskravVurdering.status shouldBe AktivitetskravStatus.INNSTILLING_OM_STANS
+                        latestAktivitetskravVurdering.stansFom shouldBeEqualTo vurderingInnstillingOmStansRequestDTO.stansFom
+                    }
+                }
+
+                it("Fails to create stans vurdering when no document") {
+                    testApplication {
+                        val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                        val vurderingInnstillingOmStansRequestDTO = AktivitetskravVurderingRequestDTO(
+                            status = AktivitetskravStatus.INNSTILLING_OM_STANS,
+                            beskrivelse = "Stans fordi personen ikke er syk",
+                            arsaker = listOf(),
+                            document = emptyList(),
+                        )
+                        val response = client.postVurdering(
+                            aktivitetskravUuid = nyAktivitetskrav.uuid,
+                            vurderingDTO = vurderingInnstillingOmStansRequestDTO,
+                        )
+                        response.status shouldBeEqualTo HttpStatusCode.BadRequest
                     }
                 }
             }

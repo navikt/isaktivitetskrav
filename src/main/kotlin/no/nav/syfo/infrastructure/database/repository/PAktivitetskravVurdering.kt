@@ -16,6 +16,7 @@ data class PAktivitetskravVurdering(
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
     val arsaker: List<VurderingArsak>,
+    val stansFom: LocalDate?,
     val frist: LocalDate?,
     val varsel: PAktivitetskravVarsel?,
 ) {
@@ -27,6 +28,7 @@ data class PAktivitetskravVurdering(
             status = this.status,
             arsaker = this.arsaker,
             beskrivelse = this.beskrivelse,
+            stansFom = this.stansFom,
             frist = this.frist,
             varsel = varsel?.toAktivitetkravVarsel(),
         )

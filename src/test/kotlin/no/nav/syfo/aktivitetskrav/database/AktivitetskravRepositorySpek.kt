@@ -1,11 +1,9 @@
 package no.nav.syfo.aktivitetskrav.database
 
-import io.ktor.server.testing.*
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.infrastructure.database.repository.createAktivitetskravVurdering
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.*
 import org.amshove.kluent.shouldBeEqualTo

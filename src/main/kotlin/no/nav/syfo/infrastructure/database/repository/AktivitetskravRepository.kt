@@ -208,7 +208,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
                 vurdering.id AS vurdering_id, vurdering.uuid AS vurdering_uuid, vurdering.aktivitetskrav_id AS vurdering_aktivitetskrav_id,
                 vurdering.created_at AS vurdering_created_at, vurdering.created_by AS vurdering_created_by,
                 vurdering.status AS vurdering_status, vurdering.beskrivelse AS vurdering_beskrivelse,
-                vurdering.arsaker AS vurdering_arsaker, vurdering.frist AS vurdering_frist,
+                vurdering.arsaker AS vurdering_arsaker, vurdering.stans_fom AS vurdering_stans_fom, vurdering.frist AS vurdering_frist,
                 varsel.id AS varsel_id, varsel.uuid AS varsel_uuid, varsel.created_at AS varsel_created_at,
                 varsel.updated_at AS varsel_updated_at, varsel.aktivitetskrav_vurdering_id AS varsel_aktivitetskrav_vurdering_id,
                 varsel.journalpost_id AS varsel_journalpost_id, varsel.document AS varsel_document,
@@ -295,6 +295,7 @@ fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
         beskrivelse = getString("beskrivelse"),
         arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
             .map { it.toVurderingArsak(status) },
+        stansFom = getDate("stans_fom")?.toLocalDate(),
         frist = getDate("frist")?.toLocalDate(),
         varsel = null,
     )
@@ -335,6 +336,7 @@ private fun ResultSet.toAktivitetskravWithVurderinger(): List<PAktivitetskrav> {
                     beskrivelse = getString("vurdering_beskrivelse"),
                     arsaker = getString("vurdering_arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
                         .map { it.toVurderingArsak(vurderingStatus) },
+                    stansFom = getDate("vurdering_stans_fom")?.toLocalDate(),
                     frist = getDate("vurdering_frist")?.toLocalDate(),
                     varsel = varsel,
                 )

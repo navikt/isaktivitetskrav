@@ -29,16 +29,24 @@ class PdfGenClient(
             pdfUrl = "$pdfGenBaseUrl$API_BASE_PATH$FORHANDSVARSEL_PATH",
         ) ?: throw RuntimeException("Failed to request pdf for forhandsvarsel, callId: $callId")
 
-    suspend fun createVurderingPdf(callId: String, vurderingPdfDTO: VurderingPdfDTO): ByteArray = getPdf(
-        callId = callId,
-        payload = vurderingPdfDTO,
-        pdfUrl = "$pdfGenBaseUrl$API_BASE_PATH$VURDERING_PATH",
-    ) ?: throw RuntimeException("Failed to request pdf for vurdering, callId: $callId")
+    suspend fun createVurderingPdf(callId: String, vurderingPdfDTO: VurderingPdfDTO): ByteArray =
+        getPdf(
+            callId = callId,
+            payload = vurderingPdfDTO,
+            pdfUrl = "$pdfGenBaseUrl$API_BASE_PATH$VURDERING_PATH",
+        ) ?: throw RuntimeException("Failed to request pdf for vurdering, callId: $callId")
+
+    suspend fun createInnstillingOmStansPdf(callId: String, vurderingPdf: VurderingPdfDTO): ByteArray =
+        getPdf(
+            callId = callId,
+            payload = vurderingPdf,
+            pdfUrl = "$pdfGenBaseUrl$API_BASE_PATH$STANS_VURDERING_PATH",
+        ) ?: throw RuntimeException("Failed to request pdf for INNSTILLING_OM_STANS vurdering, callId: $callId")
 
     private suspend inline fun <reified Payload> getPdf(
         callId: String,
         payload: Payload,
-        pdfUrl: String
+        pdfUrl: String,
     ): ByteArray? =
         try {
             val response: HttpResponse = httpClient.post(pdfUrl) {
@@ -72,8 +80,9 @@ class PdfGenClient(
 
     companion object {
         private const val API_BASE_PATH = "/api/v1/genpdf/isaktivitetskrav"
-        const val FORHANDSVARSEL_PATH = "/forhandsvarsel-til-innbygger-om-stans-av-sykepenger"
-        const val VURDERING_PATH = "/aktivitetskrav-vurdering"
+        private const val FORHANDSVARSEL_PATH = "/forhandsvarsel-til-innbygger-om-stans-av-sykepenger"
+        private const val VURDERING_PATH = "/aktivitetskrav-vurdering"
+        private const val STANS_VURDERING_PATH = "/innstilling-om-stans-av-sykepenger"
 
         private val log = LoggerFactory.getLogger(PdfGenClient::class.java)
     }

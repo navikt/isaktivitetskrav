@@ -30,6 +30,9 @@ data class AktivitetskravVarsel internal constructor(
             if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER && frist == null) {
                 throw IllegalArgumentException("Forhandsvarsel must have frist")
             }
+            if (type == VarselType.INNSTILLING_OM_STANS && frist != null) {
+                throw IllegalArgumentException("Innstilling om stans can't have frist")
+            }
             return AktivitetskravVarsel(
                 uuid = UUID.randomUUID(),
                 createdAt = nowUTC(),

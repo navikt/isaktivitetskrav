@@ -38,5 +38,10 @@ class VarselPdfService(
                 vurderingPdfDTO,
             )
         }
+
+        VarselType.INNSTILLING_OM_STANS -> {
+            val vurderingPdfDTO = VurderingPdfDTO.create(varsel.document)
+            pdfGenClient.createInnstillingOmStansPdf(callId, vurderingPdfDTO)
+        }
     }
 }
