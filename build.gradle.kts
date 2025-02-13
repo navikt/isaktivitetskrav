@@ -1,27 +1,28 @@
 group = "no.nav.syfo"
 version = "0.0.1"
 
-val confluentVersion = "7.7.2"
-val flywayVersion = "10.17.2"
-val hikariVersion = "5.1.0"
-val jacksonDataTypeVersion = "2.18.0"
-val jedisVersion = "5.1.5"
+val confluentVersion = "7.8.0"
+val flywayVersion = "11.3.0"
+val hikariVersion = "6.2.1"
+val jacksonDataTypeVersion = "2.18.2"
+val jedisVersion = "5.2.0"
 val kafkaVersion = "3.9.0"
 val kluentVersion = "1.73"
-val ktorVersion = "3.0.2"
-val logbackVersion = "1.5.12"
-val logstashEncoderVersion = "7.4"
-val micrometerRegistryVersion = "1.12.8"
-val mockkVersion = "1.13.12"
-val nimbusJoseJwtVersion = "9.47"
-val postgresVersion = "42.7.4"
-val postgresEmbeddedVersion = "2.0.7"
+val ktorVersion = "3.1.0"
+val logbackVersion = "1.5.16"
+val logstashEncoderVersion = "8.0"
+val micrometerRegistryVersion = "1.12.13"
+val mockkVersion = "1.13.16"
+val nettyCodecVersion = "4.1.118.Final"
+val nimbusJoseJwtVersion = "10.0.1"
+val postgresVersion = "42.7.5"
+val postgresEmbeddedVersion = "2.1.0"
 val redisEmbeddedVersion = "0.7.3"
 val spekVersion = "2.0.19"
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-    id("com.gradleup.shadow") version "8.3.1"
+    kotlin("jvm") version "2.1.10"
+    id("com.gradleup.shadow") version "8.3.6"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
 }
 
@@ -42,6 +43,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation("io.netty:netty-codec-http2:$nettyCodecVersion") // TODO: Remove when Ktor upgrades Netty Codec
 
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
