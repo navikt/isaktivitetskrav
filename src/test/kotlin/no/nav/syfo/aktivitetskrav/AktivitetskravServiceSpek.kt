@@ -248,6 +248,40 @@ class AktivitetskravServiceSpek : Spek({
                     aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
                 varsel.shouldBeNull()
             }
+
+            it("creates vurdering, journalpost and pdf for INNSTILLING_OM_STANS") {
+                var aktivitetskrav = createAktivitetskravNy(tilfelleStart = LocalDate.now().minusWeeks(10))
+                aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+                val fritekst = "En beskrivelse"
+                val vurdering = AktivitetskravVurdering.create(
+                    status = AktivitetskravStatus.INNSTILLING_OM_STANS,
+                    createdBy = UserConstants.VEILEDER_IDENT,
+                    beskrivelse = fritekst,
+                    stansFom = LocalDate.now(),
+                )
+
+                runBlocking {
+                    aktivitetskravService.vurderAktivitetskrav(
+                        aktivitetskrav = aktivitetskrav,
+                        aktivitetskravVurdering = vurdering,
+                        document = generateDocumentComponentDTO(fritekst),
+                        callId = "",
+                    )
+                }
+
+                aktivitetskrav =
+                    aktivitetskravRepository.getAktivitetskrav(uuid = aktivitetskrav.uuid)?.toAktivitetskrav()!!
+                aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.INNSTILLING_OM_STANS
+                val latestVurdering = aktivitetskrav.vurderinger.first()
+                val varsel =
+                    aktivitetskravVarselRepository.getVarselForVurdering(vurderingUuid = latestVurdering.uuid)
+                varsel.shouldNotBeNull()
+                varsel.type shouldBeEqualTo VarselType.INNSTILLING_OM_STANS.name
+                varsel.document.shouldNotBeEmpty()
+                varsel.svarfrist.shouldBeNull()
+                val varselPdf = database.getAktivitetskravVarselPdf(aktivitetskravVarselId = varsel.id)
+                varselPdf.shouldNotBeNull()
+            }
         }
 
         describe("getAktivitetskravForPersons") {

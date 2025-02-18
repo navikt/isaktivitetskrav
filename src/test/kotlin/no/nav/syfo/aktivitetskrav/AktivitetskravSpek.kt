@@ -56,14 +56,15 @@ class AktivitetskravSpek : Spek({
     describe("shouldUpdateStoppunkt") {
         it("true if stoppunkt changed and after arenaCutoff") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
-            val shouldUpdate = aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle, arenaCutoff = LocalDate.now().minusWeeks(4))
+            val shouldUpdate =
+                aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle, arenaCutoff = LocalDate.now().minusWeeks(4))
 
             shouldUpdate shouldBeEqualTo true
         }
         it("false if stoppunkt is unchanged") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
             val shouldUpdate = aktivitetskrav.shouldUpdateStoppunkt(
-                oppfolgingstilfelle = oppfolgingstilfelle.copy(tilfelleStart = tenWeeksAgo,),
+                oppfolgingstilfelle = oppfolgingstilfelle.copy(tilfelleStart = tenWeeksAgo),
                 arenaCutoff = LocalDate.now().minusWeeks(4)
             )
 
@@ -71,7 +72,8 @@ class AktivitetskravSpek : Spek({
         }
         it("false if stoppunkt before arenaCutoff") {
             val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
-            val shouldUpdate = aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle, arenaCutoff = LocalDate.now())
+            val shouldUpdate =
+                aktivitetskrav.shouldUpdateStoppunkt(oppfolgingstilfelle = oppfolgingstilfelle, arenaCutoff = LocalDate.now())
 
             shouldUpdate shouldBeEqualTo false
         }
@@ -127,7 +129,7 @@ class AktivitetskravSpek : Spek({
 
             ikkeOppfyltAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.IKKE_AKTUELL
         }
-        EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT, AktivitetskravStatus.STANS)
+        EnumSet.of(AktivitetskravStatus.NY, AktivitetskravStatus.AUTOMATISK_OPPFYLT)
             .forEach {
                 it("kan ikke lage vurdering med status $it") {
                     assertFailsWith(IllegalArgumentException::class) {
@@ -140,6 +142,13 @@ class AktivitetskravSpek : Spek({
                     }
                 }
             }
+
+        it("kan vurdere INNSTILLING_OM_STANS uten arsak og frist") {
+            val aktivitetskrav = createAktivitetskravNy(tilfelleStart = tenWeeksAgo)
+            val ikkeOppfyltAktivitetskrav = createAktivitetskravInnstillingOmStans(nyAktivitetskrav = aktivitetskrav)
+
+            ikkeOppfyltAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.INNSTILLING_OM_STANS
+        }
     }
 
     describe("toKafkaAktivitetskravVurdering") {

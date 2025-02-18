@@ -43,7 +43,7 @@ class AktivitetskravVurderingProducer(
                 AktivitetskravStatus.UNNTAK.name -> COUNT_UNNTAK.increment()
                 AktivitetskravStatus.OPPFYLT.name -> COUNT_OPPFYLT.increment()
                 AktivitetskravStatus.FORHANDSVARSEL.name -> COUNT_FORHANDSVARSEL.increment()
-                AktivitetskravStatus.STANS.name -> COUNT_STANS.increment()
+                AktivitetskravStatus.INNSTILLING_OM_STANS.name -> COUNT_STANS.increment()
                 AktivitetskravStatus.IKKE_OPPFYLT.name -> COUNT_IKKE_OPPFYLT.increment()
                 AktivitetskravStatus.IKKE_AKTUELL.name -> COUNT_IKKE_AKTUELL.increment()
             }

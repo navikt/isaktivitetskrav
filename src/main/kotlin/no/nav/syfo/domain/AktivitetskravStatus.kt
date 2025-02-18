@@ -10,7 +10,7 @@ enum class AktivitetskravStatus(val isFinal: Boolean) {
     OPPFYLT(true),
     AUTOMATISK_OPPFYLT(true),
     FORHANDSVARSEL(false),
-    STANS(true),
+    INNSTILLING_OM_STANS(true),
     IKKE_OPPFYLT(true),
     IKKE_AKTUELL(true),
     LUKKET(true),
@@ -25,6 +25,7 @@ private val allowedChangedVurderingStatus = EnumSet.of(
     AktivitetskravStatus.IKKE_OPPFYLT,
     AktivitetskravStatus.IKKE_AKTUELL,
     AktivitetskravStatus.FORHANDSVARSEL,
+    AktivitetskravStatus.INNSTILLING_OM_STANS
 )
 
 fun AktivitetskravStatus.requiresVurderingArsak(): Boolean =
@@ -35,5 +36,6 @@ fun AktivitetskravStatus.toVarselType(): VarselType? = when (this) {
     AktivitetskravStatus.UNNTAK -> VarselType.UNNTAK
     AktivitetskravStatus.OPPFYLT -> VarselType.OPPFYLT
     AktivitetskravStatus.IKKE_AKTUELL -> VarselType.IKKE_AKTUELL
+    AktivitetskravStatus.INNSTILLING_OM_STANS -> VarselType.INNSTILLING_OM_STANS
     else -> null
 }

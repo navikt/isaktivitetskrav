@@ -23,10 +23,11 @@ data class Aktivitetskrav(
 
     fun vurder(
         aktivitetskravVurdering: AktivitetskravVurdering,
-    ): Aktivitetskrav = this.copy(
-        status = aktivitetskravVurdering.status,
-        vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
-    )
+    ): Aktivitetskrav =
+        this.copy(
+            status = aktivitetskravVurdering.status,
+            vurderinger = listOf(aktivitetskravVurdering) + this.vurderinger,
+        )
 
     fun lukk(): Aktivitetskrav =
         this.copy(status = AktivitetskravStatus.LUKKET)

@@ -24,7 +24,7 @@ class IdenthendelseService(
                     inactiveIdenter.filter { aktivitetskravRepository.getAktivitetskrav(it).isNotEmpty() }
 
                 if (oldPersonIdentList.isNotEmpty()) {
-                    checkThatPdlIsUpdated(activeIdent)
+                    ensurePdlIsUpdated(activeIdent)
                     val numberOfUpdatedIdenter =
                         aktivitetskravRepository.updateAktivitetskravPersonIdent(activeIdent, oldPersonIdentList)
 
@@ -38,7 +38,7 @@ class IdenthendelseService(
     }
 
     // Erfaringer fra andre team tilsier at vi burde dobbeltsjekke at ting har blitt oppdatert i PDL før vi gjør endringer
-    private fun checkThatPdlIsUpdated(ident: PersonIdent) {
+    private fun ensurePdlIsUpdated(ident: PersonIdent) {
         runBlocking {
             val pdlIdenter =
                 pdlClient.getPdlIdenter(ident)?.hentIdenter ?: throw RuntimeException("Fant ingen identer fra PDL")

@@ -64,7 +64,6 @@ fun createAktivitetskravIkkeOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitet
         beskrivelse = null,
         arsaker = emptyList(),
     )
-
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeOppfyltVurdering)
 }
 
@@ -75,8 +74,17 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
         beskrivelse = null,
         arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
     )
-
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
+}
+
+fun createAktivitetskravInnstillingOmStans(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav {
+    val innstillingOmStansVurdering = AktivitetskravVurdering.create(
+        status = AktivitetskravStatus.INNSTILLING_OM_STANS,
+        createdBy = UserConstants.VEILEDER_IDENT,
+        beskrivelse = null,
+        stansFom = LocalDate.now(),
+    )
+    return nyAktivitetskrav.vurder(aktivitetskravVurdering = innstillingOmStansVurdering)
 }
 
 fun createVurdering(

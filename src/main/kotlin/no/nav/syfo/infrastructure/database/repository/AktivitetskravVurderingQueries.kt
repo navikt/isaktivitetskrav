@@ -19,8 +19,9 @@ const val queryCreateAktivitetskravVurdering =
         status,
         beskrivelse,
         arsaker,
+        stans_fom,
         frist
-    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) values (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING *
     """
 
@@ -36,7 +37,8 @@ fun Connection.createAktivitetskravVurdering(
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
         it.setString(7, aktivitetskravVurdering.arsaker.joinToString(",") { arsak -> arsak.value })
-        it.setDate(8, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
+        it.setDate(8, aktivitetskravVurdering.stansFom?.let { stansFom -> Date.valueOf(stansFom) })
+        it.setDate(9, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
         it.executeQuery().toList { toPAktivitetskravVurdering() }
     }
 

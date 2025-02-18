@@ -46,6 +46,7 @@ data class AktivitetskravVurdering(
     val status: AktivitetskravStatus,
     val arsaker: List<VurderingArsak>,
     val beskrivelse: String?,
+    val stansFom: LocalDate?,
     val frist: LocalDate?,
     val varsel: AktivitetskravVarsel?,
 ) {
@@ -59,7 +60,8 @@ data class AktivitetskravVurdering(
             status: AktivitetskravStatus,
             createdBy: String,
             beskrivelse: String?,
-            arsaker: List<VurderingArsak>,
+            arsaker: List<VurderingArsak> = emptyList(),
+            stansFom: LocalDate? = null,
             frist: LocalDate? = null,
         ): AktivitetskravVurdering {
             return AktivitetskravVurdering(
@@ -69,6 +71,7 @@ data class AktivitetskravVurdering(
                 status = status,
                 beskrivelse = beskrivelse,
                 arsaker = arsaker,
+                stansFom = stansFom,
                 frist = frist,
                 varsel = null,
             ).also { it.validate() }
@@ -85,5 +88,8 @@ fun AktivitetskravVurdering.validate() {
     }
     if (status.requiresVurderingArsak() && arsaker.isEmpty()) {
         throw IllegalArgumentException("Must have arsak for status $status")
+    }
+    if (status == AktivitetskravStatus.INNSTILLING_OM_STANS && stansFom == null) {
+        throw IllegalArgumentException("Must have stansFom for status $status")
     }
 }

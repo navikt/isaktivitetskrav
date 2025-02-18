@@ -1,6 +1,5 @@
 package no.nav.syfo.aktivitetskrav.cronjob
 
-import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
@@ -66,11 +65,12 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         pdf: ByteArray,
         journalpostId: String? = defaultJournalpostId,
         varselType: VarselType,
+        frist: LocalDate? = LocalDate.now().plusDays(30),
         document: List<DocumentComponentDTO>,
     ): AktivitetskravVarsel {
         val varsel = AktivitetskravVarsel.create(
             type = varselType,
-            frist = LocalDate.now().plusDays(30),
+            frist = frist,
             document = document,
         )
         aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(
@@ -332,6 +332,53 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
             kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
             kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.IKKE_AKTUELL.name
+        }
+        it("Publiserer journalført vurdering om STANS") {
+            val fritekst = "Aktivitetskravet er ikke oppfylt, og sykepengene stanses"
+            val vurdering = AktivitetskravVurdering.create(
+                status = AktivitetskravStatus.INNSTILLING_OM_STANS,
+                beskrivelse = fritekst,
+                stansFom = LocalDate.now(),
+                createdBy = UserConstants.VEILEDER_IDENT,
+            )
+            val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
+            val varsel = createVarsel(
+                aktivitetskrav = updatedAktivitetskrav,
+                pdf = pdf,
+                varselType = VarselType.INNSTILLING_OM_STANS,
+                frist = null,
+                document = generateDocumentComponentDTO(fritekst),
+            )
+
+            runBlocking {
+                val result = publiserAktivitetskravVarselCronjob.runJob()
+                result.failed shouldBeEqualTo 0
+                result.updated shouldBeEqualTo 1
+            }
+            val varsler = database.getVarsler(personIdent)
+            varsler.size shouldBeEqualTo 1
+            val first = varsler.first()
+            first.uuid shouldBeEqualTo varsel.uuid
+            first.updatedAt shouldBeGreaterThan first.createdAt
+            first.publishedAt shouldNotBe null
+
+            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            verify(exactly = 1) {
+                aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
+            }
+
+            val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
+            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
+            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
+            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
+            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
+            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
+            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
+            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
+            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
+            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
+            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.INNSTILLING_OM_STANS.name
         }
     }
 })

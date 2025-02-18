@@ -8,8 +8,9 @@ import java.time.LocalDate
 data class AktivitetskravVurderingRequestDTO(
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
-    val arsaker: List<Arsak>,
+    val arsaker: List<Arsak> = emptyList(),
     val frist: LocalDate? = null,
+    val stansFom: LocalDate? = null,
     val document: List<DocumentComponentDTO>? = emptyList(),
 )
 
@@ -20,6 +21,7 @@ fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(
     createdBy = createdByIdent,
     beskrivelse = this.beskrivelse,
     arsaker = arsaker.map { it.toVurderingArsak(this.status) },
+    stansFom = this.stansFom,
     frist = this.frist,
 )
 
