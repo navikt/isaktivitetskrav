@@ -12,9 +12,11 @@ enum class VarselType {
 }
 
 fun VarselType.getDokumentTittel(): String = when (this) {
-    VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER -> "Forhåndsvarsel om stans av sykepenger"
-    VarselType.UNNTAK, VarselType.OPPFYLT, VarselType.IKKE_AKTUELL -> "Vurdering av aktivitetskravet"
-    VarselType.INNSTILLING_OM_STANS -> "Stans av sykepenger"
+    VarselType.UNNTAK -> "Vurdering av aktivitetskravet - Unntak"
+    VarselType.IKKE_AKTUELL -> "Vurdering av aktivitetskravet - Ikke aktuell"
+    VarselType.OPPFYLT -> "Vurdering av aktivitetskravet - Oppfylt"
+    VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER -> "Vurdering av aktivitetskravet - Forhåndsvarsel om stans"
+    VarselType.INNSTILLING_OM_STANS -> "Vurdering av aktivitetskravet - Innstilling om stans"
 }
 
 fun VarselType.getBrevkode(): BrevkodeType = when (this) {
