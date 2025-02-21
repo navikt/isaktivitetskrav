@@ -127,7 +127,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             )
 
             val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
-                tittel = "Vurdering av aktivitetskravet",
+                tittel = "Vurdering av aktivitetskravet - Unntak",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                 pdf = pdf,
                 varselId = varsel.uuid,
@@ -171,8 +171,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 document = generateDocumentComponentDTO(fritekst),
             )
 
-            val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
-                tittel = "Vurdering av aktivitetskravet",
+            val expectedJournalpostRequestIkkeAktuellVarsel = generateJournalpostRequest(
+                tittel = "Vurdering av aktivitetskravet - Ikke aktuell",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                 pdf = pdf,
                 varselId = varsel.uuid,
@@ -189,7 +189,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             coVerify {
-                dokarkivClient.journalfor(expectedJournalpostRequestUnntakVarsel)
+                dokarkivClient.journalfor(expectedJournalpostRequestIkkeAktuellVarsel)
             }
 
             val varsler = database.getVarsler(personIdent)
@@ -216,8 +216,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
                 document = generateDocumentComponentDTO(fritekst),
             )
 
-            val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
-                tittel = "Vurdering av aktivitetskravet",
+            val expectedJournalpostRequestOppfyltVarsel = generateJournalpostRequest(
+                tittel = "Vurdering av aktivitetskravet - Oppfylt",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_VURDERING,
                 pdf = pdf,
                 varselId = varsel.uuid,
@@ -234,7 +234,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             coVerify {
-                dokarkivClient.journalfor(expectedJournalpostRequestUnntakVarsel)
+                dokarkivClient.journalfor(expectedJournalpostRequestOppfyltVarsel)
             }
 
             val varsler = database.getVarsler(personIdent)
@@ -256,7 +256,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             )
 
             val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
-                tittel = "Forhåndsvarsel om stans av sykepenger",
+                tittel = "Vurdering av aktivitetskravet - Forhåndsvarsel om stans",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                 pdf = pdf,
                 varselId = varsel.uuid,
@@ -302,7 +302,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             )
 
             val expectedJournalpostRequestUnntakVarsel = generateJournalpostRequest(
-                tittel = "Stans av sykepenger",
+                tittel = "Vurdering av aktivitetskravet - Innstilling om stans",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_STANS,
                 pdf = pdf,
                 varselId = varsel.uuid,
@@ -415,7 +415,7 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             )
 
             val expectedJournalpostRequestForhandsvarsel = generateJournalpostRequest(
-                tittel = "Forhåndsvarsel om stans av sykepenger",
+                tittel = "Vurdering av aktivitetskravet - Forhåndsvarsel om stans",
                 brevkodeType = BrevkodeType.AKTIVITETSKRAV_FORHANDSVARSEL,
                 pdf = pdf,
                 varselId = varsel.uuid,
