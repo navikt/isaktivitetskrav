@@ -12,18 +12,19 @@ data class AktivitetskravVurderingRequestDTO(
     val frist: LocalDate? = null,
     val stansFom: LocalDate? = null,
     val document: List<DocumentComponentDTO>? = emptyList(),
-)
-
-fun AktivitetskravVurderingRequestDTO.toAktivitetskravVurdering(
-    createdByIdent: String,
-) = AktivitetskravVurdering.create(
-    status = this.status,
-    createdBy = createdByIdent,
-    beskrivelse = this.beskrivelse,
-    arsaker = arsaker.map { it.toVurderingArsak(this.status) },
-    stansFom = this.stansFom,
-    frist = this.frist,
-)
+) {
+    fun toAktivitetskravVurdering(
+        createdByIdent: String,
+    ): AktivitetskravVurdering =
+        AktivitetskravVurdering.create(
+            status = this.status,
+            createdBy = createdByIdent,
+            beskrivelse = this.beskrivelse,
+            arsaker = arsaker.map { it.toVurderingArsak(this.status) },
+            stansFom = this.stansFom,
+            frist = this.frist,
+        )
+}
 
 enum class Arsak {
     OPPFOLGINGSPLAN_ARBEIDSGIVER,

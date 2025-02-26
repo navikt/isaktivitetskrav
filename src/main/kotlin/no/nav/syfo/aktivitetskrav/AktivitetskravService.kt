@@ -12,9 +12,7 @@ import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.domain.isInFinalState
 import no.nav.syfo.domain.oppfyllAutomatisk
-import no.nav.syfo.domain.toVarselType
 import no.nav.syfo.domain.updateStoppunkt
-import no.nav.syfo.domain.validate
 import no.nav.syfo.infrastructure.database.repository.updateAktivitetskrav
 import no.nav.syfo.oppfolgingstilfelle.domain.Oppfolgingstilfelle
 import java.sql.Connection
@@ -81,20 +79,19 @@ class AktivitetskravService(
         document: List<DocumentComponentDTO>,
         callId: String,
     ) {
-        if (aktivitetskravVurdering.status == AktivitetskravStatus.FORHANDSVARSEL) {
+        if (aktivitetskravVurdering is AktivitetskravVurdering.Forhandsvarsel) {
             throw ConflictException("Kan ikke sette FORHANDSVARSEL her, bruk aktivitetskravVarselService.sendForhandsvarsel")
         }
         val currentVurdering = aktivitetskrav.vurderinger.firstOrNull()
-        if (currentVurdering?.isFinal() == true) {
+        if (currentVurdering?.isFinal == true) {
             throw ConflictException("Aktivitetskravet har allerede en avsluttende vurdering")
         }
-        aktivitetskravVurdering.validate()
 
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = aktivitetskravVurdering)
 
-        if (aktivitetskravVurdering.requiresVarselPdf()) {
+        if (aktivitetskravVurdering.requiresPdfDocument()) {
             val varsel = AktivitetskravVarsel.create(
-                type = aktivitetskravVurdering.status.toVarselType()!!,
+                type = aktivitetskravVurdering.toVarselType(),
                 document = document,
             )
             val pdf = varselPdfService.createVarselPdf(

@@ -1,6 +1,7 @@
 package no.nav.syfo.infrastructure.kafka.domain
 
 import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.AktivitetskravVurdering
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -32,13 +33,13 @@ data class AktivitetskravVurderingRecord(
                 createdAt = aktivitetskrav.createdAt,
                 status = aktivitetskrav.status.name,
                 isFinal = aktivitetskrav.status.isFinal,
-                beskrivelse = latestVurdering?.beskrivelse,
+                beskrivelse = latestVurdering?.beskrivelse(),
                 stoppunktAt = aktivitetskrav.stoppunktAt,
                 updatedBy = latestVurdering?.createdBy,
-                arsaker = latestVurdering?.arsaker?.map { it.value } ?: emptyList(),
+                arsaker = latestVurdering?.arsaker() ?: emptyList(),
                 sisteVurderingUuid = latestVurdering?.uuid,
                 sistVurdert = latestVurdering?.createdAt,
-                frist = latestVurdering?.frist,
+                frist = if (latestVurdering is AktivitetskravVurdering.Avvent) latestVurdering.frist else null,
                 previousAktivitetskravUuid = previousAktivitetskravUuid,
             )
         }
