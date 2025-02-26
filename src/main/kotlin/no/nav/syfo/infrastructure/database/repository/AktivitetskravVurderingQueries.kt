@@ -36,9 +36,14 @@ fun Connection.createAktivitetskravVurdering(
         it.setString(4, aktivitetskravVurdering.createdBy)
         it.setString(5, aktivitetskravVurdering.status.name)
         it.setString(6, aktivitetskravVurdering.beskrivelse)
-        it.setString(7, aktivitetskravVurdering.arsaker.joinToString(",") { arsak -> arsak.value })
-        it.setDate(8, aktivitetskravVurdering.stansFom?.let { stansFom -> Date.valueOf(stansFom) })
-        it.setDate(9, aktivitetskravVurdering.frist?.let { frist -> Date.valueOf(frist) })
+        it.setString(7, aktivitetskravVurdering.arsaker().joinToString(","))
+        it.setDate(
+            8,
+            if (aktivitetskravVurdering is AktivitetskravVurdering.InnstillingOmStans)
+                aktivitetskravVurdering.stansFom.let { stansFom -> Date.valueOf(stansFom) }
+            else null
+        )
+        it.setDate(9, aktivitetskravVurdering.frist()?.let { frist -> Date.valueOf(frist) })
         it.executeQuery().toList { toPAktivitetskravVurdering() }
     }
 

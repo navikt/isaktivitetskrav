@@ -1,18 +1,17 @@
 package no.nav.syfo.aktivitetskrav
 
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
-import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVarsel
-import no.nav.syfo.domain.AktivitetskravVurdering
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.domain.VarselType
 import no.nav.syfo.domain.isInFinalState
+import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import java.util.*
 
 class AktivitetskravVarselService(
@@ -73,7 +72,7 @@ class AktivitetskravVarselService(
             personIdent = personIdent,
             callId = callId,
         )
-        val vurdering: AktivitetskravVurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
+        val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(veilederIdent)
         val updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = vurdering)
 
         val nyttForhandsvarsel = aktivitetskravVarselRepository.createAktivitetskravVurderingWithVarselPdf(

@@ -2,7 +2,6 @@ package no.nav.syfo.infrastructure.database.repository
 
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVurdering
-import no.nav.syfo.domain.VurderingArsak
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -15,62 +14,124 @@ data class PAktivitetskravVurdering(
     val createdBy: String,
     val status: AktivitetskravStatus,
     val beskrivelse: String?,
-    val arsaker: List<VurderingArsak>,
+    val arsaker: List<PArsak>,
     val stansFom: LocalDate?,
     val frist: LocalDate?,
     val varsel: PAktivitetskravVarsel?,
 ) {
-    fun toAktivitetskravVurdering() =
-        AktivitetskravVurdering(
-            uuid = this.uuid,
-            createdAt = this.createdAt,
-            createdBy = this.createdBy,
-            status = this.status,
-            arsaker = this.arsaker,
-            beskrivelse = this.beskrivelse,
-            stansFom = this.stansFom,
-            frist = this.frist,
-            varsel = varsel?.toAktivitetkravVarsel(),
-        )
+    fun toAktivitetskravVurdering(): AktivitetskravVurdering =
+        when (status) {
+            AktivitetskravStatus.AVVENT -> AktivitetskravVurdering.Avvent(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                arsaker = this.arsaker.map { it.toAvventArsak() },
+                beskrivelse = this.beskrivelse!!,
+                frist = this.frist,
+            )
+            AktivitetskravStatus.UNNTAK -> AktivitetskravVurdering.Unntak(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                arsaker = this.arsaker.map { it.toUnntakArsak() },
+                beskrivelse = this.beskrivelse,
+            )
+            AktivitetskravStatus.OPPFYLT -> AktivitetskravVurdering.Oppfylt(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                arsaker = this.arsaker.map { it.toOppfyltArsak() },
+                beskrivelse = this.beskrivelse,
+            )
+            AktivitetskravStatus.AUTOMATISK_OPPFYLT -> AktivitetskravVurdering.IkkeOppfylt(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                beskrivelse = this.beskrivelse,
+            )
+            AktivitetskravStatus.IKKE_OPPFYLT -> AktivitetskravVurdering.IkkeOppfylt(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                beskrivelse = this.beskrivelse,
+            )
+            AktivitetskravStatus.IKKE_AKTUELL -> AktivitetskravVurdering.IkkeAktuell(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                arsaker = this.arsaker.map { it.toIkkeAktuellArsak() },
+                beskrivelse = this.beskrivelse,
+            )
+            AktivitetskravStatus.INNSTILLING_OM_STANS -> AktivitetskravVurdering.InnstillingOmStans(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                beskrivelse = this.beskrivelse!!,
+                stansFom = this.stansFom!!,
+                varsel = this.varsel?.toAktivitetkravVarsel(),
+            )
+            AktivitetskravStatus.FORHANDSVARSEL -> AktivitetskravVurdering.Forhandsvarsel(
+                uuid = this.uuid,
+                createdAt = this.createdAt,
+                createdBy = this.createdBy,
+                beskrivelse = this.beskrivelse!!,
+                frist = this.frist,
+                varsel = this.varsel?.toAktivitetkravVarsel(),
+            )
+            else -> throw IllegalArgumentException("Ugyldig AktivitetskravStatus: $status som AktivitetskravVurdering")
+        }
 }
 
-fun String.toVurderingArsak(status: AktivitetskravStatus): VurderingArsak =
-    when (status) {
-        AktivitetskravStatus.AVVENT ->
-            when (this) {
-                "OPPFOLGINGSPLAN_ARBEIDSGIVER" -> VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver
-                "INFORMASJON_BEHANDLER" -> VurderingArsak.Avvent.InformasjonBehandler
-                "INFORMASJON_SYKMELDT" -> VurderingArsak.Avvent.InformasjonSykmeldt
-                "DROFTES_MED_ROL" -> VurderingArsak.Avvent.DroftesMedROL
-                "DROFTES_INTERNT" -> VurderingArsak.Avvent.DroftesInternt
-                "ANNET" -> VurderingArsak.Avvent.Annet
-                else -> throw IllegalArgumentException("String was $this and status was $status")
-            }
+enum class PArsak(value: String) {
+    OPPFOLGINGSPLAN_ARBEIDSGIVER("OPPFOLGINGSPLAN_ARBEIDSGIVER"),
+    INFORMASJON_BEHANDLER("INFORMASJON_BEHANDLER"),
+    INFORMASJON_SYKMELDT("INFORMASJON_SYKMELDT"),
+    DROFTES_MED_ROL("DROFTES_MED_ROL"),
+    DROFTES_INTERNT("DROFTES_INTERNT"),
+    MEDISINSKE_GRUNNER("MEDISINSKE_GRUNNER"),
+    TILRETTELEGGING_IKKE_MULIG("TILRETTELEGGING_IKKE_MULIG"),
+    SJOMENN_UTENRIKS("SJOMENN_UTENRIKS"),
+    FRISKMELDT("FRISKMELDT"),
+    GRADERT("GRADERT"),
+    TILTAK("TILTAK"),
+    INNVILGET_VTA("INNVILGET_VTA"),
+    MOTTAR_AAP("MOTTAR_AAP"),
+    ER_DOD("ER_DOD"),
+    ANNET("ANNET");
 
-        AktivitetskravStatus.UNNTAK ->
-            when (this) {
-                "MEDISINSKE_GRUNNER" -> VurderingArsak.Unntak.MedisinskeGrunner
-                "TILRETTELEGGING_IKKE_MULIG" -> VurderingArsak.Unntak.TilretteleggingIkkeMulig
-                "SJOMENN_UTENRIKS" -> VurderingArsak.Unntak.SjomennUtenriks
-                else -> throw IllegalArgumentException("String was $this and status was $status")
-            }
+    fun toAvventArsak(): AktivitetskravVurdering.Avvent.Arsak =
+        when (this) {
+            OPPFOLGINGSPLAN_ARBEIDSGIVER -> AktivitetskravVurdering.Avvent.Arsak.OppfolgingsplanArbeidsgiver
+            INFORMASJON_BEHANDLER -> AktivitetskravVurdering.Avvent.Arsak.InformasjonBehandler
+            INFORMASJON_SYKMELDT -> AktivitetskravVurdering.Avvent.Arsak.InformasjonSykmeldt
+            DROFTES_MED_ROL -> AktivitetskravVurdering.Avvent.Arsak.DroftesMedROL
+            DROFTES_INTERNT -> AktivitetskravVurdering.Avvent.Arsak.DroftesInternt
+            ANNET -> AktivitetskravVurdering.Avvent.Arsak.Annet
+            else -> throw IllegalArgumentException("Ugyldig PArsak for Avvent: $this")
+        }
 
-        AktivitetskravStatus.OPPFYLT ->
-            when (this) {
-                "FRISKMELDT" -> VurderingArsak.Oppfylt.Friskmeldt
-                "GRADERT" -> VurderingArsak.Oppfylt.Gradert
-                "TILTAK" -> VurderingArsak.Oppfylt.Tiltak
-                else -> throw IllegalArgumentException("String was $this and status was $status")
-            }
+    fun toUnntakArsak(): AktivitetskravVurdering.Unntak.Arsak =
+        when (this) {
+            MEDISINSKE_GRUNNER -> AktivitetskravVurdering.Unntak.Arsak.MedisinskeGrunner
+            TILRETTELEGGING_IKKE_MULIG -> AktivitetskravVurdering.Unntak.Arsak.TilretteleggingIkkeMulig
+            SJOMENN_UTENRIKS -> AktivitetskravVurdering.Unntak.Arsak.SjomennUtenriks
+            else -> throw IllegalArgumentException("Ugyldig PArsak for Unntak: $this")
+        }
 
-        AktivitetskravStatus.IKKE_AKTUELL ->
-            when (this) {
-                "INNVILGET_VTA" -> VurderingArsak.IkkeAktuell.InnvilgetVTA
-                "MOTTAR_AAP" -> VurderingArsak.IkkeAktuell.MottarAAP
-                "ER_DOD" -> VurderingArsak.IkkeAktuell.ErDod
-                "ANNET" -> VurderingArsak.IkkeAktuell.Annet
-                else -> throw IllegalArgumentException("String was $this and status was $status")
-            }
+    fun toOppfyltArsak(): AktivitetskravVurdering.Oppfylt.Arsak =
+        when (this) {
+            FRISKMELDT -> AktivitetskravVurdering.Oppfylt.Arsak.Friskmeldt
+            GRADERT -> AktivitetskravVurdering.Oppfylt.Arsak.Gradert
+            TILTAK -> AktivitetskravVurdering.Oppfylt.Arsak.Tiltak
+            else -> throw IllegalArgumentException("Ugyldig PArsak for Oppfylt: $this")
+        }
 
-        else -> throw IllegalArgumentException("String was $this and status was $status")
-    }
+    fun toIkkeAktuellArsak(): AktivitetskravVurdering.IkkeAktuell.Arsak =
+        when (this) {
+            INNVILGET_VTA -> AktivitetskravVurdering.IkkeAktuell.Arsak.InnvilgetVTA
+            MOTTAR_AAP -> AktivitetskravVurdering.IkkeAktuell.Arsak.MottarAAP
+            ER_DOD -> AktivitetskravVurdering.IkkeAktuell.Arsak.ErDod
+            ANNET -> AktivitetskravVurdering.IkkeAktuell.Arsak.Annet
+            else -> throw IllegalArgumentException("Ugyldig PArsak for IkkeAktuell: $this")
+        }
+}
