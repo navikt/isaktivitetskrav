@@ -81,7 +81,7 @@ fun createAktivitetskravInnstillingOmStans(nyAktivitetskrav: Aktivitetskrav): Ak
     val innstillingOmStansVurdering = AktivitetskravVurdering.create(
         status = AktivitetskravStatus.INNSTILLING_OM_STANS,
         createdBy = UserConstants.VEILEDER_IDENT,
-        beskrivelse = null,
+        beskrivelse = "Beskrivelse",
         stansFom = LocalDate.now(),
     )
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = innstillingOmStansVurdering)

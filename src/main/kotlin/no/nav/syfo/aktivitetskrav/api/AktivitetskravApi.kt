@@ -100,9 +100,11 @@ fun Route.registerAktivitetskravApi(
                     throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on aktivitetskrav differs from request")
                 }
 
-                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(
-                    createdByIdent = call.getNAVIdent(),
-                )
+                val aktivitetskravVurdering = try {
+                    requestDTO.toAktivitetskravVurdering(createdByIdent = call.getNAVIdent())
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("Failed to vurdere aktivitetskrav: ${e.message}")
+                }
                 aktivitetskravService.vurderAktivitetskrav(
                     aktivitetskrav = aktivitetskrav,
                     aktivitetskravVurdering = aktivitetskravVurdering,

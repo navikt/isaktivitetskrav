@@ -202,7 +202,7 @@ class AktivitetskravRepositorySpek : Spek({
                 val firstStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == firstAktivitetskrav.personIdent }
                 firstStoredAktivitetskrav?.personIdent shouldBeEqualTo firstAktivitetskrav.personIdent
                 firstStoredAktivitetskrav?.vurderinger?.size shouldBeEqualTo 2
-                firstStoredAktivitetskrav?.vurderinger?.find { it.varsel !== null } shouldNotBe null
+                firstStoredAktivitetskrav?.vurderinger?.find { it.varsel() !== null } shouldNotBe null
             }
         }
     }
