@@ -26,7 +26,7 @@ data class AktivitetskravResponseDTO(
                 status = aktivitetskrav.status,
                 inFinalState = aktivitetskrav.isInFinalState(),
                 stoppunktAt = aktivitetskrav.stoppunktAt,
-                vurderinger = aktivitetskrav.vurderinger.map { AktivitetskravVurderingResponseDTO.from(it, it.varsel) }
+                vurderinger = aktivitetskrav.vurderinger.map { AktivitetskravVurderingResponseDTO.from(it, it.varsel()) }
             )
 
         fun from(aktivitetskrav: Aktivitetskrav, vurderinger: List<AktivitetskravVurderingResponseDTO>) =
@@ -62,8 +62,8 @@ data class AktivitetskravVurderingResponseDTO(
                 createdBy = aktivitetskravVurdering.createdBy,
                 status = aktivitetskravVurdering.status,
                 beskrivelse = aktivitetskravVurdering.beskrivelse,
-                arsaker = aktivitetskravVurdering.arsaker.map { Arsak.valueOf(it.value) },
-                frist = aktivitetskravVurdering.frist,
+                arsaker = aktivitetskravVurdering.arsaker().map { Arsak.valueOf(it) },
+                frist = aktivitetskravVurdering.frist(),
                 varsel = varsel?.toVarselResponseDTO()
             )
     }

@@ -6,10 +6,10 @@ import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVurdering
+import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.database.NoElementInsertedException
 import no.nav.syfo.infrastructure.database.toList
-import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
 import java.sql.Connection
@@ -294,7 +294,7 @@ fun ResultSet.toPAktivitetskravVurdering(): PAktivitetskravVurdering {
         status = status,
         beskrivelse = getString("beskrivelse"),
         arsaker = getString("arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
-            .map { it.toVurderingArsak(status) },
+            .map { PArsak.valueOf(it) },
         stansFom = getDate("stans_fom")?.toLocalDate(),
         frist = getDate("frist")?.toLocalDate(),
         varsel = null,
@@ -335,7 +335,7 @@ private fun ResultSet.toAktivitetskravWithVurderinger(): List<PAktivitetskrav> {
                     status = vurderingStatus,
                     beskrivelse = getString("vurdering_beskrivelse"),
                     arsaker = getString("vurdering_arsaker").split(",").map(String::trim).filter(String::isNotEmpty)
-                        .map { it.toVurderingArsak(vurderingStatus) },
+                        .map { PArsak.valueOf(it) },
                     stansFom = getDate("vurdering_stans_fom")?.toLocalDate(),
                     frist = getDate("vurdering_frist")?.toLocalDate(),
                     varsel = varsel,

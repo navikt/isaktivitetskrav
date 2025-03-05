@@ -507,7 +507,10 @@ class AktivitetskravApiSpek : Spek({
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                     val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                    val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
+                    val newVurdering = createVurdering(
+                        AktivitetskravStatus.FORHANDSVARSEL,
+                        frist = LocalDate.now().plusDays(30)
+                    ).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
                         type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
                         frist = LocalDate.now().plusDays(30),
@@ -546,7 +549,10 @@ class AktivitetskravApiSpek : Spek({
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
                     }
-                    val newVurdering = createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also { firstAktivitetskrav.vurder(it) }
+                    val newVurdering = createVurdering(
+                        AktivitetskravStatus.FORHANDSVARSEL,
+                        frist = LocalDate.now().plusDays(30)
+                    ).also { firstAktivitetskrav.vurder(it) }
                     val newVarsel = AktivitetskravVarsel.create(
                         type = VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER,
                         frist = LocalDate.now().plusDays(30),
@@ -560,7 +566,7 @@ class AktivitetskravApiSpek : Spek({
                     )
                     val secondAktivitetskrav = Aktivitetskrav.create(OTHER_ARBEIDSTAKER_PERSONIDENT)
                     aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
-                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL).also {
+                    createVurdering(AktivitetskravStatus.FORHANDSVARSEL, frist = LocalDate.now().plusDays(14)).also {
                         secondAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
                     }

@@ -8,6 +8,7 @@ import no.nav.syfo.domain.VarselType
 import no.nav.syfo.domain.VurderingArsak
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.Aktivitetskrav
+import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
@@ -258,6 +259,10 @@ class AktivitetskravServiceSpek : Spek({
                     createdBy = UserConstants.VEILEDER_IDENT,
                     beskrivelse = fritekst,
                     stansFom = LocalDate.now(),
+                    varsel = AktivitetskravVarsel.create(
+                        type = VarselType.INNSTILLING_OM_STANS,
+                        document = generateDocumentComponentDTO(fritekst),
+                    )
                 )
 
                 runBlocking {
@@ -288,7 +293,7 @@ class AktivitetskravServiceSpek : Spek({
             it("gets aktivitetskrav with only the most recent vurdering for persons") {
                 val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
                 aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                createVurdering(AktivitetskravStatus.FORHANDSVARSEL, frist = LocalDate.now().plusDays(14))
                     .also {
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)

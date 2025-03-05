@@ -132,7 +132,7 @@ class AktivitetskravRepositorySpek : Spek({
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
                     }
-                createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                createVurdering(AktivitetskravStatus.FORHANDSVARSEL, frist = LocalDate.now().plusDays(14))
                     .also {
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
@@ -145,7 +145,7 @@ class AktivitetskravRepositorySpek : Spek({
 
                 val secondAktivitetskrav = Aktivitetskrav.create(UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT)
                 aktivitetskravRepository.createAktivitetskrav(secondAktivitetskrav, UUID.randomUUID())
-                createVurdering(AktivitetskravStatus.FORHANDSVARSEL)
+                createVurdering(AktivitetskravStatus.FORHANDSVARSEL, frist = LocalDate.now().plusDays(14))
                     .also {
                         secondAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
@@ -202,7 +202,7 @@ class AktivitetskravRepositorySpek : Spek({
                 val firstStoredAktivitetskrav = storedAktivitetskrav.find { it.personIdent == firstAktivitetskrav.personIdent }
                 firstStoredAktivitetskrav?.personIdent shouldBeEqualTo firstAktivitetskrav.personIdent
                 firstStoredAktivitetskrav?.vurderinger?.size shouldBeEqualTo 2
-                firstStoredAktivitetskrav?.vurderinger?.find { it.varsel !== null } shouldNotBe null
+                firstStoredAktivitetskrav?.vurderinger?.find { it.varsel() !== null } shouldNotBe null
             }
         }
     }

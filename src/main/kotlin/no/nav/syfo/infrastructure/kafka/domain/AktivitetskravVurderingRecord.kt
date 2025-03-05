@@ -35,10 +35,10 @@ data class AktivitetskravVurderingRecord(
                 beskrivelse = latestVurdering?.beskrivelse,
                 stoppunktAt = aktivitetskrav.stoppunktAt,
                 updatedBy = latestVurdering?.createdBy,
-                arsaker = latestVurdering?.arsaker?.map { it.value } ?: emptyList(),
+                arsaker = latestVurdering?.arsaker() ?: emptyList(),
                 sisteVurderingUuid = latestVurdering?.uuid,
                 sistVurdert = latestVurdering?.createdAt,
-                frist = latestVurdering?.frist,
+                frist = latestVurdering?.frist(),
                 previousAktivitetskravUuid = previousAktivitetskravUuid,
             )
         }
