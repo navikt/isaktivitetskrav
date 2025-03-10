@@ -4,6 +4,7 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
@@ -198,7 +199,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.UNNTAK,
                 beskrivelse = fritekst,
-                arsaker = listOf(VurderingArsak.Unntak.MedisinskeGrunner),
+                arsaker = listOf(Arsak.MEDISINSKE_GRUNNER),
                 createdBy = UserConstants.VEILEDER_IDENT,
             )
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
@@ -245,7 +246,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 beskrivelse = fritekst,
-                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
+                arsaker = listOf(Arsak.FRISKMELDT),
                 createdBy = UserConstants.VEILEDER_IDENT,
             )
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
@@ -292,7 +293,7 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.IKKE_AKTUELL,
                 beskrivelse = fritekst,
-                arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
+                arsaker = listOf(Arsak.INNVILGET_VTA),
                 createdBy = UserConstants.VEILEDER_IDENT,
             )
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)

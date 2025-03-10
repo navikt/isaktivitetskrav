@@ -1,5 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
@@ -27,7 +28,7 @@ fun createAktivitetskravOppfylt(nyAktivitetskrav: Aktivitetskrav): Aktivitetskra
         status = AktivitetskravStatus.OPPFYLT,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Oppfylt",
-        arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
+        arsaker = listOf(Arsak.FRISKMELDT),
     )
     return nyAktivitetskrav.vurder(oppfyltVurdering)
 }
@@ -38,10 +39,10 @@ fun createAktivitetskravAvvent(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Avvent",
         arsaker = listOf(
-            VurderingArsak.Avvent.InformasjonBehandler,
-            VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
-            VurderingArsak.Avvent.DroftesMedROL,
-            VurderingArsak.Avvent.DroftesInternt,
+            Arsak.INFORMASJON_BEHANDLER,
+            Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+            Arsak.DROFTES_MED_ROL,
+            Arsak.DROFTES_INTERNT,
         ),
     )
     return nyAktivitetskrav.vurder(avventVurdering)
@@ -52,7 +53,7 @@ fun createAktivitetskravUnntak(nyAktivitetskrav: Aktivitetskrav): Aktivitetskrav
         status = AktivitetskravStatus.UNNTAK,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = "Unntak",
-        arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
+        arsaker = listOf(Arsak.SJOMENN_UTENRIKS),
     )
     return nyAktivitetskrav.vurder(unntakVurdering)
 }
@@ -72,7 +73,7 @@ fun createAktivitetskravIkkeAktuell(nyAktivitetskrav: Aktivitetskrav): Aktivitet
         status = AktivitetskravStatus.IKKE_AKTUELL,
         createdBy = UserConstants.VEILEDER_IDENT,
         beskrivelse = null,
-        arsaker = listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
+        arsaker = listOf(Arsak.INNVILGET_VTA),
     )
     return nyAktivitetskrav.vurder(aktivitetskravVurdering = ikkeAktuellVurdering)
 }
@@ -89,7 +90,7 @@ fun createAktivitetskravInnstillingOmStans(nyAktivitetskrav: Aktivitetskrav): Ak
 
 fun createVurdering(
     status: AktivitetskravStatus,
-    arsaker: List<VurderingArsak> = emptyList(),
+    arsaker: List<Arsak> = emptyList(),
     frist: LocalDate? = null,
 ) =
     AktivitetskravVurdering.create(

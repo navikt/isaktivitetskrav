@@ -128,11 +128,11 @@ class AktivitetskravApiSpek : Spek({
                             createdBy = VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
-                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
-                                VurderingArsak.Avvent.InformasjonSykmeldt,
-                                VurderingArsak.Avvent.InformasjonBehandler,
-                                VurderingArsak.Avvent.DroftesMedROL,
-                                VurderingArsak.Avvent.DroftesInternt,
+                                Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+                                Arsak.INFORMASJON_SYKMELDT,
+                                Arsak.INFORMASJON_BEHANDLER,
+                                Arsak.DROFTES_MED_ROL,
+                                Arsak.DROFTES_INTERNT,
                             ),
                         )
                         runBlocking {
@@ -148,7 +148,7 @@ class AktivitetskravApiSpek : Spek({
                             status = AktivitetskravStatus.OPPFYLT,
                             createdBy = VEILEDER_IDENT,
                             beskrivelse = beskrivelse,
-                            arsaker = listOf(VurderingArsak.Oppfylt.Gradert),
+                            arsaker = listOf(Arsak.GRADERT),
                         )
                         runBlocking {
                             aktivitetskravService.vurderAktivitetskrav(
@@ -179,19 +179,18 @@ class AktivitetskravApiSpek : Spek({
                         latestVurdering.beskrivelse shouldBeEqualTo beskrivelse
                         latestVurdering.createdBy shouldBeEqualTo VEILEDER_IDENT
                         latestVurdering.createdAt shouldBeGreaterThan oldestVurdering.createdAt
-                        latestVurdering.arsaker.first()
-                            .toVurderingArsak(AktivitetskravStatus.OPPFYLT) shouldBeEqualTo VurderingArsak.Oppfylt.Gradert
+                        latestVurdering.arsaker.first() shouldBeEqualTo Arsak.GRADERT
                         latestVurdering.varsel.shouldNotBeNull()
 
                         oldestVurdering.status shouldBeEqualTo AktivitetskravStatus.AVVENT
                         oldestVurdering.beskrivelse shouldBeEqualTo "Avvent"
                         oldestVurdering.createdBy shouldBeEqualTo VEILEDER_IDENT
-                        oldestVurdering.arsaker.map { it.toVurderingArsak(AktivitetskravStatus.AVVENT) } shouldBeEqualTo listOf(
-                            VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
-                            VurderingArsak.Avvent.InformasjonSykmeldt,
-                            VurderingArsak.Avvent.InformasjonBehandler,
-                            VurderingArsak.Avvent.DroftesMedROL,
-                            VurderingArsak.Avvent.DroftesInternt,
+                        oldestVurdering.arsaker shouldBeEqualTo listOf(
+                            Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+                            Arsak.INFORMASJON_SYKMELDT,
+                            Arsak.INFORMASJON_BEHANDLER,
+                            Arsak.DROFTES_MED_ROL,
+                            Arsak.DROFTES_INTERNT,
                         )
                         oldestVurdering.varsel.shouldBeNull()
                     }
@@ -420,7 +419,7 @@ class AktivitetskravApiSpek : Spek({
                                     status = AktivitetskravStatus.UNNTAK,
                                     createdBy = VEILEDER_IDENT,
                                     beskrivelse = "Unntak",
-                                    arsaker = listOf(VurderingArsak.Unntak.SjomennUtenriks),
+                                    arsaker = listOf(Arsak.SJOMENN_UTENRIKS),
                                 ),
                                 document = generateDocumentComponentDTO("Litt fritekst"),
                                 callId = "",
@@ -470,7 +469,7 @@ class AktivitetskravApiSpek : Spek({
             )
             val pdf = byteArrayOf(0x2E, 100)
 
-            fun createVurdering(status: AktivitetskravStatus, arsaker: List<VurderingArsak> = emptyList(), frist: LocalDate? = null) =
+            fun createVurdering(status: AktivitetskravStatus, arsaker: List<Arsak> = emptyList(), frist: LocalDate? = null) =
                 AktivitetskravVurdering.create(
                     status = status,
                     createdBy = VEILEDER_IDENT,
@@ -544,7 +543,7 @@ class AktivitetskravApiSpek : Spek({
                     aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
                     createVurdering(
                         status = AktivitetskravStatus.AVVENT,
-                        arsaker = listOf(VurderingArsak.Avvent.InformasjonSykmeldt)
+                        arsaker = listOf(Arsak.INFORMASJON_SYKMELDT),
                     ).also {
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)

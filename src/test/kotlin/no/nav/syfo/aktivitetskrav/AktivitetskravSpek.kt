@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav
 
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
@@ -96,13 +97,13 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
-                arsaker = listOf(VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver),
+                arsaker = listOf(Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
-                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
+                arsaker = listOf(Arsak.FRISKMELDT),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -158,14 +159,14 @@ class AktivitetskravSpek : Spek({
                 status = AktivitetskravStatus.AVVENT,
                 createdBy = UserConstants.VEILEDER_IDENT,
                 beskrivelse = "Avvent",
-                arsaker = listOf(VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver),
+                arsaker = listOf(Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER),
                 frist = twoWeeksFromNow,
             )
             val oppfyltVurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
                 createdBy = UserConstants.OTHER_VEILEDER_IDENT,
                 beskrivelse = "Oppfylt",
-                arsaker = listOf(VurderingArsak.Oppfylt.Friskmeldt),
+                arsaker = listOf(Arsak.FRISKMELDT),
             )
 
             var updatedAktivitetskrav = aktivitetskrav.vurder(aktivitetskravVurdering = avventVurdering)
@@ -180,7 +181,7 @@ class AktivitetskravSpek : Spek({
 
             aktivitetskravVurderingRecord.updatedBy shouldBeEqualTo UserConstants.OTHER_VEILEDER_IDENT
             aktivitetskravVurderingRecord.beskrivelse shouldBeEqualTo "Oppfylt"
-            aktivitetskravVurderingRecord.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
+            aktivitetskravVurderingRecord.arsaker shouldBeEqualTo listOf(Arsak.FRISKMELDT.toString())
             aktivitetskravVurderingRecord.sistVurdert shouldBeEqualTo oppfyltVurdering.createdAt
             aktivitetskravVurderingRecord.sisteVurderingUuid shouldBeEqualTo oppfyltVurdering.uuid
             aktivitetskravVurderingRecord.frist shouldBeEqualTo null

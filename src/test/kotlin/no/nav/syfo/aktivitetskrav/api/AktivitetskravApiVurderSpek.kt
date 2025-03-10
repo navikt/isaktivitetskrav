@@ -119,7 +119,7 @@ class AktivitetskravApiVurderSpek : Spek({
                         kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
                         kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                        kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
+                        kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(Arsak.FRISKMELDT.toString())
                         kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                         kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                         kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
@@ -133,10 +133,10 @@ class AktivitetskravApiVurderSpek : Spek({
                             createdBy = UserConstants.VEILEDER_IDENT,
                             beskrivelse = "Avvent",
                             arsaker = listOf(
-                                VurderingArsak.Avvent.OppfolgingsplanArbeidsgiver,
-                                VurderingArsak.Avvent.InformasjonBehandler,
-                                VurderingArsak.Avvent.DroftesMedROL,
-                                VurderingArsak.Avvent.DroftesInternt,
+                                Arsak.OPPFOLGINGSPLAN_ARBEIDSGIVER,
+                                Arsak.INFORMASJON_BEHANDLER,
+                                Arsak.DROFTES_MED_ROL,
+                                Arsak.DROFTES_INTERNT,
                             ),
                         )
                         runBlocking {
@@ -169,7 +169,7 @@ class AktivitetskravApiVurderSpek : Spek({
                         kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo UserConstants.ARBEIDSTAKER_PERSONIDENT.value
                         kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
                         kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo "Aktivitetskravet er oppfylt"
-                        kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(VurderingArsak.Oppfylt.Friskmeldt.value)
+                        kafkaAktivitetskravVurdering.arsaker shouldBeEqualTo listOf(AktivitetskravVurdering.Oppfylt.Arsak.FRISKMELDT.toString())
                         kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo UserConstants.VEILEDER_IDENT
                         kafkaAktivitetskravVurdering.sisteVurderingUuid shouldBeEqualTo latestAktivitetskravVurdering.uuid
                         kafkaAktivitetskravVurdering.sistVurdert?.millisekundOpplosning() shouldBeEqualTo latestAktivitetskravVurdering.createdAt.millisekundOpplosning()
