@@ -1,40 +1,11 @@
 package no.nav.syfo.domain
 
+import no.nav.syfo.aktivitetskrav.api.Arsak
+import no.nav.syfo.infrastructure.kafka.UNNTAK
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
-
-sealed class VurderingArsak(val value: String) {
-
-    sealed class Avvent(value: String) : VurderingArsak(value) {
-        data object OppfolgingsplanArbeidsgiver : Avvent("OPPFOLGINGSPLAN_ARBEIDSGIVER")
-        data object InformasjonBehandler : Avvent("INFORMASJON_BEHANDLER")
-        data object InformasjonSykmeldt : Avvent("INFORMASJON_SYKMELDT")
-        data object DroftesMedROL : Avvent("DROFTES_MED_ROL")
-        data object DroftesInternt : Avvent("DROFTES_INTERNT")
-        data object Annet : Avvent("ANNET")
-    }
-
-    sealed class Unntak(value: String) : VurderingArsak(value) {
-        data object MedisinskeGrunner : Unntak("MEDISINSKE_GRUNNER")
-        data object TilretteleggingIkkeMulig : Unntak("TILRETTELEGGING_IKKE_MULIG")
-        data object SjomennUtenriks : Unntak("SJOMENN_UTENRIKS")
-    }
-
-    sealed class Oppfylt(value: String) : VurderingArsak(value) {
-        data object Friskmeldt : Oppfylt("FRISKMELDT")
-        data object Gradert : Oppfylt("GRADERT")
-        data object Tiltak : Oppfylt("TILTAK")
-    }
-
-    sealed class IkkeAktuell(value: String) : VurderingArsak(value) {
-        data object InnvilgetVTA : Oppfylt("INNVILGET_VTA")
-        data object MottarAAP : Oppfylt("MOTTAR_AAP")
-        data object ErDod : Oppfylt("ER_DOD")
-        data object Annet : Oppfylt("ANNET")
-    }
-}
 
 sealed class AktivitetskravVurdering(
     open val uuid: UUID,
@@ -53,13 +24,13 @@ sealed class AktivitetskravVurdering(
         val arsaker: List<Arsak>,
         val frist: LocalDate?,
     ) : AktivitetskravVurdering(uuid, createdAt, createdBy, beskrivelse, status = AktivitetskravStatus.AVVENT, isFinal = false) {
-        enum class Arsak(val value: String) {
-            OppfolgingsplanArbeidsgiver("OPPFOLGINGSPLAN_ARBEIDSGIVER"),
-            InformasjonBehandler("INFORMASJON_BEHANDLER"),
-            InformasjonSykmeldt("INFORMASJON_SYKMELDT"),
-            DroftesMedROL("DROFTES_MED_ROL"),
-            DroftesInternt("DROFTES_INTERNT"),
-            Annet("ANNET"),
+        enum class Arsak {
+            OPPFOLGINGSPLAN_ARBEIDSGIVER,
+            INFORMASJON_BEHANDLER,
+            INFORMASJON_SYKMELDT,
+            DROFTES_MED_ROL,
+            DROFTES_INTERNT,
+            ANNET,
         }
     }
 
@@ -70,10 +41,10 @@ sealed class AktivitetskravVurdering(
         override val beskrivelse: String?,
         val arsaker: List<Arsak>,
     ) : AktivitetskravVurdering(uuid, createdAt, createdBy, beskrivelse, status = AktivitetskravStatus.UNNTAK, isFinal = true) {
-        enum class Arsak(val value: String) {
-            MedisinskeGrunner("MEDISINSKE_GRUNNER"),
-            TilretteleggingIkkeMulig("TILRETTELEGGING_IKKE_MULIG"),
-            SjomennUtenriks("SJOMENN_UTENRIKS"),
+        enum class Arsak {
+            MEDISINSKE_GRUNNER,
+            TILRETTELEGGING_IKKE_MULIG,
+            SJOMENN_UTENRIKS,
         }
     }
 
@@ -91,10 +62,10 @@ sealed class AktivitetskravVurdering(
         override val beskrivelse: String?,
         val arsaker: List<Arsak>,
     ) : AktivitetskravVurdering(uuid, createdAt, createdBy, beskrivelse, status = AktivitetskravStatus.OPPFYLT, isFinal = true) {
-        enum class Arsak(val value: String) {
-            Friskmeldt("FRISKMELDT"),
-            Gradert("GRADERT"),
-            Tiltak("TILTAK"),
+        enum class Arsak {
+            FRISKMELDT,
+            GRADERT,
+            TILTAK,
         }
     }
 
@@ -105,11 +76,11 @@ sealed class AktivitetskravVurdering(
         override val beskrivelse: String?,
         val arsaker: List<Arsak>,
     ) : AktivitetskravVurdering(uuid, createdAt, createdBy, beskrivelse, status = AktivitetskravStatus.IKKE_AKTUELL, isFinal = true) {
-        enum class Arsak(val value: String) {
-            InnvilgetVTA("INNVILGET_VTA"),
-            MottarAAP("MOTTAR_AAP"),
-            ErDod("ER_DOD"),
-            Annet("ANNET"),
+        enum class Arsak {
+            INNVILGET_VTA,
+            MOTTAR_AAP,
+            ER_DOD,
+            ANNET,
         }
     }
 
@@ -140,10 +111,10 @@ sealed class AktivitetskravVurdering(
 
     fun arsaker(): List<String> =
         when (this) {
-            is Avvent -> arsaker.map { it.value }
-            is Unntak -> arsaker.map { it.value }
-            is Oppfylt -> arsaker.map { it.value }
-            is IkkeAktuell -> arsaker.map { it.value }
+            is Avvent -> arsaker.map { it.toString() }
+            is Unntak -> arsaker.map { it.toString() }
+            is Oppfylt -> arsaker.map { it.toString() }
+            is IkkeAktuell -> arsaker.map { it.toString() }
             else -> emptyList()
         }
 
@@ -172,7 +143,7 @@ sealed class AktivitetskravVurdering(
             status: AktivitetskravStatus,
             createdBy: String,
             beskrivelse: String?,
-            arsaker: List<VurderingArsak> = emptyList(),
+            arsaker: List<Arsak> = emptyList(),
             stansFom: LocalDate? = null,
             frist: LocalDate? = null,
             varsel: AktivitetskravVarsel? = null,

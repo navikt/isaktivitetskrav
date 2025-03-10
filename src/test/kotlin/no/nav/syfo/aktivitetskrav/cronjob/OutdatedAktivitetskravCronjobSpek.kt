@@ -4,6 +4,7 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.aktivitetskrav.AktivitetskravService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.domain.*
@@ -103,7 +104,7 @@ class OutdatedAktivitetskravCronjobSpek : Spek({
                         status = AktivitetskravStatus.UNNTAK,
                         createdBy = UserConstants.VEILEDER_IDENT,
                         beskrivelse = null,
-                        listOf(VurderingArsak.Unntak.MedisinskeGrunner),
+                        listOf(Arsak.MEDISINSKE_GRUNNER),
                     )
                 )
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)

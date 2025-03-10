@@ -2,10 +2,10 @@ package no.nav.syfo.aktivitetskrav
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.VarselType
-import no.nav.syfo.domain.VurderingArsak
 import no.nav.syfo.application.exception.ConflictException
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravVarsel
@@ -127,7 +127,7 @@ class AktivitetskravServiceSpek : Spek({
                     AktivitetskravStatus.UNNTAK,
                     UserConstants.VEILEDER_IDENT,
                     fritekst,
-                    listOf(VurderingArsak.Unntak.MedisinskeGrunner),
+                    listOf(Arsak.MEDISINSKE_GRUNNER),
                 )
 
                 runBlocking {
@@ -161,7 +161,7 @@ class AktivitetskravServiceSpek : Spek({
                     AktivitetskravStatus.OPPFYLT,
                     UserConstants.VEILEDER_IDENT,
                     fritekst,
-                    listOf(VurderingArsak.Oppfylt.Gradert),
+                    listOf(Arsak.GRADERT),
                 )
 
                 runBlocking {
@@ -195,7 +195,7 @@ class AktivitetskravServiceSpek : Spek({
                     AktivitetskravStatus.IKKE_AKTUELL,
                     UserConstants.VEILEDER_IDENT,
                     fritekst,
-                    listOf(VurderingArsak.IkkeAktuell.InnvilgetVTA),
+                    listOf(Arsak.INNVILGET_VTA),
                 )
 
                 runBlocking {
@@ -229,7 +229,7 @@ class AktivitetskravServiceSpek : Spek({
                     AktivitetskravStatus.AVVENT,
                     UserConstants.VEILEDER_IDENT,
                     fritekst,
-                    listOf(VurderingArsak.Avvent.DroftesMedROL),
+                    listOf(Arsak.DROFTES_MED_ROL),
                 )
 
                 runBlocking {

@@ -1,5 +1,6 @@
 package no.nav.syfo.aktivitetskrav.database
 
+import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
 import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
@@ -127,7 +128,7 @@ class AktivitetskravRepositorySpek : Spek({
             it("Should retrieve aktivitetskrav with vurderinger for persons") {
                 val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                createVurdering(AktivitetskravStatus.AVVENT, listOf(VurderingArsak.Avvent.InformasjonSykmeldt))
+                createVurdering(AktivitetskravStatus.AVVENT, listOf(Arsak.INFORMASJON_SYKMELDT))
                     .also {
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
@@ -150,7 +151,7 @@ class AktivitetskravRepositorySpek : Spek({
                         secondAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
                     }
-                createVurdering(AktivitetskravStatus.OPPFYLT, listOf(VurderingArsak.Oppfylt.Friskmeldt))
+                createVurdering(AktivitetskravStatus.OPPFYLT, listOf(Arsak.FRISKMELDT))
                     .also {
                         secondAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
@@ -173,7 +174,7 @@ class AktivitetskravRepositorySpek : Spek({
             it("Should retrieve aktivitetskrav with vurderinger and varsel for persons") {
                 val firstAktivitetskrav = Aktivitetskrav.create(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 aktivitetskravRepository.createAktivitetskrav(firstAktivitetskrav, UUID.randomUUID())
-                createVurdering(AktivitetskravStatus.AVVENT, listOf(VurderingArsak.Avvent.InformasjonSykmeldt))
+                createVurdering(AktivitetskravStatus.AVVENT, listOf(Arsak.INFORMASJON_SYKMELDT))
                     .also {
                         firstAktivitetskrav.vurder(it)
                         aktivitetskravRepository.createAktivitetskravVurdering(firstAktivitetskrav, it)
