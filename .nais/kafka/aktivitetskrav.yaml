@@ -25,6 +25,9 @@ spec:
     - team: teamsykefravr
       application: syfooversiktsrv
       access: read
+    - team: teamsykefravr
+      application: ispengestopp
+      access: read
     - team: disykefravar
       application: dvh-sykefravar-airflow-kafka
       access: read
