@@ -1,5 +1,5 @@
 UPDATE aktivitetskrav_varsel
-SET published_at = NULL,svarfrist='2025-04-07'
+SET published_at = NULL,svarfrist='2025-04-09'
 WHERE uuid IN (
     SELECT v.uuid
     FROM aktivitetskrav_vurdering av
