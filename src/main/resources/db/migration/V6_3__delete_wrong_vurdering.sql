@@ -1,6 +1,6 @@
 DELETE
 FROM aktivitetskrav_vurdering
-WHERE uuid = 'bda969dd-bd00-4e4a-9522-cddf06a3c9f2';
+WHERE uuid = 'a136454e-6c97-47b5-a89c-c2d32b90cb83';
 
 UPDATE aktivitetskrav
 SET status     = 'NY',
