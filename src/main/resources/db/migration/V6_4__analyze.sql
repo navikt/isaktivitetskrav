@@ -1,0 +1,5 @@
+DO $$
+BEGIN
+    ANALYZE;
+END
+$$;
