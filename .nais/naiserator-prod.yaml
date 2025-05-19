@@ -57,7 +57,7 @@ spec:
         - application: ispdfgen
   gcp:
     sqlInstances:
-      - type: POSTGRES_14
+      - type: POSTGRES_17
         tier: db-custom-1-3840
         databases:
           - name: isaktivitetskrav-db
