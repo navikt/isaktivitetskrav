@@ -6,9 +6,9 @@ import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
 import no.nav.syfo.aktivitetskrav.VarselPdfService
 import no.nav.syfo.aktivitetskrav.api.Arsak
 import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVarselProducer
 import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
 import no.nav.syfo.testhelper.ExternalMockEnvironment
@@ -18,36 +18,39 @@ import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
 import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.getVarsler
 import no.nav.syfo.util.sekundOpplosning
-import org.amshove.kluent.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.concurrent.Future
 
-class PubliserAktivitetskravVarselCronjobSpek : Spek({
-    val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-    val aktivitetskrav = Aktivitetskrav.create(
+class PubliserAktivitetskravVarselCronjobTest {
+    private val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+    private val aktivitetskrav = Aktivitetskrav.create(
         personIdent = personIdent,
         oppfolgingstilfelleStart = LocalDate.now(),
     )
-    val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")
-    val pdf = byteArrayOf(23)
-    val defaultJournalpostId = "9"
+    private val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")
+    private val pdf = byteArrayOf(23)
+    private val defaultJournalpostId = "9"
 
-    val externalMockEnvironment = ExternalMockEnvironment.instance
-    val database = externalMockEnvironment.database
+    private val externalMockEnvironment = ExternalMockEnvironment.instance
+    private val database = externalMockEnvironment.database
 
-    val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-    val aktivitetskravRepository = AktivitetskravRepository(database = database)
+    private val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+    private val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
-    val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
-    val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
+    private val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
+    private val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
         kafkaProducer = aktivitetskravVarselKafkaProducer,
     )
-    val aktivitetskravVarselService = AktivitetskravVarselService(
+    private val aktivitetskravVarselService = AktivitetskravVarselService(
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = mockk(),
         aktivitetskravVarselProducer = aktivitetskravVarselProducer,
@@ -57,11 +60,11 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         ),
     )
 
-    val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
+    private val publiserAktivitetskravVarselCronjob = PubliserAktivitetskravVarselCronjob(
         aktivitetskravVarselService = aktivitetskravVarselService,
     )
 
-    fun createVarsel(
+    private fun createVarsel(
         aktivitetskrav: Aktivitetskrav,
         pdf: ByteArray,
         journalpostId: String? = defaultJournalpostId,
@@ -86,22 +89,27 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
         return varsel
     }
 
-    beforeEachTest {
+    @BeforeEach
+    fun setUp() {
         clearMocks(aktivitetskravVarselKafkaProducer)
         coEvery {
             aktivitetskravVarselKafkaProducer.send(any())
         } returns mockk<Future<RecordMetadata>>(relaxed = true)
+
+        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
     }
-    afterEachTest {
+
+    @AfterEach
+    fun tearDown() {
         database.dropData()
     }
 
-    describe("${PubliserAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
-        beforeEachTest {
-            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
-        }
+    @Nested
+    @DisplayName("runJob")
+    inner class RunJob {
 
-        it("Publiserer journalfort forhandsvarsel") {
+        @Test
+        fun `publiserer journalfort forhandsvarsel`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
             createVarsel(
@@ -111,20 +119,20 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
                 document = forhandsvarselDTO.document,
             )
             val varslerBefore = database.getVarsler(personIdent)
-            varslerBefore.size shouldBeEqualTo 1
-            varslerBefore.first().publishedAt shouldBe null
+            assertEquals(1, varslerBefore.size)
+            assertNull(varslerBefore.first().publishedAt)
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varslerBefore.first().uuid
-            first.updatedAt shouldBeGreaterThan first.createdAt
-            first.publishedAt shouldNotBe null
+            assertEquals(varslerBefore.first().uuid, first.uuid)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
+            assertNotNull(first.publishedAt)
 
             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
             verify(exactly = 1) {
@@ -132,19 +140,21 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name
+            assertEquals(personIdent.value, kafkaAktivitetskravVarsel.personIdent)
+            assertNotEquals(kafkaAktivitetskravVarsel.aktivitetskravUuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(aktivitetskrav.uuid, kafkaAktivitetskravVarsel.aktivitetskravUuid)
+            assertEquals(first.uuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(first.createdAt, kafkaAktivitetskravVarsel.createdAt)
+            assertNotNull(kafkaAktivitetskravVarsel.journalpostId)
+            assertEquals(first.journalpostId, kafkaAktivitetskravVarsel.journalpostId)
+            assertFalse(kafkaAktivitetskravVarsel.document.isEmpty())
+            assertEquals(first.svarfrist, kafkaAktivitetskravVarsel.svarfrist)
+            assertEquals(vurdering.uuid, kafkaAktivitetskravVarsel.vurderingUuid)
+            assertEquals(VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER.name, kafkaAktivitetskravVarsel.type)
         }
-        it("Publiserer ikke forhandsvarsel som ikke er journalfort") {
+
+        @Test
+        fun `publiserer ikke forhandsvarsel som ikke er journalfort`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
             createVarsel(
@@ -155,22 +165,24 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
                 journalpostId = null,
             )
             val varslerBefore = database.getVarsler(personIdent)
-            varslerBefore.size shouldBeEqualTo 1
-            varslerBefore.first().publishedAt shouldBe null
+            assertEquals(1, varslerBefore.size)
+            assertNull(varslerBefore.first().publishedAt)
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 0
+                assertEquals(0, result.failed)
+                assertEquals(0, result.updated)
             }
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varslerBefore.first().uuid
-            first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
-            first.publishedAt shouldBe null
+            assertEquals(varslerBefore.first().uuid, first.uuid)
+            assertEquals(first.createdAt.sekundOpplosning(), first.updatedAt.sekundOpplosning())
+            assertNull(first.publishedAt)
         }
-        it("Publiserer ikke forhandsvarsel som allerede er publisert") {
+
+        @Test
+        fun `publiserer ikke forhandsvarsel som allerede er publisert`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
             createVarsel(
@@ -180,21 +192,23 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
                 document = forhandsvarselDTO.document,
             )
             val varslerBefore = database.getVarsler(personIdent)
-            varslerBefore.size shouldBeEqualTo 1
-            varslerBefore.first().publishedAt shouldBe null
+            assertEquals(1, varslerBefore.size)
+            assertNull(varslerBefore.first().publishedAt)
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 0
+                assertEquals(0, result.failed)
+                assertEquals(0, result.updated)
             }
         }
-        it("Publiserer journalført varsel for UNNTAK") {
+
+        @Test
+        fun `publiserer journalført varsel for UNNTAK`() {
             val fritekst = "Aktivitetskravet er oppfylt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.UNNTAK,
@@ -212,15 +226,15 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.updatedAt shouldBeGreaterThan first.createdAt
-            first.publishedAt shouldNotBe null
+            assertEquals(varsel.uuid, first.uuid)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
+            assertNotNull(first.publishedAt)
 
             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
             verify(exactly = 1) {
@@ -228,20 +242,21 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.UNNTAK.name
+            assertEquals(personIdent.value, kafkaAktivitetskravVarsel.personIdent)
+            assertNotEquals(kafkaAktivitetskravVarsel.aktivitetskravUuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(aktivitetskrav.uuid, kafkaAktivitetskravVarsel.aktivitetskravUuid)
+            assertEquals(first.uuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(first.createdAt, kafkaAktivitetskravVarsel.createdAt)
+            assertNotNull(kafkaAktivitetskravVarsel.journalpostId)
+            assertEquals(first.journalpostId, kafkaAktivitetskravVarsel.journalpostId)
+            assertFalse(kafkaAktivitetskravVarsel.document.isEmpty())
+            assertEquals(first.svarfrist, kafkaAktivitetskravVarsel.svarfrist)
+            assertEquals(vurdering.uuid, kafkaAktivitetskravVarsel.vurderingUuid)
+            assertEquals(VarselType.UNNTAK.name, kafkaAktivitetskravVarsel.type)
         }
 
-        it("Publiserer journalført varsel for OPPFYLT") {
+        @Test
+        fun `publiserer journalført varsel for OPPFYLT`() {
             val fritekst = "Aktivitetskravet er oppfylt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
@@ -259,15 +274,15 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.updatedAt shouldBeGreaterThan first.createdAt
-            first.publishedAt shouldNotBe null
+            assertEquals(varsel.uuid, first.uuid)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
+            assertNotNull(first.publishedAt)
 
             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
             verify(exactly = 1) {
@@ -275,20 +290,21 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.OPPFYLT.name
+            assertEquals(personIdent.value, kafkaAktivitetskravVarsel.personIdent)
+            assertNotEquals(kafkaAktivitetskravVarsel.aktivitetskravUuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(aktivitetskrav.uuid, kafkaAktivitetskravVarsel.aktivitetskravUuid)
+            assertEquals(first.uuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(first.createdAt, kafkaAktivitetskravVarsel.createdAt)
+            assertNotNull(kafkaAktivitetskravVarsel.journalpostId)
+            assertEquals(first.journalpostId, kafkaAktivitetskravVarsel.journalpostId)
+            assertFalse(kafkaAktivitetskravVarsel.document.isEmpty())
+            assertEquals(first.svarfrist, kafkaAktivitetskravVarsel.svarfrist)
+            assertEquals(vurdering.uuid, kafkaAktivitetskravVarsel.vurderingUuid)
+            assertEquals(VarselType.OPPFYLT.name, kafkaAktivitetskravVarsel.type)
         }
 
-        it("Publiserer journalført varsel for IKKE AKTUELL") {
+        @Test
+        fun `publiserer journalført varsel for IKKE AKTUELL`() {
             val fritekst = "Aktivitetskravet er ikke aktuelt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.IKKE_AKTUELL,
@@ -306,15 +322,15 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.updatedAt shouldBeGreaterThan first.createdAt
-            first.publishedAt shouldNotBe null
+            assertEquals(varsel.uuid, first.uuid)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
+            assertNotNull(first.publishedAt)
 
             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
             verify(exactly = 1) {
@@ -322,19 +338,21 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.IKKE_AKTUELL.name
+            assertEquals(personIdent.value, kafkaAktivitetskravVarsel.personIdent)
+            assertNotEquals(kafkaAktivitetskravVarsel.aktivitetskravUuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(aktivitetskrav.uuid, kafkaAktivitetskravVarsel.aktivitetskravUuid)
+            assertEquals(first.uuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(first.createdAt, kafkaAktivitetskravVarsel.createdAt)
+            assertNotNull(kafkaAktivitetskravVarsel.journalpostId)
+            assertEquals(first.journalpostId, kafkaAktivitetskravVarsel.journalpostId)
+            assertFalse(kafkaAktivitetskravVarsel.document.isEmpty())
+            assertEquals(first.svarfrist, kafkaAktivitetskravVarsel.svarfrist)
+            assertEquals(vurdering.uuid, kafkaAktivitetskravVarsel.vurderingUuid)
+            assertEquals(VarselType.IKKE_AKTUELL.name, kafkaAktivitetskravVarsel.type)
         }
-        it("Publiserer journalført vurdering om STANS") {
+
+        @Test
+        fun `publiserer journalført vurdering om STANS`() {
             val fritekst = "Aktivitetskravet er ikke oppfylt, og sykepengene stanses"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.INNSTILLING_OM_STANS,
@@ -353,15 +371,15 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
 
             runBlocking {
                 val result = publiserAktivitetskravVarselCronjob.runJob()
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.updatedAt shouldBeGreaterThan first.createdAt
-            first.publishedAt shouldNotBe null
+            assertEquals(varsel.uuid, first.uuid)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
+            assertNotNull(first.publishedAt)
 
             val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
             verify(exactly = 1) {
@@ -369,17 +387,17 @@ class PubliserAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val kafkaAktivitetskravVarsel = producerRecordSlot.captured.value()
-            kafkaAktivitetskravVarsel.personIdent shouldBeEqualTo personIdent.value
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldNotBeEqualTo kafkaAktivitetskravVarsel.varselUuid
-            kafkaAktivitetskravVarsel.aktivitetskravUuid shouldBeEqualTo aktivitetskrav.uuid
-            kafkaAktivitetskravVarsel.varselUuid shouldBeEqualTo first.uuid
-            kafkaAktivitetskravVarsel.createdAt shouldBeEqualTo first.createdAt
-            kafkaAktivitetskravVarsel.journalpostId.shouldNotBeNull()
-            kafkaAktivitetskravVarsel.journalpostId shouldBeEqualTo first.journalpostId
-            kafkaAktivitetskravVarsel.document.shouldNotBeEmpty()
-            kafkaAktivitetskravVarsel.svarfrist shouldBeEqualTo first.svarfrist
-            kafkaAktivitetskravVarsel.vurderingUuid shouldBeEqualTo vurdering.uuid
-            kafkaAktivitetskravVarsel.type shouldBeEqualTo VarselType.INNSTILLING_OM_STANS.name
+            assertEquals(personIdent.value, kafkaAktivitetskravVarsel.personIdent)
+            assertNotEquals(kafkaAktivitetskravVarsel.aktivitetskravUuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(aktivitetskrav.uuid, kafkaAktivitetskravVarsel.aktivitetskravUuid)
+            assertEquals(first.uuid, kafkaAktivitetskravVarsel.varselUuid)
+            assertEquals(first.createdAt, kafkaAktivitetskravVarsel.createdAt)
+            assertNotNull(kafkaAktivitetskravVarsel.journalpostId)
+            assertEquals(first.journalpostId, kafkaAktivitetskravVarsel.journalpostId)
+            assertFalse(kafkaAktivitetskravVarsel.document.isEmpty())
+            assertEquals(first.svarfrist, kafkaAktivitetskravVarsel.svarfrist)
+            assertEquals(vurdering.uuid, kafkaAktivitetskravVarsel.vurderingUuid)
+            assertEquals(VarselType.INNSTILLING_OM_STANS.name, kafkaAktivitetskravVarsel.type)
         }
     }
-})
+}
