@@ -1,6 +1,7 @@
 ![Build status](https://github.com/navikt/isaktivitetskrav/workflows/main/badge.svg?branch=master)
 
 # isaktivitetskrav
+
 Applikasjon for vurdering av aktivitetskravet i sykefraværsoppfølgingen
 
 ## Technologies used
@@ -14,9 +15,8 @@ Applikasjon for vurdering av aktivitetskravet i sykefraværsoppfølgingen
 
 ##### Test Libraries:
 
-* Kluent
 * Mockk
-* Spek
+* JUnit
 
 #### Requirements
 
@@ -27,12 +27,15 @@ Applikasjon for vurdering av aktivitetskravet i sykefraværsoppfølgingen
 Run `./gradlew clean shadowJar`
 
 ### Lint (Ktlint)
+
 ##### Command line
+
 Run checking: `./gradlew --continue ktlintCheck`
 
 Run formatting: `./gradlew ktlintFormat`
 
 ##### Git Hooks
+
 Apply checking: `./gradlew addKtlintCheckGitPreCommitHook`
 
 Apply formatting: `./gradlew addKtlintFormatGitPreCommitHook`

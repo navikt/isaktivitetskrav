@@ -1,53 +1,66 @@
 package no.nav.syfo.oppfolgingstilfelle.domain
 
 import no.nav.syfo.testhelper.generator.generateOppfolgingstilfelle
-import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class OppfolgingstilfelleSpek : Spek({
+class OppfolgingstilfelleTest {
 
-    describe("Varighet uker") {
-        it("Calculates varighet based on start and end when antallSykedager missing") {
+    @Nested
+    @DisplayName("Varighet uker")
+    inner class VarighetUker {
+
+        @Test
+        fun `Calculates varighet based on start and end when antallSykedager missing - 19 days`() {
             val oppfolgingstilfelle = generateOppfolgingstilfelle(
                 start = LocalDate.now().minusDays(19),
                 end = LocalDate.now(),
                 antallSykedager = null,
             )
-            oppfolgingstilfelle.durationInWeeks() shouldBeEqualTo 2
+            assertEquals(2, oppfolgingstilfelle.durationInWeeks())
         }
-        it("Calculates varighet based on start and end when antallSykedager missing") {
+
+        @Test
+        fun `Calculates varighet based on start and end when antallSykedager missing - 20 days`() {
             val oppfolgingstilfelle = generateOppfolgingstilfelle(
                 start = LocalDate.now().minusDays(20),
                 end = LocalDate.now(),
                 antallSykedager = null,
             )
-            oppfolgingstilfelle.durationInWeeks() shouldBeEqualTo 3
+            assertEquals(3, oppfolgingstilfelle.durationInWeeks())
         }
-        it("Calculates varighet based on start and end when end is in the future") {
+
+        @Test
+        fun `Calculates varighet based on start and end when end is in the future`() {
             val oppfolgingstilfelle = generateOppfolgingstilfelle(
                 start = LocalDate.now().minusDays(19),
                 end = LocalDate.now().plusDays(1),
                 antallSykedager = null,
             )
-            oppfolgingstilfelle.durationInWeeks() shouldBeEqualTo 3
+            assertEquals(3, oppfolgingstilfelle.durationInWeeks())
         }
-        it("Calculates varighet based on antallSykedager") {
+
+        @Test
+        fun `Calculates varighet based on antallSykedager - 13 days`() {
             val oppfolgingstilfelle = generateOppfolgingstilfelle(
                 start = LocalDate.now().minusDays(19),
                 end = LocalDate.now(),
                 antallSykedager = 13,
             )
-            oppfolgingstilfelle.durationInWeeks() shouldBeEqualTo 1
+            assertEquals(1, oppfolgingstilfelle.durationInWeeks())
         }
-        it("Calculates varighet based on antallSykedager") {
+
+        @Test
+        fun `Calculates varighet based on antallSykedager - 14 days`() {
             val oppfolgingstilfelle = generateOppfolgingstilfelle(
                 start = LocalDate.now().minusDays(19),
                 end = LocalDate.now(),
                 antallSykedager = 14,
             )
-            oppfolgingstilfelle.durationInWeeks() shouldBeEqualTo 2
+            assertEquals(2, oppfolgingstilfelle.durationInWeeks())
         }
     }
-})
+}

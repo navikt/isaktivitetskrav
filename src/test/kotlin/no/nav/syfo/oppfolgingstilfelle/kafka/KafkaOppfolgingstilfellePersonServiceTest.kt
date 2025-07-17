@@ -13,16 +13,16 @@ import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
 import no.nav.syfo.testhelper.generator.*
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeEqualTo
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 import java.time.LocalDate
 import java.util.UUID
@@ -34,17 +34,17 @@ private val nineWeeksAgo = LocalDate.now().minusWeeks(9)
 private val tenWeeksAgo = LocalDate.now().minusWeeks(10)
 private val yearAgo = LocalDate.now().minusYears(1)
 
-class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
-    val externalMockEnvironment = ExternalMockEnvironment.instance
-    val database = externalMockEnvironment.database
-    val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
-    val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
-    val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
+class KafkaOppfolgingstilfellePersonServiceTest {
+    private val externalMockEnvironment = ExternalMockEnvironment.instance
+    private val database = externalMockEnvironment.database
+    private val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
+    private val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
+    private val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         producer = kafkaProducer,
     )
-    val aktivitetskravRepository = AktivitetskravRepository(database)
-    val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-    val aktivitetskravService = AktivitetskravService(
+    private val aktivitetskravRepository = AktivitetskravRepository(database)
+    private val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+    private val aktivitetskravService = AktivitetskravService(
         aktivitetskravRepository = aktivitetskravRepository,
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
@@ -54,66 +54,67 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
             pdlClient = externalMockEnvironment.pdlClient,
         )
     )
-    val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
+    private val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
         database = database,
         aktivitetskravService = aktivitetskravService,
         arenaCutoff = arenaCutoff,
     )
 
-    val kafkaOppfolgingstilfellePersonTopicPartition = createKafkaOppfolgingstilfellePersonTopicPartition()
-    val mockKafkaConsumerOppfolgingstilfellePerson = mockk<KafkaConsumer<String, KafkaOppfolgingstilfellePerson>>()
+    private val kafkaOppfolgingstilfellePersonTopicPartition = createKafkaOppfolgingstilfellePersonTopicPartition()
+    private val mockKafkaConsumerOppfolgingstilfellePerson = mockk<KafkaConsumer<String, KafkaOppfolgingstilfellePerson>>()
 
-    val kafkaOppfolgingstilfelleNineWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfelleNineWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = nineWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = false,
     )
-    val kafkaOppfolgingstilfelleNineWeeksGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfelleNineWeeksGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = nineWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = true,
     )
-    val kafkaOppfolgingstilfellePersonSevenWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfellePersonSevenWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = sevenWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = false,
     )
-    val kafkaOppfolgingstilfellePersonWithDodsdato = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfellePersonWithDodsdato = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = tenWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = false,
         dodsdato = LocalDate.now(),
     )
-    val kafkaOppfolgingstilfellePersonSevenWeeksGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfellePersonSevenWeeksGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = sevenWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = true,
     )
-    val kafkaOppfolgingstilfelleTenWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfelleTenWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = tenWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = false,
     )
-    val kafkaOppfolgingstilfelleTenWeeksGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfelleTenWeeksGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = tenWeeksAgo,
         tilfelleEnd = LocalDate.now(),
         gradert = true,
     )
-    val kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
+    private val kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
         personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         tilfelleStart = LocalDate.now().plusDays(1),
         tilfelleEnd = LocalDate.now().plusWeeks(9),
         gradert = false,
     )
 
-    beforeEachTest {
+    @BeforeEach
+    fun setUp() {
         database.dropData()
         clearMocks(kafkaProducer, mockKafkaConsumerOppfolgingstilfellePerson)
         coEvery {
@@ -122,7 +123,7 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
     }
 
-    fun mockKafkaConsumerOppfolgingstilfellePerson(
+    private fun mockKafkaConsumerOppfolgingstilfellePerson(
         vararg kafkaOppfolgingstilfellePerson: KafkaOppfolgingstilfellePerson,
     ) {
         val consumerRecords =
@@ -132,9 +133,16 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
         )
     }
 
-    describe("${KafkaOppfolgingstilfellePersonService::class.java.simpleName}: pollAndProcessRecords") {
-        describe("no Aktivitetskrav exists for oppfolgingstilfelle") {
-            it("creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert") {
+    @Nested
+    @DisplayName("pollAndProcessRecords")
+    inner class PollAndProcessRecords {
+
+        @Nested
+        @DisplayName("no Aktivitetskrav exists for oppfolgingstilfelle")
+        inner class NoAktivitetskravExistsForOppfolgingstilfelle {
+
+            @Test
+            fun `creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting 9 weeks, not gradert`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfelleNineWeeksNotGradert
                 )
@@ -150,23 +158,28 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val aktivitetskrav = aktivitetskravList.first()
-                aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
-                aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksNotGradert.referanseTilfelleBitUuid
+                assertEquals(AktivitetskravStatus.NY, aktivitetskrav.status)
+                assertEquals(nineWeeksAgo.plusWeeks(8).minusDays(1), aktivitetskrav.stoppunktAt)
+                assertEquals(
+                    kafkaOppfolgingstilfelleNineWeeksNotGradert.referanseTilfelleBitUuid,
+                    aktivitetskrav.referanseTilfelleBitUuid.toString()
+                )
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskrav.personIdent.value
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status.name
-                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
-                kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+                assertEquals(aktivitetskrav.personIdent.value, kafkaAktivitetskravVurdering.personIdent)
+                assertEquals(aktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                assertEquals(aktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+                assertNull(kafkaAktivitetskravVurdering.beskrivelse)
+                assertNull(kafkaAktivitetskravVurdering.updatedBy)
+                assertNull(kafkaAktivitetskravVurdering.sistVurdert)
             }
-            it("creates Aktivitetskrav(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert") {
+
+            @Test
+            fun `creates Aktivitetskrav(AUTOMATISK_OPPFYLT) for oppfolgingstilfelle lasting 9 weeks, gradert`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfelleNineWeeksGradert
                 )
@@ -182,23 +195,28 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val aktivitetskrav = aktivitetskravList.first()
-                aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                aktivitetskrav.stoppunktAt shouldBeEqualTo nineWeeksAgo.plusWeeks(8).minusDays(1)
-                aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelleNineWeeksGradert.referanseTilfelleBitUuid
+                assertEquals(AktivitetskravStatus.AUTOMATISK_OPPFYLT, aktivitetskrav.status)
+                assertEquals(nineWeeksAgo.plusWeeks(8).minusDays(1), aktivitetskrav.stoppunktAt)
+                assertEquals(
+                    kafkaOppfolgingstilfelleNineWeeksGradert.referanseTilfelleBitUuid,
+                    aktivitetskrav.referanseTilfelleBitUuid.toString()
+                )
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.personIdent shouldBeEqualTo aktivitetskrav.personIdent.value
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo aktivitetskrav.status.name
-                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo aktivitetskrav.stoppunktAt
-                kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+                assertEquals(aktivitetskrav.personIdent.value, kafkaAktivitetskravVurdering.personIdent)
+                assertEquals(aktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                assertEquals(aktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+                assertNull(kafkaAktivitetskravVurdering.beskrivelse)
+                assertNull(kafkaAktivitetskravVurdering.updatedBy)
+                assertNull(kafkaAktivitetskravVurdering.sistVurdert)
             }
-            it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, not gradert") {
+
+            @Test
+            fun `creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, not gradert`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
                 )
@@ -210,16 +228,17 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 verify(exactly = 1) {
                     mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                 }
-                verify(exactly = 0) {
-                    kafkaProducer.send(any())
-                }
 
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
+
+                verify(exactly = 0) { kafkaProducer.send(any()) }
             }
-            it("creates no Aktivitetskrav for oppfolgingstilfelle when dodsdato != null") {
+
+            @Test
+            fun `creates no Aktivitetskrav for person with dodsdato`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfellePersonWithDodsdato
                 )
@@ -231,16 +250,17 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 verify(exactly = 1) {
                     mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
                 }
-                verify(exactly = 0) {
-                    kafkaProducer.send(any())
-                }
 
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
+
+                verify(exactly = 0) { kafkaProducer.send(any()) }
             }
-            it("creates no Aktivitetskrav for oppfolgingstilfelle starting before OLD_TILFELLE_CUTOFF") {
+
+            @Test
+            fun `creates no Aktivitetskrav for oppfolgingstilfelle starting before OLD_TILFELLE_CUTOFF`() {
                 val oldKafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = OLD_TILFELLE_CUTOFF.minusDays(1),
@@ -266,9 +286,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
             }
-            it("creates no Aktivitetskrav for oppfolgingstilfelle ending before arenaCutoff date") {
+
+            @Test
+            fun `creates no Aktivitetskrav for oppfolgingstilfelle ending before arenaCutoff date`() {
                 val kafkaOppfolgingstilfellePerson = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = arenaCutoff.minusWeeks(12),
@@ -294,9 +316,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
             }
-            it("creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, gradert") {
+
+            @Test
+            fun `creates no Aktivitetskrav for oppfolgingstilfelle lasting 7 weeks, gradert`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfellePersonSevenWeeksGradert
                 )
@@ -316,9 +340,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                 )
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
             }
-            it("creates Aktivitetskrav(NY) once for oppfolgingstilfelle polled twice lasting 8 weeks, not gradert") {
+
+            @Test
+            fun `creates Aktivitetskrav(NY) once for oppfolgingstilfelle polled twice lasting 8 weeks, not gradert`() {
                 val kafkaOppfolgingstilfelleEightWeeksNotGradert = createKafkaOppfolgingstilfellePerson(
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                     tilfelleStart = eightWeeksAgo,
@@ -343,14 +369,19 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
                 )
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
             }
         }
-        describe("Aktivitetskrav(NY) exists for oppfolgingstilfelle") {
-            val nyAktivitetskrav = createAktivitetskravNy(
+
+        @Nested
+        @DisplayName("Aktivitetskrav(NY) exists for oppfolgingstilfelle")
+        inner class AktivitetskravNyExistsForOppfolgingstilfelle {
+            private val nyAktivitetskrav = createAktivitetskravNy(
                 tilfelleStart = nineWeeksAgo,
             )
-            it("does not update Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
+
+            @Test
+            fun `does not update Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle-start unchanged`() {
                 aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                 var aktivitetskravList =
@@ -377,10 +408,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 aktivitetskrav = aktivitetskravList.first()
-                aktivitetskrav.updatedAt shouldBeEqualTo updatedAt
+                assertEquals(updatedAt, aktivitetskrav.updatedAt)
             }
 
-            it("updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert and start changed") {
+            @Test
+            fun `updates Aktivitetskrav(NY) stoppunkt_at if oppfolgingstilfelle gradert and start changed`() {
                 aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                 mockKafkaConsumerOppfolgingstilfellePerson(
@@ -398,22 +430,24 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val latestAktivitetskrav = aktivitetskravList.first()
-                latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
-                latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                assertEquals(AktivitetskravStatus.NY, latestAktivitetskrav.status)
+                assertEquals(tenWeeksAgo.plusWeeks(8).minusDays(1), latestAktivitetskrav.stoppunktAt)
+                assertEquals(nyAktivitetskrav.uuid, latestAktivitetskrav.uuid)
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
-                kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+                assertEquals(latestAktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                assertEquals(latestAktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+                assertNull(kafkaAktivitetskravVurdering.beskrivelse)
+                assertNull(kafkaAktivitetskravVurdering.updatedBy)
+                assertNull(kafkaAktivitetskravVurdering.sistVurdert)
             }
-            it("updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert and start changed") {
+
+            @Test
+            fun `updates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert and start changed`() {
                 aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                 mockKafkaConsumerOppfolgingstilfellePerson(
@@ -431,27 +465,31 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val latestAktivitetskrav = aktivitetskravList.first()
-                latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
-                latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                assertEquals(AktivitetskravStatus.NY, latestAktivitetskrav.status)
+                assertEquals(tenWeeksAgo.plusWeeks(8).minusDays(1), latestAktivitetskrav.stoppunktAt)
+                assertEquals(nyAktivitetskrav.uuid, latestAktivitetskrav.uuid)
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
-                kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+                assertEquals(latestAktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                assertEquals(latestAktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+                assertNull(kafkaAktivitetskravVurdering.beskrivelse)
+                assertNull(kafkaAktivitetskravVurdering.updatedBy)
+                assertNull(kafkaAktivitetskravVurdering.sistVurdert)
             }
         }
-        describe("Aktivitetskrav(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle") {
-            val automatiskOppfyltAktivitetskrav =
+
+        @Nested
+        @DisplayName("Aktivitetskrav(AUTOMATISK_OPPFYLT) exists for oppfolgingstilfelle")
+        inner class AktivitetskravAutomatiskOppfyltExistsForOppfolgingstilfelle {
+            private val automatiskOppfyltAktivitetskrav =
                 createAktivitetskravAutomatiskOppfylt(tilfelleStart = nineWeeksAgo)
 
-            it("creates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert") {
+            @Test
+            fun `creates Aktivitetskrav(NY) if oppfolgingstilfelle not gradert`() {
                 aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                 mockKafkaConsumerOppfolgingstilfellePerson(
@@ -469,20 +507,22 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 2
+                assertEquals(2, aktivitetskravList.size)
                 val latestAktivitetskrav = aktivitetskravList.first()
-                latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                latestAktivitetskrav.uuid shouldNotBeEqualTo automatiskOppfyltAktivitetskrav.uuid
+                assertEquals(AktivitetskravStatus.NY, latestAktivitetskrav.status)
+                assertNotEquals(automatiskOppfyltAktivitetskrav.uuid, latestAktivitetskrav.uuid)
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo AktivitetskravStatus.NY.name
-                kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+                assertEquals(AktivitetskravStatus.NY.name, kafkaAktivitetskravVurdering.status)
+                assertNull(kafkaAktivitetskravVurdering.beskrivelse)
+                assertNull(kafkaAktivitetskravVurdering.updatedBy)
+                assertNull(kafkaAktivitetskravVurdering.sistVurdert)
             }
-            it("updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert and start changed") {
+
+            @Test
+            fun `updates Aktivitetskrav(AUTOMATISK_OPPFYLT) if oppfolgingstilfelle gradert and start changed`() {
                 aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                 mockKafkaConsumerOppfolgingstilfellePerson(
@@ -500,22 +540,24 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val latestAktivitetskrav = aktivitetskravList.first()
-                latestAktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                latestAktivitetskrav.stoppunktAt shouldBeEqualTo tenWeeksAgo.plusWeeks(8).minusDays(1)
-                latestAktivitetskrav.uuid shouldBeEqualTo automatiskOppfyltAktivitetskrav.uuid
+                assertEquals(AktivitetskravStatus.AUTOMATISK_OPPFYLT, latestAktivitetskrav.status)
+                assertEquals(tenWeeksAgo.plusWeeks(8).minusDays(1), latestAktivitetskrav.stoppunktAt)
+                assertEquals(automatiskOppfyltAktivitetskrav.uuid, latestAktivitetskrav.uuid)
 
                 val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                 val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
-                kafkaAktivitetskravVurdering.beskrivelse shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.updatedBy shouldBeEqualTo null
-                kafkaAktivitetskravVurdering.sistVurdert shouldBeEqualTo null
+                assertEquals(latestAktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                assertEquals(latestAktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+                assertNull(kafkaAktivitetskravVurdering.beskrivelse)
+                assertNull(kafkaAktivitetskravVurdering.updatedBy)
+                assertNull(kafkaAktivitetskravVurdering.sistVurdert)
             }
-            it("does not update Aktivitetskrav(AUTOMATISK_OPPFYLT) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
+
+            @Test
+            fun `does not update Aktivitetskrav(AUTOMATISK_OPPFYLT) stoppunkt_at if oppfolgingstilfelle-start unchanged`() {
                 aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
                 var aktivitetskravList =
@@ -542,23 +584,28 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                 aktivitetskrav = aktivitetskravList.first()
-                aktivitetskrav.updatedAt shouldBeEqualTo updatedAt
+                assertEquals(updatedAt, aktivitetskrav.updatedAt)
             }
         }
-        describe("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for oppfolgingstilfelle") {
-            val nyAktivitetskrav = createAktivitetskravNy(
+
+        @Nested
+        @DisplayName("Aktivitetskrav(UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for oppfolgingstilfelle")
+        inner class AktivitetskravVurdertExistsForOppfolgingstilfelle {
+            private val nyAktivitetskrav = createAktivitetskravNy(
                 tilfelleStart = nineWeeksAgo,
             )
-            val testcases = listOf(
+            private val testcases = listOf(
                 createAktivitetskravUnntak(nyAktivitetskrav),
                 createAktivitetskravOppfylt(nyAktivitetskrav),
                 createAktivitetskravAvvent(nyAktivitetskrav),
                 createAktivitetskravIkkeOppfylt(nyAktivitetskrav),
                 createAktivitetskravIkkeAktuell(nyAktivitetskrav),
             )
-            testcases.forEach { aktivitetskrav ->
-                val aktivitetskravStatus = aktivitetskrav.status
-                it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle not gradert and start changed") {
+
+            @Test
+            fun `updates Aktivitetskrav stoppunkt_at if oppfolgingstilfelle not gradert and start changed`() {
+                for (aktivitetskrav in testcases) {
+                    val aktivitetskravStatus = aktivitetskrav.status
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -576,19 +623,32 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                    aktivitetskravList.size shouldBeEqualTo 1
+                    assertEquals(1, aktivitetskravList.size)
                     val latestAktivitetskrav = aktivitetskravList.first()
-                    latestAktivitetskrav.status shouldBeEqualTo aktivitetskravStatus
-                    latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
-                    latestAktivitetskrav.stoppunktAt shouldNotBeEqualTo nyAktivitetskrav.stoppunktAt
+                    assertEquals(aktivitetskravStatus, latestAktivitetskrav.status)
+                    assertEquals(nyAktivitetskrav.uuid, latestAktivitetskrav.uuid)
+                    assertNotEquals(nyAktivitetskrav.stoppunktAt, latestAktivitetskrav.stoppunktAt)
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                    assertEquals(latestAktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                    assertEquals(latestAktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+
+                    // Clear data for next test case
+                    database.dropData()
+                    clearMocks(kafkaProducer, mockKafkaConsumerOppfolgingstilfellePerson)
+                    coEvery {
+                        kafkaProducer.send(any())
+                    } returns mockk<Future<RecordMetadata>>(relaxed = true)
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
                 }
-                it("updates Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle gradert and start changed") {
+            }
+
+            @Test
+            fun `updates Aktivitetskrav stoppunkt_at if oppfolgingstilfelle gradert and start changed`() {
+                for (aktivitetskrav in testcases) {
+                    val aktivitetskravStatus = aktivitetskrav.status
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -606,19 +666,31 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                    aktivitetskravList.size shouldBeEqualTo 1
+                    assertEquals(1, aktivitetskravList.size)
                     val latestAktivitetskrav = aktivitetskravList.first()
-                    latestAktivitetskrav.status shouldBeEqualTo aktivitetskravStatus
-                    latestAktivitetskrav.uuid shouldBeEqualTo nyAktivitetskrav.uuid
-                    latestAktivitetskrav.stoppunktAt shouldNotBeEqualTo nyAktivitetskrav.stoppunktAt
+                    assertEquals(aktivitetskravStatus, latestAktivitetskrav.status)
+                    assertEquals(nyAktivitetskrav.uuid, latestAktivitetskrav.uuid)
+                    assertNotEquals(nyAktivitetskrav.stoppunktAt, latestAktivitetskrav.stoppunktAt)
 
                     val kafkaRecordSlot = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                     verify(exactly = 1) { kafkaProducer.send(capture(kafkaRecordSlot)) }
                     val kafkaAktivitetskravVurdering = kafkaRecordSlot.captured.value()
-                    kafkaAktivitetskravVurdering.status shouldBeEqualTo latestAktivitetskrav.status.name
-                    kafkaAktivitetskravVurdering.stoppunktAt shouldBeEqualTo latestAktivitetskrav.stoppunktAt
+                    assertEquals(latestAktivitetskrav.status.name, kafkaAktivitetskravVurdering.status)
+                    assertEquals(latestAktivitetskrav.stoppunktAt, kafkaAktivitetskravVurdering.stoppunktAt)
+
+                    // Clear data for next test case
+                    database.dropData()
+                    clearMocks(kafkaProducer, mockKafkaConsumerOppfolgingstilfellePerson)
+                    coEvery {
+                        kafkaProducer.send(any())
+                    } returns mockk<Future<RecordMetadata>>(relaxed = true)
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
                 }
-                it("does not update Aktivitetskrav($aktivitetskravStatus) stoppunkt_at if oppfolgingstilfelle-start unchanged") {
+            }
+
+            @Test
+            fun `does not update Aktivitetskrav stoppunkt_at if oppfolgingstilfelle-start unchanged`() {
+                for (aktivitetskrav in testcases) {
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                     var aktivitetskravList =
@@ -645,12 +717,24 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
                     pAktivitetskrav = aktivitetskravList.first()
-                    pAktivitetskrav.updatedAt shouldBeEqualTo updatedAt
+                    assertEquals(updatedAt, pAktivitetskrav.updatedAt)
+
+                    // Clear data for next test case
+                    database.dropData()
+                    clearMocks(kafkaProducer, mockKafkaConsumerOppfolgingstilfellePerson)
+                    coEvery {
+                        kafkaProducer.send(any())
+                    } returns mockk<Future<RecordMetadata>>(relaxed = true)
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
                 }
             }
         }
-        describe("Oppfolgingstilfelle start in future") {
-            it("creates no Aktivitetskrav for future oppfolgingstilfelle lasting 9 weeks, not gradert") {
+
+        @Nested
+        @DisplayName("Oppfolgingstilfelle start in future")
+        inner class OppfolgingstilfelleStartInFuture {
+            @Test
+            fun `creates no Aktivitetskrav for future oppfolgingstilfelle lasting 9 weeks, not gradert`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert
                 )
@@ -669,13 +753,17 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
             }
         }
-        describe("Aktivitetskrav(NY) exists for earlier oppfolgingstilfelle") {
-            val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
 
-            it("updates aktivitetskrav for earlier oppfolgingstilfelle to AUTOMATISK_OPPFYLT when latest oppfolgingstilfelle lasting 9 weeks (not gradert)") {
+        @Nested
+        @DisplayName("Aktivitetskrav(NY) exists for earlier oppfolgingstilfelle")
+        inner class AktivitetskravNyExistsForEarlierOppfolgingstilfelle {
+            private val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
+
+            @Test
+            fun `updates aktivitetskrav for tidligere oppfolgingstilfelle til AUTOMATISK_OPPFYLT når nyeste oppfolgingstilfelle varer i 9 uker (ikke gradert)`() {
                 aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                 mockKafkaConsumerOppfolgingstilfellePerson(
@@ -693,11 +781,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 2
+                assertEquals(2, aktivitetskravList.size)
 
-                val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
-                aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.AUTOMATISK_OPPFYLT
-                aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                val aktivitetskravTidligereOppfolgingstilfelle = aktivitetskravList.last()
+                assertEquals(AktivitetskravStatus.AUTOMATISK_OPPFYLT, aktivitetskravTidligereOppfolgingstilfelle.status)
+                assertEquals(nyAktivitetskrav.uuid, aktivitetskravTidligereOppfolgingstilfelle.uuid)
 
                 val kafkaRecordSlot1 = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
                 val kafkaRecordSlot2 = slot<ProducerRecord<String, AktivitetskravVurderingRecord>>()
@@ -706,9 +794,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     kafkaProducer.send(capture(kafkaRecordSlot2))
                 }
 
-                kafkaRecordSlot1.captured.value().status shouldBeEqualTo aktivitetskravEarlierOppfolgingstilfelle.status.name
+                assertEquals(kafkaRecordSlot1.captured.value().status, aktivitetskravTidligereOppfolgingstilfelle.status.name)
             }
-            it("do not update aktivitetskrav for earlier oppfolgingstilfelle when latest oppfolgingstilfelle lasting 7 weeks") {
+
+            @Test
+            fun `do not update aktivitetskrav for tidligere oppfolgingstilfelle når nyeste oppfolgingstilfelle varer i 7 uker`() {
                 aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                 mockKafkaConsumerOppfolgingstilfellePerson(
@@ -729,15 +819,18 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
-                val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
-                aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo AktivitetskravStatus.NY
-                aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo nyAktivitetskrav.uuid
+                assertEquals(1, aktivitetskravList.size)
+                val aktivitetskravTidligereOppfolgingstilfelle = aktivitetskravList.first()
+                assertEquals(AktivitetskravStatus.NY, aktivitetskravTidligereOppfolgingstilfelle.status)
+                assertEquals(nyAktivitetskrav.uuid, aktivitetskravTidligereOppfolgingstilfelle.uuid)
             }
         }
-        describe("Aktivitetskrav(AUTOMATISK_OPPFYLT/UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for earlier oppfolgingstilfelle") {
-            val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
-            val testcases = listOf(
+
+        @Nested
+        @DisplayName("Aktivitetskrav(AUTOMATISK_OPPFYLT/UNNTAK/OPPFYLT/AVVENT/IKKE_OPPFYLT/IKKE_AKTUELL) exists for tidligere oppfolgingstilfelle")
+        inner class AktivitetskravVurdertExistsForTidligereOppfolgingstilfelle {
+            private val nyAktivitetskrav = createAktivitetskravNy(tilfelleStart = yearAgo)
+            private val testcases = listOf(
                 createAktivitetskravAutomatiskOppfylt(tilfelleStart = yearAgo),
                 createAktivitetskravUnntak(nyAktivitetskrav),
                 createAktivitetskravOppfylt(nyAktivitetskrav),
@@ -745,9 +838,11 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 createAktivitetskravIkkeOppfylt(nyAktivitetskrav),
                 createAktivitetskravIkkeAktuell(nyAktivitetskrav)
             )
-            testcases.forEach { aktivitetskrav ->
-                val aktivitetskravStatus = aktivitetskrav.status
-                it("do not update aktivitetskrav($aktivitetskravStatus) for earlier oppfolgingstilfelle when latest oppfolgingstilfelle lasting 9 weeks") {
+
+            @Test
+            fun `do not update aktivitetskrav for tidligere oppfolgingstilfelle når nyeste oppfolgingstilfelle varer i 9 uker`() {
+                for (aktivitetskrav in testcases) {
+                    val aktivitetskravStatus = aktivitetskrav.status
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -765,12 +860,25 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                    aktivitetskravList.size shouldBeEqualTo 2
-                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.last()
-                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo aktivitetskravStatus
-                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo aktivitetskrav.uuid
+                    assertEquals(2, aktivitetskravList.size)
+                    val aktivitetskravTidligereOppfolgingstilfelle = aktivitetskravList.last()
+                    assertEquals(aktivitetskravStatus, aktivitetskravTidligereOppfolgingstilfelle.status)
+                    assertEquals(aktivitetskrav.uuid, aktivitetskravTidligereOppfolgingstilfelle.uuid)
+
+                    // Clear data for next test case
+                    database.dropData()
+                    clearMocks(kafkaProducer, mockKafkaConsumerOppfolgingstilfellePerson)
+                    coEvery {
+                        kafkaProducer.send(any())
+                    } returns mockk<Future<RecordMetadata>>(relaxed = true)
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
                 }
-                it("do not update aktivitetskrav($aktivitetskravStatus) for earlier oppfolgingstilfelle when latest oppfolgingstilfelle lasting 7 weeks") {
+            }
+
+            @Test
+            fun `do not update aktivitetskrav for tidligere oppfolgingstilfelle når nyeste oppfolgingstilfelle varer i 7 uker`() {
+                for (aktivitetskrav in testcases) {
+                    val aktivitetskravStatus = aktivitetskrav.status
                     aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
                     mockKafkaConsumerOppfolgingstilfellePerson(
@@ -791,31 +899,42 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                     val aktivitetskravList =
                         aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                    aktivitetskravList.size shouldBeEqualTo 1
-                    val aktivitetskravEarlierOppfolgingstilfelle = aktivitetskravList.first()
-                    aktivitetskravEarlierOppfolgingstilfelle.status shouldBeEqualTo aktivitetskravStatus
-                    aktivitetskravEarlierOppfolgingstilfelle.uuid shouldBeEqualTo aktivitetskrav.uuid
+                    assertEquals(1, aktivitetskravList.size)
+                    val aktivitetskravTidligereOppfolgingstilfelle = aktivitetskravList.first()
+                    assertEquals(aktivitetskravStatus, aktivitetskravTidligereOppfolgingstilfelle.status)
+                    assertEquals(aktivitetskrav.uuid, aktivitetskravTidligereOppfolgingstilfelle.uuid)
+
+                    // Clear data for next test case
+                    database.dropData()
+                    clearMocks(kafkaProducer, mockKafkaConsumerOppfolgingstilfellePerson)
+                    coEvery {
+                        kafkaProducer.send(any())
+                    } returns mockk<Future<RecordMetadata>>(relaxed = true)
+                    every { mockKafkaConsumerOppfolgingstilfellePerson.commitSync() } returns Unit
                 }
             }
         }
 
-        describe("Oppfolgingstilfelle is exactly 56 days") {
-            val startDate = LocalDate.now().minusDays(5)
-            val endDate = LocalDate.now().plusDays(50)
-            val kafkaOppfolgingstilfelle56Days = createKafkaOppfolgingstilfellePerson(
+        @Nested
+        @DisplayName("Oppfolgingstilfelle is exactly 56 days")
+        inner class OppfolgingstilfelleExactly56Days {
+            private val startDate = LocalDate.now().minusDays(5)
+            private val endDate = LocalDate.now().plusDays(50)
+            private val kafkaOppfolgingstilfelle56Days = createKafkaOppfolgingstilfellePerson(
                 personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                 tilfelleStart = startDate,
                 tilfelleEnd = endDate,
                 gradert = false,
             )
-            val secondKafkaOppfolgingstilfelle56Days = kafkaOppfolgingstilfelle56Days.copy(
+            private val secondKafkaOppfolgingstilfelle56Days = kafkaOppfolgingstilfelle56Days.copy(
                 referanseTilfelleBitInntruffet = kafkaOppfolgingstilfelle56Days.referanseTilfelleBitInntruffet.plusDays(
                     1
                 ),
                 referanseTilfelleBitUuid = UUID.randomUUID().toString(),
             )
 
-            it("creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting exactly 56 days") {
+            @Test
+            fun `creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting exactly 56 days`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfelle56Days
                 )
@@ -831,14 +950,15 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val aktivitetskrav = aktivitetskravList.first()
-                aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                aktivitetskrav.stoppunktAt shouldBeEqualTo endDate
-                aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid
+                assertEquals(AktivitetskravStatus.NY, aktivitetskrav.status)
+                assertEquals(endDate, aktivitetskrav.stoppunktAt)
+                assertEquals(kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid, aktivitetskrav.referanseTilfelleBitUuid.toString())
             }
 
-            it("doesn't create Aktivitetskrav for second oppfolgingstilfelle lasting exactly 56 days") {
+            @Test
+            fun `doesn't create Aktivitetskrav for second oppfolgingstilfelle lasting exactly 56 days`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaOppfolgingstilfelle56Days,
                     secondKafkaOppfolgingstilfelle56Days,
@@ -855,25 +975,28 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.size shouldBeEqualTo 1
+                assertEquals(1, aktivitetskravList.size)
                 val aktivitetskrav = aktivitetskravList.first()
-                aktivitetskrav.status shouldBeEqualTo AktivitetskravStatus.NY
-                aktivitetskrav.stoppunktAt shouldBeEqualTo endDate
-                aktivitetskrav.referanseTilfelleBitUuid.toString() shouldBeEqualTo kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid
+                assertEquals(AktivitetskravStatus.NY, aktivitetskrav.status)
+                assertEquals(endDate, aktivitetskrav.stoppunktAt)
+                assertEquals(kafkaOppfolgingstilfelle56Days.referanseTilfelleBitUuid, aktivitetskrav.referanseTilfelleBitUuid.toString())
             }
         }
 
-        describe("Inactive oppfolgingstilfelle") {
-            val startDate = LocalDate.now().minusDays(90)
-            val endDate = LocalDate.now().minusDays(31)
-            val kafkaInactiveOppfolgingstilfelle = createKafkaOppfolgingstilfellePerson(
+        @Nested
+        @DisplayName("Inactive oppfolgingstilfelle")
+        inner class InactiveOppfolgingstilfelle {
+            private val startDate = LocalDate.now().minusDays(90)
+            private val endDate = LocalDate.now().minusDays(31)
+            private val kafkaInactiveOppfolgingstilfelle = createKafkaOppfolgingstilfellePerson(
                 personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
                 tilfelleStart = startDate,
                 tilfelleEnd = endDate,
                 gradert = false,
             )
 
-            it("does not create Aktivitetskrav(NY) for oppfolgingstilfelle ending more than 30 days ago") {
+            @Test
+            fun `does not create Aktivitetskrav(NY) for oppfolgingstilfelle ending more than 30 days ago`() {
                 mockKafkaConsumerOppfolgingstilfellePerson(
                     kafkaInactiveOppfolgingstilfelle
                 )
@@ -889,8 +1012,8 @@ class KafkaOppfolgingstilfellePersonServiceSpek : Spek({
                 val aktivitetskravList =
                     aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
 
-                aktivitetskravList.shouldBeEmpty()
+                assertTrue(aktivitetskravList.isEmpty())
             }
         }
     }
-})
+}
