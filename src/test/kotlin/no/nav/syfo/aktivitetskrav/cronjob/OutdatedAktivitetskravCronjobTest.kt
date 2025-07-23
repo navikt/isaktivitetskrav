@@ -146,9 +146,7 @@ class OutdatedAktivitetskravCronjobTest {
         }
 
         val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-        assertEquals(1, pAktivitetskravList.size)
-        val persistedAktivitetskrav = pAktivitetskravList.first()
-        assertEquals(AktivitetskravStatus.NY, persistedAktivitetskrav.status)
+        assertFalse(pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET })
     }
 
     @Test
@@ -170,8 +168,32 @@ class OutdatedAktivitetskravCronjobTest {
         }
 
         val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
-        assertEquals(1, pAktivitetskravList.size)
-        val persistedAktivitetskrav = pAktivitetskravList.first()
-        assertEquals(AktivitetskravStatus.NY, persistedAktivitetskrav.status)
+        assertFalse(pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET })
+    }
+
+    @Test
+    fun `Lukker ikke nytt aktivitetskrav hvor stoppunkt er etter arena-cutoff og før outdated-cutoff hvis det finnes aktivitetskrav for samme person hvor stoppunkt er etter outdated-cutoff`() {
+        val aktivitetskrav = createNyttAktivitetskrav(
+            stoppunktAt = arenaCutoff.plusDays(1)
+        )
+        val nyttAktivitetskrav = createNyttAktivitetskrav(
+            stoppunktAt = outdatedCutoff.plusDays(1)
+        )
+        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+        aktivitetskravRepository.createAktivitetskrav(nyttAktivitetskrav)
+
+        runBlocking {
+            val result = outdatedAktivitetskravCronjob.runJob()
+
+            assertEquals(0, result.failed)
+            assertEquals(0, result.updated)
+        }
+
+        verify(exactly = 0) {
+            kafkaProducer.send(any())
+        }
+
+        val pAktivitetskravList = aktivitetskravRepository.getAktivitetskrav(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+        assertFalse(pAktivitetskravList.any { it.status == AktivitetskravStatus.LUKKET })
     }
 }

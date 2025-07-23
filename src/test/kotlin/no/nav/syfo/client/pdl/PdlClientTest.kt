@@ -12,7 +12,6 @@ import no.nav.syfo.testhelper.UserConstants
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
-@DisplayName("PdlClient")
 class PdlClientTest {
     private val externalMockEnvironment = ExternalMockEnvironment.instance
     private val cacheMock = mockk<ValkeyStore>(relaxed = true)

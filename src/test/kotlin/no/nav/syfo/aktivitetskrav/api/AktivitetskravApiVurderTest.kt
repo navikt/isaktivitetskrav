@@ -31,7 +31,6 @@ import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.Future
 
-@DisplayName("AktivitetskravApiVurder")
 class AktivitetskravApiVurderTest {
     private val nyAktivitetskrav = createAktivitetskravNy(
         tilfelleStart = LocalDate.now().minusWeeks(10),
@@ -346,22 +345,22 @@ class AktivitetskravApiVurderTest {
                 testApplication {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
-                    val response1 = client.postVurdering(
+                    val response = client.postVurdering(
                         aktivitetskravUuid = nyAktivitetskrav.uuid,
                         vurderingDTO = vurderingOppfyltRequestDTO,
                     )
-                    assertEquals(HttpStatusCode.OK, response1.status)
+                    assertEquals(HttpStatusCode.OK, response.status)
 
                     val vurderingAvventRequestDTO = AktivitetskravVurderingRequestDTO(
                         status = AktivitetskravStatus.AVVENT,
                         beskrivelse = "Avventer mer informasjon",
                         arsaker = listOf(Arsak.INFORMASJON_BEHANDLER),
                     )
-                    val response2 = client.postVurdering(
+                    val responseNew = client.postVurdering(
                         aktivitetskravUuid = nyAktivitetskrav.uuid,
                         vurderingDTO = vurderingAvventRequestDTO,
                     )
-                    assertEquals(HttpStatusCode.Conflict, response2.status)
+                    assertEquals(HttpStatusCode.Conflict, responseNew.status)
                 }
             }
 
