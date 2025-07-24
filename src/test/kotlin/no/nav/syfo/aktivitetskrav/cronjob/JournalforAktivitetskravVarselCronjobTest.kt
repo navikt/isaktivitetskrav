@@ -24,43 +24,46 @@ import no.nav.syfo.testhelper.generator.generateForhandsvarsel
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest
 import no.nav.syfo.testhelper.getVarsler
 import no.nav.syfo.util.sekundOpplosning
-import org.amshove.kluent.*
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-const val anyJournalpostId = 1
-val anyJournalpostResponse = JournalpostResponse(
-    dokumenter = null,
-    journalpostId = anyJournalpostId,
-    journalpostferdigstilt = null,
-    journalstatus = "status",
-    melding = null,
-)
-val pdf = byteArrayOf(23)
+class JournalforAktivitetskravVarselCronjobTest {
+    private val anyJournalpostId = 1
+    private val anyJournalpostResponse = JournalpostResponse(
+        dokumenter = null,
+        journalpostId = anyJournalpostId,
+        journalpostferdigstilt = null,
+        journalstatus = "status",
+        melding = null,
+    )
+    private val pdf = byteArrayOf(23)
 
-val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
-val aktivitetskrav = Aktivitetskrav.create(
-    personIdent = personIdent,
-    oppfolgingstilfelleStart = LocalDate.now(),
-)
-val personIdentManglerNavn = UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME
-val aktivitetskravPersonManglerNavn = Aktivitetskrav.create(
-    personIdent = personIdentManglerNavn,
-    oppfolgingstilfelleStart = LocalDate.now(),
-)
+    private val personIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT
+    private val aktivitetskrav = Aktivitetskrav.create(
+        personIdent = personIdent,
+        oppfolgingstilfelleStart = LocalDate.now(),
+    )
+    private val personIdentManglerNavn = UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME
+    private val aktivitetskravPersonManglerNavn = Aktivitetskrav.create(
+        personIdent = personIdentManglerNavn,
+        oppfolgingstilfelleStart = LocalDate.now(),
+    )
 
-val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")
+    private val forhandsvarselDTO = generateForhandsvarsel("Et forhåndsvarsel")
 
-class JournalforAktivitetskravVarselCronjobSpek : Spek({
-    val externalMockEnvironment = ExternalMockEnvironment.instance
-    val database = externalMockEnvironment.database
+    private val externalMockEnvironment = ExternalMockEnvironment.instance
+    private val database = externalMockEnvironment.database
 
-    val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
-    val dokarkivClient = mockk<DokarkivClient>()
-    val aktivitetskravRepository = AktivitetskravRepository(database = database)
+    private val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
+    private val dokarkivClient = mockk<DokarkivClient>()
+    private val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
-    val aktivitetskravVarselService = AktivitetskravVarselService(
+    private val aktivitetskravVarselService = AktivitetskravVarselService(
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = mockk(),
         aktivitetskravVarselProducer = mockk(),
@@ -70,14 +73,14 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         ),
     )
 
-    val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
+    private val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
         dokarkivClient = dokarkivClient,
         pdlClient = externalMockEnvironment.pdlClient,
         aktivitetskravVarselService = aktivitetskravVarselService,
         isJournalforingRetryEnabled = externalMockEnvironment.environment.isJournalforingRetryEnabled,
     )
 
-    fun createVarsel(
+    private fun createVarsel(
         aktivitetskrav: Aktivitetskrav,
         pdf: ByteArray,
         varselType: VarselType,
@@ -99,19 +102,24 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
         return forhandsvarsel
     }
 
-    beforeEachTest {
+    @BeforeEach
+    fun setUp() {
         clearMocks(dokarkivClient)
+        aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
+        aktivitetskravRepository.createAktivitetskrav(aktivitetskravPersonManglerNavn)
     }
-    afterEachTest {
+
+    @AfterEach
+    fun tearDown() {
         database.dropData()
     }
 
-    describe("${JournalforAktivitetskravVarselCronjob::class.java.simpleName} runJob") {
-        beforeEachTest {
-            aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
-            aktivitetskravRepository.createAktivitetskrav(aktivitetskravPersonManglerNavn)
-        }
-        it("Journalfører og oppdaterer journalpostId for ikke journalført unntak-vurdering") {
+    @Nested
+    @DisplayName("runJob")
+    inner class RunJob {
+
+        @Test
+        fun `journalfører og oppdaterer journalpostId for ikke journalført unntak-vurdering`() {
             val fritekst = "Aktivitetskravet er oppfylt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.UNNTAK,
@@ -140,8 +148,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
 
             coVerify {
@@ -149,14 +157,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldNotBeNull()
-            first.updatedAt shouldBeGreaterThan first.createdAt
+            assertEquals(varsel.uuid, first.uuid)
+            assertNotNull(first.journalpostId)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
         }
 
-        it("Journalfører og oppdaterer journalpostId for ikke journalført ikke aktuell-vurdering") {
+        @Test
+        fun `journalfører og oppdaterer journalpostId for ikke journalført ikke aktuell-vurdering`() {
             val fritekst = "Aktivitetskravet er ikke aktuelt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.IKKE_AKTUELL,
@@ -185,8 +194,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
 
             coVerify {
@@ -194,14 +203,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldNotBeNull()
-            first.updatedAt shouldBeGreaterThan first.createdAt
+            assertEquals(varsel.uuid, first.uuid)
+            assertNotNull(first.journalpostId)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
         }
 
-        it("Journalfører og oppdaterer journalpostId for ikke journalført oppfylt-vurdering") {
+        @Test
+        fun `journalfører og oppdaterer journalpostId for ikke journalført oppfylt-vurdering`() {
             val fritekst = "Aktivitetskravet er oppfylt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.OPPFYLT,
@@ -230,8 +240,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
 
             coVerify {
@@ -239,14 +249,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldNotBeNull()
-            first.updatedAt shouldBeGreaterThan first.createdAt
+            assertEquals(varsel.uuid, first.uuid)
+            assertNotNull(first.journalpostId)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
         }
 
-        it("Journalfører og oppdaterer journalpostId for ikke-journalført forhandsvarsel") {
+        @Test
+        fun `journalfører og oppdaterer journalpostId for ikke-journalført forhandsvarsel`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
             val varsel = createVarsel(
@@ -269,8 +280,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
 
             coVerify {
@@ -278,14 +289,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldNotBeNull()
-            first.updatedAt shouldBeGreaterThan first.createdAt
+            assertEquals(varsel.uuid, first.uuid)
+            assertNotNull(first.journalpostId)
+            assertTrue(first.updatedAt.isAfter(first.createdAt))
         }
 
-        it("Journalfører og oppdaterer journalpostId for ikke-journalført stans-vurdering") {
+        @Test
+        fun `journalfører og oppdaterer journalpostId for ikke-journalført stans-vurdering`() {
             val fritekst = "Aktivitetskravet er oppfylt"
             val vurdering = AktivitetskravVurdering.create(
                 status = AktivitetskravStatus.INNSTILLING_OM_STANS,
@@ -315,8 +327,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 1
+                assertEquals(0, result.failed)
+                assertEquals(1, result.updated)
             }
 
             coVerify {
@@ -324,11 +336,12 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.first().type shouldBeEqualTo VarselType.INNSTILLING_OM_STANS.name
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
+            assertEquals(VarselType.INNSTILLING_OM_STANS.name, varsler.first().type)
         }
 
-        it("Journalfører ikke og oppdaterer ingenting når forhandsvarsel er journalført fra før") {
+        @Test
+        fun `journalfører ikke og oppdaterer ingenting når forhandsvarsel er journalført fra før`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
             val varsel = createVarsel(
@@ -344,8 +357,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 0
+                assertEquals(0, result.failed)
+                assertEquals(0, result.updated)
             }
 
             coVerify(exactly = 0) {
@@ -353,19 +366,21 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldNotBeNull()
+            assertEquals(varsel.uuid, first.uuid)
+            assertNotNull(first.journalpostId)
         }
-        it("Journalfører ikke og oppdaterer ingenting når det ikke finnes forhandsvarsel") {
+
+        @Test
+        fun `journalfører ikke og oppdaterer ingenting når det ikke finnes forhandsvarsel`() {
             coEvery { dokarkivClient.journalfor(any()) } returns anyJournalpostResponse
 
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 0
-                result.updated shouldBeEqualTo 0
+                assertEquals(0, result.failed)
+                assertEquals(0, result.updated)
             }
 
             coVerify(exactly = 0) {
@@ -373,9 +388,11 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.shouldBeEmpty()
+            assertTrue(varsler.isEmpty())
         }
-        it("Feiler og oppdaterer ingenting når person tilknyttet forhåndsvarsel mangler navn") {
+
+        @Test
+        fun `feiler og oppdaterer ingenting når person tilknyttet forhåndsvarsel mangler navn`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskravPersonManglerNavn.vurder(vurdering)
             val varsel = createVarsel(
@@ -390,8 +407,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 1
-                result.updated shouldBeEqualTo 0
+                assertEquals(1, result.failed)
+                assertEquals(0, result.updated)
             }
 
             coVerify(exactly = 0) {
@@ -399,13 +416,15 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdentManglerNavn)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldBeNull()
-            first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
+            assertEquals(varsel.uuid, first.uuid)
+            assertNull(first.journalpostId)
+            assertEquals(first.createdAt.sekundOpplosning(), first.updatedAt.sekundOpplosning())
         }
-        it("Oppdaterer ikke journalpostId når journalføring feiler") {
+
+        @Test
+        fun `oppdaterer ikke journalpostId når journalføring feiler`() {
             val vurdering = forhandsvarselDTO.toAktivitetskravVurdering(UserConstants.VEILEDER_IDENT)
             val updatedAktivitetskrav = aktivitetskrav.vurder(vurdering)
             val varsel = createVarsel(
@@ -428,8 +447,8 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             runBlocking {
                 val result = journalforAktivitetskravVarselCronjob.runJob()
 
-                result.failed shouldBeEqualTo 1
-                result.updated shouldBeEqualTo 0
+                assertEquals(1, result.failed)
+                assertEquals(0, result.updated)
             }
 
             coVerify(exactly = 1) {
@@ -437,11 +456,11 @@ class JournalforAktivitetskravVarselCronjobSpek : Spek({
             }
 
             val varsler = database.getVarsler(personIdent)
-            varsler.size shouldBeEqualTo 1
+            assertEquals(1, varsler.size)
             val first = varsler.first()
-            first.uuid shouldBeEqualTo varsel.uuid
-            first.journalpostId.shouldBeNull()
-            first.updatedAt.sekundOpplosning() shouldBeEqualTo first.createdAt.sekundOpplosning()
+            assertEquals(varsel.uuid, first.uuid)
+            assertNull(first.journalpostId)
+            assertEquals(first.createdAt.sekundOpplosning(), first.updatedAt.sekundOpplosning())
         }
     }
-})
+}

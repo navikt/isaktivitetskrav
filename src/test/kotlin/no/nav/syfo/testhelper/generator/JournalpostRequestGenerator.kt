@@ -1,8 +1,8 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.aktivitetskrav.cronjob.personIdent
 import no.nav.syfo.client.dokarkiv.domain.*
 import no.nav.syfo.testhelper.UserConstants
+import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import java.util.UUID
 
 fun generateJournalpostRequest(
@@ -14,7 +14,7 @@ fun generateJournalpostRequest(
 ) = JournalpostRequest(
     avsenderMottaker = if (journalpostType != JournalpostType.NOTAT.name) {
         AvsenderMottaker.create(
-            id = personIdent.value,
+            id = ARBEIDSTAKER_PERSONIDENT.value,
             idType = BrukerIdType.PERSON_IDENT,
             navn = UserConstants.PERSON_FULLNAME,
         )

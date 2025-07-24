@@ -11,8 +11,8 @@ import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.util.configure
-import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.junit.jupiter.api.Assertions.assertEquals
 
 fun ApplicationTestBuilder.setupApiAndClient(
     kafkaProducer: KafkaProducer<String, AktivitetskravVurderingRecord> = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>(),
@@ -44,7 +44,7 @@ fun testMissingToken(
         } else {
             client.get(url) {}
         }
-        response.status shouldBeEqualTo HttpStatusCode.Unauthorized
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
 }
 
@@ -64,7 +64,7 @@ fun testMissingPersonIdent(
                 bearerAuth(validToken)
             }
         }
-        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        assertEquals(HttpStatusCode.BadRequest, response.status)
     }
 }
 
@@ -86,7 +86,7 @@ fun testInvalidPersonIdent(
                 header(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value.drop(1))
             }
         }
-        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        assertEquals(HttpStatusCode.BadRequest, response.status)
     }
 }
 
@@ -108,6 +108,6 @@ fun testDeniedPersonAccess(
                 header(NAV_PERSONIDENT_HEADER, UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS.value)
             }
         }
-        response.status shouldBeEqualTo HttpStatusCode.Forbidden
+        assertEquals(HttpStatusCode.Forbidden, response.status)
     }
 }
