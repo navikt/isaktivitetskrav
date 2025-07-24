@@ -12,7 +12,7 @@ import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.util.configure
 import org.apache.kafka.clients.producer.KafkaProducer
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 
 fun ApplicationTestBuilder.setupApiAndClient(
     kafkaProducer: KafkaProducer<String, AktivitetskravVurderingRecord> = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>(),

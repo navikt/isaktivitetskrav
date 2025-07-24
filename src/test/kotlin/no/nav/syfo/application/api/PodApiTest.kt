@@ -93,7 +93,7 @@ class PodApiTest {
     }
 
     @Nested
-    @DisplayName("Database not responding tests")
+    @DisplayName("Database not responding")
     inner class DatabaseNotResponding {
         private val database = TestDatabaseNotResponding()
 
