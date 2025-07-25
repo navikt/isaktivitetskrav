@@ -4,9 +4,9 @@ import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import no.nav.syfo.application.exception.ForbiddenAccessVeilederException
-import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
+import no.nav.syfo.api.exception.ForbiddenAccessVeilederException
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
 
 const val JWT_CLAIM_AZP = "azp"
 const val JWT_CLAIM_NAVIDENT = "NAVident"

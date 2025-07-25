@@ -1,7 +1,7 @@
 package no.nav.syfo.testhelper
 
-import no.nav.syfo.application.cache.ValkeyConfig
-import no.nav.syfo.application.cache.ValkeyStore
+import no.nav.syfo.api.cache.ValkeyConfig
+import no.nav.syfo.api.cache.ValkeyStore
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 import redis.clients.jedis.Protocol

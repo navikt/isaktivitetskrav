@@ -2,14 +2,14 @@ package no.nav.syfo.testhelper
 
 import io.ktor.server.application.*
 import io.mockk.mockk
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.api.apiModule
+import no.nav.syfo.application.AktivitetskravService
+import no.nav.syfo.application.AktivitetskravVarselService
+import no.nav.syfo.application.VarselPdfService
+import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.application.api.apiModule
-import no.nav.syfo.client.veiledertilgang.VeilederTilgangskontrollClient
 
 fun Application.testApiModule(
     externalMockEnvironment: ExternalMockEnvironment,

@@ -1,7 +1,7 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentType
+import no.nav.syfo.api.dto.DocumentComponentDTO
+import no.nav.syfo.api.dto.DocumentComponentType
 
 fun generateDocumentComponentDTO(fritekst: String, header: String = "Standard header") = listOf(
     DocumentComponentDTO(

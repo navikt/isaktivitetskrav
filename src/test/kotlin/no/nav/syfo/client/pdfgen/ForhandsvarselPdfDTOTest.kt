@@ -1,7 +1,8 @@
 package no.nav.syfo.client.pdfgen
 
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentType
+import no.nav.syfo.api.dto.DocumentComponentDTO
+import no.nav.syfo.api.dto.DocumentComponentType
+import no.nav.syfo.infrastructure.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.testhelper.UserConstants
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*

@@ -1,7 +1,9 @@
 package no.nav.syfo.testhelper.generator
 
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.oppfolgingstilfelle.kafka.*
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfelle
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfellePerson
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.OPPFOLGINGSTILFELLE_PERSON_TOPIC
 import no.nav.syfo.testhelper.UserConstants.VIRKSOMHETSNUMMER_DEFAULT
 import no.nav.syfo.util.nowUTC
 import org.apache.kafka.clients.consumer.ConsumerRecord

@@ -7,13 +7,17 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.application.AktivitetskravService
+import no.nav.syfo.application.VarselPdfService
+import no.nav.syfo.api.dto.AktivitetskravVurderingRequestDTO
+import no.nav.syfo.api.dto.Arsak
+import no.nav.syfo.api.endpoints.aktivitetskravApiBasePath
+import no.nav.syfo.api.endpoints.vurderAktivitetskravPath
 import no.nav.syfo.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
@@ -80,7 +84,7 @@ class AktivitetskravApiVurderTest {
         personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
     ): HttpResponse = run {
         val urlVurderAktivitetskrav =
-            "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+            "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
         post(urlVurderAktivitetskrav) {
             bearerAuth(validToken)
             header(NAV_PERSONIDENT_HEADER, personIdent.value)
@@ -259,7 +263,7 @@ class AktivitetskravApiVurderTest {
         @DisplayName("Unhappy path")
         inner class UnhappyPath {
             private val urlVurderExistingAktivitetskrav =
-                "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+                "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
 
             @Test
             fun `returns status Unauthorized if no token is supplied`() {

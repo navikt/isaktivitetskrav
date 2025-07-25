@@ -1,6 +1,8 @@
 package no.nav.syfo.client.pdfgen
 
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.infrastructure.client.pdfgen.ForhandsvarselPdfDTO
+import no.nav.syfo.infrastructure.client.pdfgen.VurderingPdfDTO
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import org.junit.jupiter.api.Assertions.assertArrayEquals

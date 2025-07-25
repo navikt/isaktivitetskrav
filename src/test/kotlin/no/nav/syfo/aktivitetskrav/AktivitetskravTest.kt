@@ -1,9 +1,9 @@
 package no.nav.syfo.aktivitetskrav
 
-import no.nav.syfo.aktivitetskrav.api.Arsak
+import no.nav.syfo.api.dto.Arsak
 import no.nav.syfo.domain.*
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
-import no.nav.syfo.oppfolgingstilfelle.kafka.toLatestOppfolgingstilfelle
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.toLatestOppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
 import no.nav.syfo.testhelper.UserConstants.OTHER_ARBEIDSTAKER_PERSONIDENT

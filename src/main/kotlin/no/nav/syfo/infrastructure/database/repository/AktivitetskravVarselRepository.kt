@@ -1,12 +1,12 @@
 package no.nav.syfo.infrastructure.database.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.IAktivitetskravVarselRepository
+import no.nav.syfo.api.dto.DocumentComponentDTO
+import no.nav.syfo.application.IAktivitetskravVarselRepository
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.domain.AktivitetskravVurdering
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVarselRecord
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.database.NoElementInsertedException
 import no.nav.syfo.infrastructure.database.toList
@@ -55,7 +55,7 @@ class AktivitetskravVarselRepository(private val database: DatabaseInterface) : 
     override fun updateJournalpostId(varsel: AktivitetskravVarsel, journalpostId: String) =
         database.updateVarselJournalpostId(varsel, journalpostId)
 
-    override fun setPublished(varsel: KafkaAktivitetskravVarsel) =
+    override fun setPublished(varsel: AktivitetskravVarselRecord) =
         database.setPublished(varsel.varselUuid)
 
     override fun getVarselForVurdering(vurderingUuid: UUID) =

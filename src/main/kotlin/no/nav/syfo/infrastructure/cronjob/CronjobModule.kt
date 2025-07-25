@@ -1,14 +1,11 @@
 package no.nav.syfo.infrastructure.cronjob
 
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.cronjob.*
 import no.nav.syfo.application.*
+import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
+import no.nav.syfo.infrastructure.client.dokarkiv.DokarkivClient
+import no.nav.syfo.infrastructure.client.leaderelection.LeaderPodClient
+import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.infrastructure.database.DatabaseInterface
-import no.nav.syfo.client.azuread.AzureAdClient
-import no.nav.syfo.client.dokarkiv.DokarkivClient
-import no.nav.syfo.client.leaderelection.LeaderPodClient
-import no.nav.syfo.infrastructure.pdl.PdlClient
 
 fun launchCronjobModule(
     applicationState: ApplicationState,

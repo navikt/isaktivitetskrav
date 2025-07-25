@@ -8,7 +8,7 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.testing.*
 import io.mockk.mockk
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.util.configure
 import org.apache.kafka.clients.producer.KafkaProducer

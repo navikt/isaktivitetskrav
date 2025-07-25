@@ -1,7 +1,7 @@
 package no.nav.syfo.aktivitetskrav.database
 
-import no.nav.syfo.aktivitetskrav.api.Arsak
-import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
+import no.nav.syfo.api.dto.Arsak
+import no.nav.syfo.api.dto.ForhandsvarselDTO
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVarsel
