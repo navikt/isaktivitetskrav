@@ -2,17 +2,19 @@ package no.nav.syfo.aktivitetskrav
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.api.Arsak
+import no.nav.syfo.api.dto.Arsak
+import no.nav.syfo.application.AktivitetskravService
+import no.nav.syfo.application.VarselPdfService
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVurdering
 import no.nav.syfo.domain.VarselType
-import no.nav.syfo.application.exception.ConflictException
+import no.nav.syfo.api.exception.ConflictException
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravVarsel
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT

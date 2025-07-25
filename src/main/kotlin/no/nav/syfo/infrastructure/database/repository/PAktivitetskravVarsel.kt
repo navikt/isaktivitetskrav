@@ -1,8 +1,8 @@
 package no.nav.syfo.infrastructure.database.repository
 
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.api.dto.DocumentComponentDTO
 import no.nav.syfo.domain.AktivitetskravVarsel
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVarselRecord
 import no.nav.syfo.domain.PersonIdent
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -30,7 +30,7 @@ data class PAktivitetskravVarsel(
         type = type,
     )
 
-    fun toKafkaAktivitetskravVarsel(references: VarselReferences) = KafkaAktivitetskravVarsel(
+    fun toKafkaAktivitetskravVarsel(references: VarselReferences) = AktivitetskravVarselRecord(
         personIdent = references.personIdent.value,
         aktivitetskravUuid = references.aktivitetskravUuid,
         vurderingUuid = references.vurderingUuid,

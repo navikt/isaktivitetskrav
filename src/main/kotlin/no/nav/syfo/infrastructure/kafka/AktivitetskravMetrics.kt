@@ -1,8 +1,8 @@
 package no.nav.syfo.infrastructure.kafka
 
 import io.micrometer.core.instrument.Counter
-import no.nav.syfo.application.metric.METRICS_NS
-import no.nav.syfo.application.metric.METRICS_REGISTRY
+import no.nav.syfo.api.metric.METRICS_NS
+import no.nav.syfo.api.metric.METRICS_REGISTRY
 
 const val AKTIVITETSKRAV_KAFKA_METRIC_BASE = "${METRICS_NS}_kafka_producer"
 const val AKTIVITETSKRAV_VURDERING_KAFKA = "${AKTIVITETSKRAV_KAFKA_METRIC_BASE}_vurdering"

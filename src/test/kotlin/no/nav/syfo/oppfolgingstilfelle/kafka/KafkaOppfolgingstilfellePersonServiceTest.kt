@@ -1,14 +1,17 @@
 package no.nav.syfo.oppfolgingstilfelle.kafka
 
 import io.mockk.*
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.VarselPdfService
+import no.nav.syfo.application.AktivitetskravService
+import no.nav.syfo.application.VarselPdfService
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfellePerson
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfellePersonService
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.OLD_TILFELLE_CUTOFF
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData

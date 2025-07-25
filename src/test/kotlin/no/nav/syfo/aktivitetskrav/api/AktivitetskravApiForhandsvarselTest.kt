@@ -6,9 +6,17 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
+import no.nav.syfo.api.dto.AktivitetskravResponseDTO
+import no.nav.syfo.api.dto.AktivitetskravVurderingRequestDTO
+import no.nav.syfo.api.dto.Arsak
+import no.nav.syfo.api.dto.ForhandsvarselDTO
+import no.nav.syfo.api.endpoints.aktivitetskravApiBasePath
+import no.nav.syfo.api.endpoints.aktivitetskravApiPersonidentPath
+import no.nav.syfo.api.endpoints.forhandsvarselPath
+import no.nav.syfo.api.endpoints.vurderAktivitetskravPath
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.domain.*
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.*
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
@@ -73,7 +81,7 @@ class AktivitetskravApiForhandsvarselTest {
         arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
     ) = run {
-        val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$forhandsvarselPath"
+        val url = "$aktivitetskravApiBasePath/$aktivitetskravUuid$forhandsvarselPath"
         post(url) {
             bearerAuth(validToken)
             header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
@@ -86,7 +94,7 @@ class AktivitetskravApiForhandsvarselTest {
         aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
         arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
     ) = run {
-        val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+        val url = "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
         post(url) {
             bearerAuth(validToken)
             header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
@@ -105,7 +113,7 @@ class AktivitetskravApiForhandsvarselTest {
         aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
         arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
     ) = run {
-        val url = "$aktivitetskravApiBasePath/${aktivitetskravUuid}$vurderAktivitetskravPath"
+        val url = "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
         post(url) {
             bearerAuth(validToken)
             header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)

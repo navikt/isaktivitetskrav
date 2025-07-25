@@ -1,16 +1,16 @@
 package no.nav.syfo.infrastructure.kafka
 
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
+import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.infrastructure.database.DatabaseInterface
-import no.nav.syfo.infrastructure.pdl.PdlClient
-import no.nav.syfo.identhendelse.IdenthendelseService
-import no.nav.syfo.identhendelse.kafka.KafkaIdenthendelseService
-import no.nav.syfo.identhendelse.kafka.launchKafkaTaskIdenthendelse
-import no.nav.syfo.oppfolgingstilfelle.kafka.KafkaOppfolgingstilfellePersonService
-import no.nav.syfo.oppfolgingstilfelle.kafka.launchKafkaTaskOppfolgingstilfellePerson
+import no.nav.syfo.infrastructure.client.pdl.PdlClient
+import no.nav.syfo.application.IdenthendelseService
+import no.nav.syfo.infrastructure.kafka.identhendelse.KafkaIdenthendelseService
+import no.nav.syfo.infrastructure.kafka.identhendelse.launchKafkaTaskIdenthendelse
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfellePersonService
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.launchKafkaTaskOppfolgingstilfellePerson
 
 fun launchKafkaModule(
     applicationState: ApplicationState,

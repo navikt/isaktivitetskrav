@@ -1,7 +1,7 @@
 package no.nav.syfo.domain
 
-import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
-import no.nav.syfo.client.dokarkiv.domain.JournalpostType
+import no.nav.syfo.infrastructure.client.dokarkiv.model.BrevkodeType
+import no.nav.syfo.infrastructure.client.dokarkiv.model.JournalpostType
 
 enum class VarselType {
     FORHANDSVARSEL_STANS_AV_SYKEPENGER,

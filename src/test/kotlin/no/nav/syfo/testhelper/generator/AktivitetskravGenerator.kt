@@ -1,6 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.aktivitetskrav.api.Arsak
+import no.nav.syfo.api.dto.Arsak
 import no.nav.syfo.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.testhelper.UserConstants
