@@ -1,9 +1,9 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.client.dokarkiv.domain.*
+import no.nav.syfo.infrastructure.client.dokarkiv.model.*
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.UserConstants.ARBEIDSTAKER_PERSONIDENT
-import java.util.UUID
+import java.util.*
 
 fun generateJournalpostRequest(
     tittel: String,
@@ -20,7 +20,7 @@ fun generateJournalpostRequest(
         )
     } else null,
     bruker = Bruker.create(
-        id = UserConstants.ARBEIDSTAKER_PERSONIDENT.value,
+        id = ARBEIDSTAKER_PERSONIDENT.value,
         idType = BrukerIdType.PERSON_IDENT
     ),
     tittel = tittel,

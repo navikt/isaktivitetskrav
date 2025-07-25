@@ -2,8 +2,9 @@ package no.nav.syfo.client.dokarkiv
 
 import io.ktor.client.plugins.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.client.dokarkiv.domain.BrevkodeType
-import no.nav.syfo.client.dokarkiv.domain.JournalpostType
+import no.nav.syfo.infrastructure.client.dokarkiv.DokarkivClient
+import no.nav.syfo.infrastructure.client.dokarkiv.model.BrevkodeType
+import no.nav.syfo.infrastructure.client.dokarkiv.model.JournalpostType
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.generator.generateJournalpostRequest

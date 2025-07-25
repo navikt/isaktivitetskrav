@@ -3,7 +3,17 @@ package no.nav.syfo.testhelper.mock
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.pdl.domain.*
+import no.nav.syfo.infrastructure.client.pdl.model.IdentType
+import no.nav.syfo.infrastructure.client.pdl.model.PdlHentIdenter
+import no.nav.syfo.infrastructure.client.pdl.model.PdlHentIdenterRequest
+import no.nav.syfo.infrastructure.client.pdl.model.PdlHentPerson
+import no.nav.syfo.infrastructure.client.pdl.model.PdlHentPersonRequest
+import no.nav.syfo.infrastructure.client.pdl.model.PdlIdent
+import no.nav.syfo.infrastructure.client.pdl.model.PdlIdenter
+import no.nav.syfo.infrastructure.client.pdl.model.PdlIdenterResponse
+import no.nav.syfo.infrastructure.client.pdl.model.PdlPerson
+import no.nav.syfo.infrastructure.client.pdl.model.PdlPersonNavn
+import no.nav.syfo.infrastructure.client.pdl.model.PdlPersonResponse
 import no.nav.syfo.testhelper.UserConstants
 
 suspend fun MockRequestHandleScope.pdlMockResponse(request: HttpRequestData): HttpResponseData {

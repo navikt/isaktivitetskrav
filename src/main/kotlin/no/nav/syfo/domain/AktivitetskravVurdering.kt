@@ -1,7 +1,6 @@
 package no.nav.syfo.domain
 
-import no.nav.syfo.aktivitetskrav.api.Arsak
-import no.nav.syfo.infrastructure.kafka.UNNTAK
+import no.nav.syfo.api.dto.Arsak
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
 import java.time.OffsetDateTime
