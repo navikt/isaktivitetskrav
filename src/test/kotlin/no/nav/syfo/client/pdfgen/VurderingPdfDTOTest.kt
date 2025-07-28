@@ -1,9 +1,10 @@
 package no.nav.syfo.client.pdfgen
 
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentType
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import no.nav.syfo.api.dto.DocumentComponentDTO
+import no.nav.syfo.api.dto.DocumentComponentType
+import no.nav.syfo.infrastructure.client.pdfgen.VurderingPdfDTO
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class VurderingPdfDTOTest {
 

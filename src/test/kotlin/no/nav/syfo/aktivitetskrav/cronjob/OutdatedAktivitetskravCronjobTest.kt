@@ -2,14 +2,15 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.AktivitetskravService
-import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.aktivitetskrav.api.Arsak
+import no.nav.syfo.application.AktivitetskravService
+import no.nav.syfo.application.VarselPdfService
+import no.nav.syfo.api.dto.Arsak
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.domain.*
+import no.nav.syfo.infrastructure.cronjob.OutdatedAktivitetskravCronjob
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.infrastructure.kafka.domain.AktivitetskravVurderingRecord
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData

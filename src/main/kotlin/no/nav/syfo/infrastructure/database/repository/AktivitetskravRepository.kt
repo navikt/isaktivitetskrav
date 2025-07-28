@@ -1,8 +1,8 @@
 package no.nav.syfo.infrastructure.database.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
-import no.nav.syfo.aktivitetskrav.IAktivitetskravRepository
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.application.IAktivitetskravRepository
+import no.nav.syfo.api.dto.DocumentComponentDTO
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
 import no.nav.syfo.domain.AktivitetskravVurdering

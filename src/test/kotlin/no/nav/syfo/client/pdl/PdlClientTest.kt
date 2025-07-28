@@ -5,12 +5,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.application.cache.ValkeyStore
-import no.nav.syfo.infrastructure.pdl.PdlClient
+import no.nav.syfo.api.cache.ValkeyStore
+import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 
 class PdlClientTest {
     private val externalMockEnvironment = ExternalMockEnvironment.instance

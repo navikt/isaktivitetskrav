@@ -1,15 +1,15 @@
 package no.nav.syfo.infrastructure.kafka
 
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVarselRecord
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class AktivitetskravVarselProducer(private val kafkaProducer: KafkaProducer<String, KafkaAktivitetskravVarsel>) {
+class AktivitetskravVarselProducer(private val kafkaProducer: KafkaProducer<String, AktivitetskravVarselRecord>) {
 
     fun sendAktivitetskravVarsel(
-        varsel: KafkaAktivitetskravVarsel,
+        varsel: AktivitetskravVarselRecord,
     ) {
         val key = UUID.nameUUIDFromBytes(varsel.personIdent.toByteArray()).toString()
         try {

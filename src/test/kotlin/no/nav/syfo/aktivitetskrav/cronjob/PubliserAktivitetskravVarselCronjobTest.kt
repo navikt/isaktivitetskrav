@@ -2,15 +2,16 @@ package no.nav.syfo.aktivitetskrav.cronjob
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.aktivitetskrav.AktivitetskravVarselService
-import no.nav.syfo.aktivitetskrav.VarselPdfService
-import no.nav.syfo.aktivitetskrav.api.Arsak
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
+import no.nav.syfo.application.AktivitetskravVarselService
+import no.nav.syfo.application.VarselPdfService
+import no.nav.syfo.api.dto.Arsak
+import no.nav.syfo.api.dto.DocumentComponentDTO
 import no.nav.syfo.domain.*
+import no.nav.syfo.infrastructure.cronjob.PubliserAktivitetskravVarselCronjob
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVarselProducer
-import no.nav.syfo.infrastructure.kafka.domain.KafkaAktivitetskravVarsel
+import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVarselRecord
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
 import no.nav.syfo.testhelper.dropData
@@ -46,7 +47,7 @@ class PubliserAktivitetskravVarselCronjobTest {
     private val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
     private val aktivitetskravRepository = AktivitetskravRepository(database = database)
 
-    private val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, KafkaAktivitetskravVarsel>>()
+    private val aktivitetskravVarselKafkaProducer = mockk<KafkaProducer<String, AktivitetskravVarselRecord>>()
     private val aktivitetskravVarselProducer = AktivitetskravVarselProducer(
         kafkaProducer = aktivitetskravVarselKafkaProducer,
     )
@@ -134,7 +135,7 @@ class PubliserAktivitetskravVarselCronjobTest {
             assertTrue(first.updatedAt.isAfter(first.createdAt))
             assertNotNull(first.publishedAt)
 
-            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVarselRecord>>()
             verify(exactly = 1) {
                 aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
@@ -236,7 +237,7 @@ class PubliserAktivitetskravVarselCronjobTest {
             assertTrue(first.updatedAt.isAfter(first.createdAt))
             assertNotNull(first.publishedAt)
 
-            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVarselRecord>>()
             verify(exactly = 1) {
                 aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
@@ -284,7 +285,7 @@ class PubliserAktivitetskravVarselCronjobTest {
             assertTrue(first.updatedAt.isAfter(first.createdAt))
             assertNotNull(first.publishedAt)
 
-            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVarselRecord>>()
             verify(exactly = 1) {
                 aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
@@ -332,7 +333,7 @@ class PubliserAktivitetskravVarselCronjobTest {
             assertTrue(first.updatedAt.isAfter(first.createdAt))
             assertNotNull(first.publishedAt)
 
-            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVarselRecord>>()
             verify(exactly = 1) {
                 aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }
@@ -381,7 +382,7 @@ class PubliserAktivitetskravVarselCronjobTest {
             assertTrue(first.updatedAt.isAfter(first.createdAt))
             assertNotNull(first.publishedAt)
 
-            val producerRecordSlot = slot<ProducerRecord<String, KafkaAktivitetskravVarsel>>()
+            val producerRecordSlot = slot<ProducerRecord<String, AktivitetskravVarselRecord>>()
             verify(exactly = 1) {
                 aktivitetskravVarselKafkaProducer.send(capture(producerRecordSlot))
             }

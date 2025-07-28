@@ -5,6 +5,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import no.nav.syfo.api.endpoints.registerPodApi
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.testhelper.TestDatabase

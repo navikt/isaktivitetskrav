@@ -1,7 +1,7 @@
 package no.nav.syfo.domain
 
-import no.nav.syfo.aktivitetskrav.api.DocumentComponentDTO
-import no.nav.syfo.aktivitetskrav.api.VarselResponseDTO
+import no.nav.syfo.api.dto.DocumentComponentDTO
+import no.nav.syfo.api.dto.VarselResponseDTO
 import no.nav.syfo.util.nowUTC
 import java.lang.IllegalArgumentException
 import java.time.LocalDate

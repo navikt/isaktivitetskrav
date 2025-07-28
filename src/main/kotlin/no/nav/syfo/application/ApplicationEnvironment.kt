@@ -1,13 +1,13 @@
 package no.nav.syfo.application
 
 import io.ktor.server.application.*
-import no.nav.syfo.application.cache.ValkeyConfig
+import no.nav.syfo.api.cache.ValkeyConfig
+import no.nav.syfo.infrastructure.client.ClientEnvironment
+import no.nav.syfo.infrastructure.client.ClientsEnvironment
+import no.nav.syfo.infrastructure.client.OpenClientEnvironment
+import no.nav.syfo.infrastructure.client.azuread.AzureEnvironment
 import no.nav.syfo.infrastructure.database.DatabaseEnvironment
 import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
-import no.nav.syfo.client.ClientEnvironment
-import no.nav.syfo.client.ClientsEnvironment
-import no.nav.syfo.client.OpenClientEnvironment
-import no.nav.syfo.client.azuread.AzureEnvironment
 import java.net.URI
 import java.time.LocalDate
 

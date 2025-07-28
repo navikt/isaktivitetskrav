@@ -1,7 +1,7 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.aktivitetskrav.api.ForhandsvarselDTO
-import no.nav.syfo.client.pdfgen.ForhandsvarselPdfDTO
+import no.nav.syfo.api.dto.ForhandsvarselDTO
+import no.nav.syfo.infrastructure.client.pdfgen.ForhandsvarselPdfDTO
 import no.nav.syfo.testhelper.UserConstants
 import java.time.LocalDate
 

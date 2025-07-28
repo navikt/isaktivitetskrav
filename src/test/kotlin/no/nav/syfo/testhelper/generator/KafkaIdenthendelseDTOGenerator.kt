@@ -1,7 +1,9 @@
 package no.nav.syfo.testhelper.generator
 
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.identhendelse.kafka.*
+import no.nav.syfo.infrastructure.kafka.identhendelse.IdentType
+import no.nav.syfo.infrastructure.kafka.identhendelse.Identifikator
+import no.nav.syfo.infrastructure.kafka.identhendelse.KafkaIdenthendelseDTO
 
 fun generateKafkaIdenthendelseDTO(
     aktivIdent: PersonIdent?,

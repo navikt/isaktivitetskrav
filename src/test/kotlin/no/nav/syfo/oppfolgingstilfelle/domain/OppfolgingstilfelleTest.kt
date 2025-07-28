@@ -1,5 +1,6 @@
 package no.nav.syfo.oppfolgingstilfelle.domain
 
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.durationInWeeks
 import no.nav.syfo.testhelper.generator.generateOppfolgingstilfelle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
