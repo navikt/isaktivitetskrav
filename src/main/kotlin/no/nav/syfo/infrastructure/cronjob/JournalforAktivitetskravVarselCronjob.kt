@@ -117,5 +117,6 @@ fun createJournalpostRequest(
         bruker = bruker,
         dokumenter = dokumenter,
         eksternReferanseId = varsel.uuid.toString(),
+        kanal = JournalpostKanal.DITT_NAV.value,
     )
 }
