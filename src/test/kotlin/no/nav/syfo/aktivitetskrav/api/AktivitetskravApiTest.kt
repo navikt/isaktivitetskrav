@@ -5,6 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.VarselPdfService
@@ -174,6 +175,7 @@ class AktivitetskravApiTest {
                             document = generateDocumentComponentDTO("Litt fritekst"),
                             callId = "",
                         )
+                        delay(10)
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
                             aktivitetskravVurdering = oppfyltVurdering,

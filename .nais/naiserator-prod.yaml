@@ -36,10 +36,10 @@ spec:
       access: readwrite
   resources:
     limits:
-      memory: 512Mi
+      memory: 1024Mi
     requests:
       cpu: 100m
-      memory: 384Mi
+      memory: 512Mi
   ingresses:
     - "https://isaktivitetskrav.intern.nav.no"
   accessPolicy:
