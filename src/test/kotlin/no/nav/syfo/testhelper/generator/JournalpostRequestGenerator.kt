@@ -40,4 +40,5 @@ fun generateJournalpostRequest(
     ),
     journalpostType = journalpostType,
     eksternReferanseId = varselId.toString(),
+    kanal = JournalpostKanal.DITT_NAV.value,
 )
