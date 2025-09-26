@@ -4,25 +4,25 @@ group = "no.nav.syfo"
 version = "0.0.1"
 
 val confluentVersion = "7.8.0"
-val flywayVersion = "11.3.0"
+val flywayVersion = "11.13.1"
 val hikariVersion = "6.2.1"
-val jacksonDataTypeVersion = "2.18.2"
+val jacksonDataTypeVersion = "2.20.0"
 val jedisVersion = "5.2.0"
 val kafkaVersion = "3.9.0"
-val ktorVersion = "3.1.2"
-val logbackVersion = "1.5.16"
-val logstashEncoderVersion = "8.0"
+val ktorVersion = "3.3.0"
+val logbackVersion = "1.5.18"
+val logstashEncoderVersion = "8.1"
 val micrometerRegistryVersion = "1.12.13"
-val mockkVersion = "1.13.16"
-val nettyCodecVersion = "4.1.118.Final"
-val nimbusJoseJwtVersion = "10.0.1"
-val postgresVersion = "42.7.5"
-val postgresEmbeddedVersion = "2.1.0"
+val mockkVersion = "1.14.5"
+val nettyCodecVersion = "4.2.6.Final"
+val nimbusJoseJwtVersion = "10.5"
+val postgresVersion = "42.7.8"
+val postgresEmbeddedVersion = "2.1.1"
 val postgresRuntimeVersion = "17.5.0"
 val redisEmbeddedVersion = "0.7.3"
 
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.2.20"
     id("com.gradleup.shadow") version "8.3.6"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
     id("com.adarshr.test-logger") version "4.0.0"
@@ -75,16 +75,16 @@ dependencies {
     }
     implementation("org.apache.kafka:kafka_2.13:$kafkaVersion", excludeLog4j)
     constraints {
-        implementation("org.apache.zookeeper:zookeeper") {
-            because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://www.cve.org/CVERecord?id=CVE-2023-44981")
-            version {
-                require("3.9.3")
-            }
-        }
         implementation("org.bitbucket.b_c:jose4j") {
             because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://github.com/advisories/GHSA-6qvw-249j-h44c")
             version {
                 require("0.9.6")
+            }
+        }
+        implementation("commons-beanutils:commons-beanutils") {
+            because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://www.cve.org/CVERecord?id=CVE-2025-48734")
+            version {
+                require("1.11.0")
             }
         }
     }
@@ -94,7 +94,7 @@ dependencies {
         implementation("org.apache.avro:avro") {
             because("io.confluent:kafka-avro-serializer:$confluentVersion -> https://www.cve.org/CVERecord?id=CVE-2023-39410")
             version {
-                require("1.11.4")
+                require("1.12.0")
             }
         }
         implementation("org.apache.commons:commons-compress") {
