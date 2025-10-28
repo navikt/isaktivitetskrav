@@ -33,12 +33,9 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
             }
         }
 
-    override fun getAktivitetskrav(
-        personIdent: PersonIdent,
-        connection: Connection?,
-    ): List<PAktivitetskrav> = connection?.getAktivitetskrav(personIdent = personIdent)
-        ?: database.connection.use {
-            it.getAktivitetskrav(personIdent = personIdent)
+    override fun getAktivitetskrav(personIdent: PersonIdent): List<PAktivitetskrav> =
+        database.connection.use { connection ->
+            connection.getAktivitetskrav(personIdent = personIdent)
         }
 
     override fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): List<Aktivitetskrav> =
@@ -76,23 +73,16 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
         aktivitetskrav: Aktivitetskrav,
         previousAktivitetskravUuid: UUID?,
         referanseTilfelleBitUuid: UUID?,
-        connection: Connection?,
     ): PAktivitetskrav {
-        return connection?.createAktivitetskrav(
-            aktivitetskrav = aktivitetskrav,
-            previousAktivitetskravUuid = previousAktivitetskravUuid,
-            referanseTilfelleBitUuid = referanseTilfelleBitUuid,
-        )
-            ?: database.connection.use {
-                val created = it.createAktivitetskrav(
-                    aktivitetskrav = aktivitetskrav,
-                    previousAktivitetskravUuid = previousAktivitetskravUuid,
-                    referanseTilfelleBitUuid = referanseTilfelleBitUuid,
-                )
-                it.commit()
-
-                return created
-            }
+        return database.connection.use {
+            val created = it.createAktivitetskrav(
+                aktivitetskrav = aktivitetskrav,
+                previousAktivitetskravUuid = previousAktivitetskravUuid,
+                referanseTilfelleBitUuid = referanseTilfelleBitUuid,
+            )
+            it.commit()
+            created
+        }
     }
 
     override fun createAktivitetskravVurdering(

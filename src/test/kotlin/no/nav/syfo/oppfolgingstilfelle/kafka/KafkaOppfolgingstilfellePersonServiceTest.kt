@@ -10,7 +10,7 @@ import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselReposi
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
 import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfellePerson
-import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.KafkaOppfolgingstilfellePersonService
+import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.OppfolgingstilfellePersonConsumer
 import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.OLD_TILFELLE_CUTOFF
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
@@ -59,8 +59,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             pdlClient = externalMockEnvironment.pdlClient,
         )
     )
-    private val kafkaOppfolgingstilfellePersonService = KafkaOppfolgingstilfellePersonService(
-        database = database,
+    private val oppfolgingstilfellePersonConsumer = OppfolgingstilfellePersonConsumer(
         aktivitetskravService = aktivitetskravService,
         arenaCutoff = arenaCutoff,
     )
@@ -147,7 +146,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             mockKafkaConsumerOppfolgingstilfellePerson(
                 kafkaOppfolgingstilfelleNineWeeksNotGradert
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -181,7 +180,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             mockKafkaConsumerOppfolgingstilfellePerson(
                 kafkaOppfolgingstilfelleNineWeeksGradert
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -215,7 +214,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             mockKafkaConsumerOppfolgingstilfellePerson(
                 kafkaOppfolgingstilfellePersonSevenWeeksNotGradert
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -234,7 +233,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             mockKafkaConsumerOppfolgingstilfellePerson(
                 kafkaOppfolgingstilfellePersonWithDodsdato
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -257,7 +256,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
                 gradert = false,
             )
             mockKafkaConsumerOppfolgingstilfellePerson(oldKafkaOppfolgingstilfellePerson)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -282,7 +281,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             )
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfellePerson)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -302,7 +301,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             mockKafkaConsumerOppfolgingstilfellePerson(
                 kafkaOppfolgingstilfellePersonSevenWeeksGradert
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -330,7 +329,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
                 kafkaOppfolgingstilfelleEightWeeksNotGradert,
                 kafkaOppfolgingstilfelleEightWeeksNotGradert,
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(
                 kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
             )
 
@@ -363,7 +362,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             val updatedAt = aktivitetskrav.updatedAt
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleNineWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -384,7 +383,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleTenWeeksGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -414,7 +413,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleTenWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -451,7 +450,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleNineWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -479,7 +478,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             aktivitetskravRepository.createAktivitetskrav(automatiskOppfyltAktivitetskrav)
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleTenWeeksGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -514,7 +513,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             val updatedAt = aktivitetskrav.updatedAt
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleNineWeeksGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(
                 kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson,
             )
 
@@ -543,7 +542,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleTenWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -571,7 +570,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             val aktivitetskravStatus = aktivitetskrav.status
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleTenWeeksGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -604,7 +603,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             val updatedAt = pAktivitetskrav.updatedAt
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleNineWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -626,7 +625,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
         @Test
         fun `creates no Aktivitetskrav for future oppfolgingstilfelle lasting 9 weeks, not gradert`() {
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleinFutureNineWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -651,7 +650,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
         fun `updates aktivitetskrav for tidligere oppfolgingstilfelle til AUTOMATISK_OPPFYLT når nyeste oppfolgingstilfelle varer i 9 uker (ikke gradert)`() {
             aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleNineWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -680,7 +679,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
         fun `do not update aktivitetskrav for tidligere oppfolgingstilfelle når nyeste oppfolgingstilfelle varer i 7 uker`() {
             aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfellePersonSevenWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -709,7 +708,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             val aktivitetskravStatus = aktivitetskrav.status
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelleNineWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -731,7 +730,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
             aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfellePersonSevenWeeksNotGradert)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -771,7 +770,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
         @Test
         fun `creates Aktivitetskrav(NY) for oppfolgingstilfelle lasting exactly 56 days`() {
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaOppfolgingstilfelle56Days)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -793,7 +792,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
                 kafkaOppfolgingstilfelle56Days,
                 secondKafkaOppfolgingstilfelle56Days,
             )
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
@@ -825,7 +824,7 @@ class KafkaOppfolgingstilfellePersonServiceTest {
         @Test
         fun `does not create Aktivitetskrav(NY) for oppfolgingstilfelle ending more than 30 days ago`() {
             mockKafkaConsumerOppfolgingstilfellePerson(kafkaInactiveOppfolgingstilfelle)
-            kafkaOppfolgingstilfellePersonService.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
+            oppfolgingstilfellePersonConsumer.pollAndProcessRecords(kafkaConsumer = mockKafkaConsumerOppfolgingstilfellePerson)
 
             verify(exactly = 1) {
                 mockKafkaConsumerOppfolgingstilfellePerson.commitSync()
