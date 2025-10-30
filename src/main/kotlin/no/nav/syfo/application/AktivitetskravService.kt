@@ -13,9 +13,7 @@ import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.domain.isInFinalState
 import no.nav.syfo.domain.oppfyllAutomatisk
 import no.nav.syfo.domain.updateStoppunkt
-import no.nav.syfo.infrastructure.database.repository.updateAktivitetskrav
-import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.Oppfolgingstilfelle
-import java.sql.Connection
+import no.nav.syfo.domain.Oppfolgingstilfelle
 import java.time.LocalDate
 import java.util.*
 
@@ -27,15 +25,15 @@ class AktivitetskravService(
     private val arenaCutoff: LocalDate,
 ) {
 
-    internal fun createAktivitetskrav(
-        connection: Connection,
-        aktivitetskrav: Aktivitetskrav,
-        referanseTilfelleBitUUID: UUID,
-    ) {
+    internal fun createAktivitetskrav(oppfolgingstilfelle: Oppfolgingstilfelle) {
+        val aktivitetskrav = Aktivitetskrav.create(
+            personIdent = oppfolgingstilfelle.personIdent,
+            oppfolgingstilfelleStart = oppfolgingstilfelle.tilfelleStart,
+            isAutomatiskOppfylt = oppfolgingstilfelle.isGradertAtTilfelleEnd(),
+        )
         aktivitetskravRepository.createAktivitetskrav(
-            connection = connection,
             aktivitetskrav = aktivitetskrav,
-            referanseTilfelleBitUuid = referanseTilfelleBitUUID,
+            referanseTilfelleBitUuid = oppfolgingstilfelle.referanseTilfelleBitUuid,
         )
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = aktivitetskrav
@@ -62,15 +60,13 @@ class AktivitetskravService(
     }
 
     internal fun updateAktivitetskravStoppunkt(
-        connection: Connection,
         aktivitetskrav: Aktivitetskrav,
         oppfolgingstilfelle: Oppfolgingstilfelle,
     ) {
         val updatedAktivitetskrav = aktivitetskrav.updateStoppunkt(
             oppfolgingstilfelle = oppfolgingstilfelle,
         )
-
-        updateAktivitetskrav(connection, updatedAktivitetskrav)
+        updateAktivitetskrav(updatedAktivitetskrav)
     }
 
     internal suspend fun vurderAktivitetskrav(
@@ -117,18 +113,17 @@ class AktivitetskravService(
         )
     }
 
-    internal fun oppfyllAutomatisk(connection: Connection, aktivitetskrav: Aktivitetskrav) {
+    internal fun oppfyllAutomatisk(aktivitetskrav: Aktivitetskrav) {
         val updatedAktivitetskrav = aktivitetskrav.oppfyllAutomatisk()
-
-        updateAktivitetskrav(connection, updatedAktivitetskrav)
+        updateAktivitetskrav(updatedAktivitetskrav)
     }
 
     internal fun getAktivitetskrav(uuid: UUID): Aktivitetskrav? =
         aktivitetskravRepository.getAktivitetskrav(uuid)
             ?.toAktivitetskrav()
 
-    internal fun getAktivitetskrav(personIdent: PersonIdent, connection: Connection? = null): List<Aktivitetskrav> =
-        aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent, connection = connection)
+    internal fun getAktivitetskrav(personIdent: PersonIdent): List<Aktivitetskrav> =
+        aktivitetskravRepository.getAktivitetskrav(personIdent = personIdent)
             .map { it.toAktivitetskrav() }
 
     fun getAktivitetskravForPersons(personidenter: List<PersonIdent>): Map<PersonIdent, Aktivitetskrav> =
@@ -159,13 +154,8 @@ class AktivitetskravService(
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(aktivitetskrav = lukketAktivitetskrav)
     }
 
-    internal fun updateAktivitetskrav(
-        connection: Connection,
-        updatedAktivitetskrav: Aktivitetskrav,
-    ) {
-        connection.updateAktivitetskrav(
-            aktivitetskrav = updatedAktivitetskrav
-        )
+    internal fun updateAktivitetskrav(updatedAktivitetskrav: Aktivitetskrav) {
+        aktivitetskravRepository.updateAktivitetskravStatus(aktivitetskrav = updatedAktivitetskrav)
         aktivitetskravVurderingProducer.sendAktivitetskravVurdering(
             aktivitetskrav = updatedAktivitetskrav
         )

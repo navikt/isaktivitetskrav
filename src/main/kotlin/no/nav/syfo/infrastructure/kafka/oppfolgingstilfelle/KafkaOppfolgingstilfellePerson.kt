@@ -1,5 +1,6 @@
 package no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle
 
+import no.nav.syfo.domain.Oppfolgingstilfelle
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.util.nowUTC
 import no.nav.syfo.util.tomorrow

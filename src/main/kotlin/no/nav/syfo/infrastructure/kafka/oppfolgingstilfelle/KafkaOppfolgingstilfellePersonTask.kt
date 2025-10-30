@@ -14,7 +14,7 @@ const val OPPFOLGINGSTILFELLE_PERSON_TOPIC =
 fun launchKafkaTaskOppfolgingstilfellePerson(
     applicationState: ApplicationState,
     kafkaEnvironment: KafkaEnvironment,
-    kafkaOppfolgingstilfellePersonService: KafkaOppfolgingstilfellePersonService,
+    oppfolgingstilfellePersonConsumer: OppfolgingstilfellePersonConsumer,
 ) {
     val consumerProperties = kafkaAivenConsumerConfig<KafkaOppfolgingstilfellePersonDeserializer>(
         kafkaEnvironment = kafkaEnvironment,
@@ -27,7 +27,7 @@ fun launchKafkaTaskOppfolgingstilfellePerson(
         applicationState = applicationState,
         topic = OPPFOLGINGSTILFELLE_PERSON_TOPIC,
         consumerProperties = consumerProperties,
-        kafkaConsumerService = kafkaOppfolgingstilfellePersonService,
+        kafkaConsumerService = oppfolgingstilfellePersonConsumer,
     )
 }
 

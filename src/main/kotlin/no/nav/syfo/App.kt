@@ -138,7 +138,6 @@ fun main() {
                 launchKafkaModule(
                     applicationState = applicationState,
                     environment = environment,
-                    database = applicationDatabase,
                     pdlClient = pdlClient,
                     aktivitetskravService = aktivitetskravService,
                     aktivitetskravRepository = aktivitetskravRepository,

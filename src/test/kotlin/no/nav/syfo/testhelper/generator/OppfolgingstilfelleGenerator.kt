@@ -1,6 +1,6 @@
 package no.nav.syfo.testhelper.generator
 
-import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.Oppfolgingstilfelle
+import no.nav.syfo.domain.Oppfolgingstilfelle
 import no.nav.syfo.testhelper.UserConstants
 import java.time.LocalDate
 import java.time.OffsetDateTime

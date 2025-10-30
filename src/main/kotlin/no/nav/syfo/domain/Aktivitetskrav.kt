@@ -1,6 +1,5 @@
 package no.nav.syfo.domain
 
-import no.nav.syfo.infrastructure.kafka.oppfolgingstilfelle.Oppfolgingstilfelle
 import no.nav.syfo.util.isAfterOrEqual
 import no.nav.syfo.util.nowUTC
 import java.time.LocalDate
