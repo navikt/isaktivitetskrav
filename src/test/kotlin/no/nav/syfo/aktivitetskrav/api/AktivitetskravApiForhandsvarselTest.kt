@@ -54,8 +54,8 @@ class AktivitetskravApiForhandsvarselTest {
     )
     private val fritekst = "Dette er et forhåndsvarsel"
     private val svarfrist = LocalDate.now().plusDays(30)
-    private val svarfristTooShort = LocalDate.now().plusDays(20)
-    private val svarfristTooLong = LocalDate.now().plusDays(43)
+    private val svarfristShortest = LocalDate.now().plusDays(21)
+    private val svarfristLongest = LocalDate.now().plusDays(42)
     private val forhandsvarselDTO = ForhandsvarselDTO(
         fritekst = fritekst,
         document = generateDocumentComponentDTO(
@@ -168,6 +168,30 @@ class AktivitetskravApiForhandsvarselTest {
                     assertEquals(svarfrist, varselResponseDTO?.svarfrist)
                 }
             }
+
+            @Test
+            fun `Shortest svarfrist`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+
+                    val postResponse = client.postForhandsvarsel(
+                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristShortest),
+                    )
+                    assertEquals(HttpStatusCode.Created, postResponse.status)
+                }
+            }
+
+            @Test
+            fun `Longest svarfrist`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+
+                    val postResponse = client.postForhandsvarsel(
+                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristLongest),
+                    )
+                    assertEquals(HttpStatusCode.Created, postResponse.status)
+                }
+            }
         }
 
         @Nested
@@ -180,7 +204,7 @@ class AktivitetskravApiForhandsvarselTest {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
                     val postResponse = client.postForhandsvarsel(
-                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristTooShort),
+                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristShortest.minusDays(1)),
                     )
                     assertEquals(HttpStatusCode.BadRequest, postResponse.status)
                 }
@@ -192,7 +216,7 @@ class AktivitetskravApiForhandsvarselTest {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
                     val postResponse = client.postForhandsvarsel(
-                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristTooLong),
+                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristLongest.plusDays(1)),
                     )
                     assertEquals(HttpStatusCode.BadRequest, postResponse.status)
                 }
