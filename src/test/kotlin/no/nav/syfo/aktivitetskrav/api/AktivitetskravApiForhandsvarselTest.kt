@@ -54,6 +54,8 @@ class AktivitetskravApiForhandsvarselTest {
     )
     private val fritekst = "Dette er et forhåndsvarsel"
     private val svarfrist = LocalDate.now().plusDays(30)
+    private val svarfristTooShort = LocalDate.now().plusDays(20)
+    private val svarfristTooLong = LocalDate.now().plusDays(43)
     private val forhandsvarselDTO = ForhandsvarselDTO(
         fritekst = fritekst,
         document = generateDocumentComponentDTO(
@@ -171,6 +173,30 @@ class AktivitetskravApiForhandsvarselTest {
         @Nested
         @DisplayName("Unhappy path")
         inner class UnhappyPath {
+
+            @Test
+            fun `Too short svarfrist`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+
+                    val postResponse = client.postForhandsvarsel(
+                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristTooShort),
+                    )
+                    assertEquals(HttpStatusCode.BadRequest, postResponse.status)
+                }
+            }
+
+            @Test
+            fun `Too long svarfrist`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+
+                    val postResponse = client.postForhandsvarsel(
+                        newForhandsvarselDTO = forhandsvarselDTO.copy(frist = svarfristTooLong),
+                    )
+                    assertEquals(HttpStatusCode.BadRequest, postResponse.status)
+                }
+            }
 
             @Test
             fun `Can't find aktivitetskrav for given uuid`() {
