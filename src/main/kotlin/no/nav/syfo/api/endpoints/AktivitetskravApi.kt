@@ -18,7 +18,6 @@ import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.util.*
-import java.time.LocalDate
 import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
@@ -29,9 +28,6 @@ const val vurderAktivitetskravPath = "/vurder"
 const val forhandsvarselPath = "/forhandsvarsel"
 
 private const val API_ACTION = "access aktivitetskrav for person"
-
-private const val FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_SHORTEST = 21L
-private const val FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_LONGEST = 42L
 
 fun Route.registerAktivitetskravApi(
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
@@ -124,15 +120,6 @@ fun Route.registerAktivitetskravApi(
             ) {
                 val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
                 val requestDTO = call.receive<ForhandsvarselDTO>()
-                if (requestDTO.document.isEmpty()) {
-                    throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
-                }
-                val allowedSvarfristShortest = LocalDate.now().plusDays(FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_SHORTEST)
-                val allowedSvarfristLongest = LocalDate.now().plusDays(FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_LONGEST)
-
-                if (requestDTO.frist.isBefore(allowedSvarfristShortest) || requestDTO.frist.isAfter(allowedSvarfristLongest)) {
-                    throw IllegalArgumentException("Forhandsvarsel has invalid svarfrist")
-                }
 
                 val aktivitetskrav =
                     aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
