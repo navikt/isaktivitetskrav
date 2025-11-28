@@ -8,6 +8,9 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
 
+private const val FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_SHORTEST = 21L
+private const val FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_LONGEST = 42L
+
 data class AktivitetskravVarsel internal constructor(
     val uuid: UUID,
     val createdAt: OffsetDateTime,
@@ -27,8 +30,15 @@ data class AktivitetskravVarsel internal constructor(
             if (document.isEmpty()) {
                 throw IllegalArgumentException("Varsel can't have empty document")
             }
-            if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER && frist == null) {
-                throw IllegalArgumentException("Forhandsvarsel must have frist")
+            if (type == VarselType.FORHANDSVARSEL_STANS_AV_SYKEPENGER) {
+                if (frist == null) {
+                    throw IllegalArgumentException("Forhandsvarsel must have frist")
+                }
+                val allowedSvarfristShortest = LocalDate.now().plusDays(FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_SHORTEST)
+                val allowedSvarfristLongest = LocalDate.now().plusDays(FORHANDSVARSEL_ALLOWED_SVARFRIST_DAYS_LONGEST)
+                if (frist.isBefore(allowedSvarfristShortest) || frist.isAfter(allowedSvarfristLongest)) {
+                    throw IllegalArgumentException("Forhandsvarsel has invalid svarfrist")
+                }
             }
             if (type == VarselType.INNSTILLING_OM_STANS && frist != null) {
                 throw IllegalArgumentException("Innstilling om stans can't have frist")

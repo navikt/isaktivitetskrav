@@ -120,9 +120,6 @@ fun Route.registerAktivitetskravApi(
             ) {
                 val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
                 val requestDTO = call.receive<ForhandsvarselDTO>()
-                if (requestDTO.document.isEmpty()) {
-                    throw IllegalArgumentException("Forhandsvarsel can't have an empty document")
-                }
 
                 val aktivitetskrav =
                     aktivitetskravService.getAktivitetskrav(uuid = aktivitetskravUUID)
