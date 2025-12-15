@@ -18,7 +18,7 @@ val nettyCodecVersion = "4.2.7.Final"
 val nimbusJoseJwtVersion = "10.6"
 val postgresVersion = "42.7.8"
 val postgresEmbeddedVersion = "2.2.0"
-val postgresRuntimeVersion = "17.5.0"
+val postgresRuntimeVersion = "18.1.0"
 val redisEmbeddedVersion = "0.7.3"
 
 plugins {
