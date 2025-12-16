@@ -3,13 +3,13 @@
     <appender name="stdout_json" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider" />
-            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
+            <decorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
                 <valueMask>
                     <value>\d{11}</value>
                     <value>\d{6}\s\d{5}</value>
                     <mask>***********</mask>
                 </valueMask>
-            </jsonGeneratorDecorator>
+            </decorator>
         </encoder>
     </appender>
 
