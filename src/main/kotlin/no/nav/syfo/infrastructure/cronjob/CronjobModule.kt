@@ -44,7 +44,7 @@ fun launchCronjobModule(
 
     if (environment.outdatedCronJobEnabled) {
         val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
-            outdatedCutoff = environment.outdatedCutoff,
+            outdatedCutoffMonths = environment.outdatedCutoffMonths,
             aktivitetskravService = aktivitetskravService,
         )
         cronjobs.add(outdatedAktivitetskravCronjob)
