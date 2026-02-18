@@ -29,7 +29,7 @@ class OutdatedAktivitetskravCronjobTest {
     private val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
 
     private val arenaCutoff = externalMockEnvironment.environment.arenaCutoff
-    private val outdatedCutoff = externalMockEnvironment.environment.outdatedCutoff
+    private val outdatedCutoff = externalMockEnvironment.environment.outdatedCutoffMonths
     private val aktivitetskravRepository = AktivitetskravRepository(database)
     private val aktivitetskravVarselRepository = AktivitetskravVarselRepository(database = database)
     private val aktivitetskravService = AktivitetskravService(
@@ -43,7 +43,7 @@ class OutdatedAktivitetskravCronjobTest {
         )
     )
     private val outdatedAktivitetskravCronjob = OutdatedAktivitetskravCronjob(
-        outdatedCutoff = outdatedCutoff,
+        outdatedCutoffMonths = outdatedCutoff,
         aktivitetskravService = aktivitetskravService,
     )
 
@@ -153,7 +153,9 @@ class OutdatedAktivitetskravCronjobTest {
     @Test
     fun `Lukker ikke aktivitetskrav med stoppunkt etter outdated-cutoff`() {
         val aktivitetskrav = createNyttAktivitetskrav(
-            stoppunktAt = outdatedCutoff.plusDays(1)
+            stoppunktAt = LocalDate.now()
+                .minusMonths(outdatedCutoff.toLong())
+                .plusDays(1)
         )
         aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
 
@@ -178,7 +180,9 @@ class OutdatedAktivitetskravCronjobTest {
             stoppunktAt = arenaCutoff.plusDays(1)
         )
         val nyttAktivitetskrav = createNyttAktivitetskrav(
-            stoppunktAt = outdatedCutoff.plusDays(1)
+            stoppunktAt = LocalDate.now()
+                .minusMonths(outdatedCutoff.toLong())
+                .plusDays(1)
         )
         aktivitetskravRepository.createAktivitetskrav(aktivitetskrav)
         aktivitetskravRepository.createAktivitetskrav(nyttAktivitetskrav)
