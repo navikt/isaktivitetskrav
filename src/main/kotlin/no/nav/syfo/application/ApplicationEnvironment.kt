@@ -45,7 +45,7 @@ data class Environment(
     ),
     val arenaCutoff: LocalDate = LocalDate.parse(getEnvVar("ARENA_CUTOFF")),
     val isJournalforingRetryEnabled: Boolean = getEnvVar("JOURNALFORING_RETRY_ENABLED").toBoolean(),
-    val outdatedCutoff: LocalDate = LocalDate.parse(getEnvVar("OUTDATED_AKTIVITETSKRAV_CUTOFF")),
+    val outdatedCutoffMonths: Int = getEnvVar("OUTDATED_AKTIVITETSKRAV_CUTOFF_MONTHS").toInt(),
     val outdatedCronJobEnabled: Boolean = getEnvVar("OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
     val clients: ClientsEnvironment = ClientsEnvironment(

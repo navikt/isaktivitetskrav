@@ -6,12 +6,12 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 class OutdatedAktivitetskravCronjob(
-    private val outdatedCutoff: LocalDate,
+    private val outdatedCutoffMonths: Int,
     private val aktivitetskravService: AktivitetskravService,
 ) : Cronjob {
 
     override val initialDelayMinutes: Long = 4
-    override val intervalDelayMinutes: Long = 10
+    override val intervalDelayMinutes: Long = 60 * 24
 
     override suspend fun run() {
         runJob()
@@ -19,17 +19,24 @@ class OutdatedAktivitetskravCronjob(
 
     internal fun runJob(): CronjobResult {
         val result = CronjobResult()
+
+        val cutoff = LocalDate.now()
+            .minusMonths(outdatedCutoffMonths.toLong())
+
+        log.info("Starting OutdatedAktivitetskravCronjob with cutoff months $outdatedCutoffMonths, $cutoff")
+
         val outdatedAktivitetskrav = aktivitetskravService.getOutdatedAktivitetskrav(
-            outdatedCutoff = outdatedCutoff
+            outdatedCutoff = cutoff
         )
 
         outdatedAktivitetskrav.forEach {
             try {
                 aktivitetskravService.lukkAktivitetskrav(aktivitetskrav = it)
                 result.updated++
+                log.info("Closed aktivitetskrav for ${it.uuid}")
             } catch (e: Exception) {
                 result.failed++
-                log.error("Got exception when creating aktivitetskrav LUKKET", e)
+                log.error("Got exception when creating aktivitetskrav LUKKET for ${it.uuid}", e)
             }
         }
 
