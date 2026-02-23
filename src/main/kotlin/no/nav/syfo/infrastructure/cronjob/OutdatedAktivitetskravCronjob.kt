@@ -11,7 +11,7 @@ class OutdatedAktivitetskravCronjob(
 ) : Cronjob {
 
     override val initialDelayMinutes: Long = 4
-    override val intervalDelayMinutes: Long = 30 // Change to once every 24 hours after initial clean up
+    override val intervalDelayMinutes: Long = 60 * 24
 
     override suspend fun run() {
         runJob()
@@ -22,6 +22,8 @@ class OutdatedAktivitetskravCronjob(
 
         val cutoff = LocalDate.now()
             .minusMonths(outdatedCutoffMonths.toLong())
+
+        log.info("Starting OutdatedAktivitetskravCronjob with cutoff months $outdatedCutoffMonths, $cutoff")
 
         val outdatedAktivitetskrav = aktivitetskravService.getOutdatedAktivitetskrav(
             outdatedCutoff = cutoff
