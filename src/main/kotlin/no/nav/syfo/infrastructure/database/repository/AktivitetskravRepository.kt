@@ -219,7 +219,7 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
                 AND stoppunkt_at < ?
                 AND status = 'NY'
                 AND personident NOT IN (SELECT personident FROM AKTIVITETSKRAV WHERE stoppunkt_at >= ?)
-                LIMIT 500;
+            LIMIT 200;
             """
 
         private const val CREATE_AKTIVITETSKRAV =
