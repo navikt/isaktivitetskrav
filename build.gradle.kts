@@ -72,8 +72,10 @@ dependencies {
     // Kafka
     val excludeLog4j = fun ExternalModuleDependency.() {
         exclude(group = "log4j")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-core")
     }
     implementation("org.apache.kafka:kafka_2.13:$kafkaVersion", excludeLog4j)
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.24.3")
     constraints {
         implementation("org.bitbucket.b_c:jose4j") {
             because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://github.com/advisories/GHSA-6qvw-249j-h44c")
