@@ -54,6 +54,7 @@ spec:
         - host: "dokarkiv.prod-fss-pub.nais.io"
       rules:
         - application: istilgangskontroll
+        - application: syfobehandlendeenhet
         - application: ispdfgen
   gcp:
     sqlInstances:
@@ -86,6 +87,10 @@ spec:
       value: "prod-gcp.teamsykefravr.istilgangskontroll"
     - name: ISTILGANGSKONTROLL_URL
       value: "http://istilgangskontroll"
+    - name: SYFOBEHANDLENDEENHET_CLIENT_ID
+      value: "prod-gcp.teamsykefravr.syfobehandlendeenhet"
+    - name: SYFOBEHANDLENDEENHET_URL
+      value: "http://syfobehandlendeenhet"
     - name: PDL_CLIENT_ID
       value: "prod-fss.pdl.pdl-api"
     - name: PDL_URL

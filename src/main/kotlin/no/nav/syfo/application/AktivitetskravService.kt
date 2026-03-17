@@ -15,13 +15,17 @@ import no.nav.syfo.domain.oppfyllAutomatisk
 import no.nav.syfo.domain.updateStoppunkt
 import no.nav.syfo.domain.Oppfolgingstilfelle
 import java.time.LocalDate
+import java.time.Month
 import java.util.*
+
+const val NAV_UTLAND_ENHETID = "0393"
 
 class AktivitetskravService(
     private val aktivitetskravRepository: IAktivitetskravRepository,
     private val aktivitetskravVarselRepository: IAktivitetskravVarselRepository,
     private val varselPdfService: VarselPdfService,
     private val aktivitetskravVurderingProducer: AktivitetskravVurderingProducer,
+    private val behandlendeEnhetClient: IBehandlendeEnhetClient,
     private val arenaCutoff: LocalDate,
 ) {
 
@@ -146,6 +150,17 @@ class AktivitetskravService(
 
     internal fun getOutdatedAktivitetskrav(outdatedCutoff: LocalDate): List<Aktivitetskrav> =
         aktivitetskravRepository.getOutdatedAktivitetskrav(arenaCutoff, outdatedCutoff)
+            .map { it.toAktivitetskrav() }
+
+    internal suspend fun getOutdatedAktivitetskravNavUtland(): List<Aktivitetskrav> =
+        aktivitetskravRepository.getOutdatedAktivitetskrav(arenaCutoff, LocalDate.of(2025, Month.NOVEMBER, 1))
+            .filter { pAktivitetskrav ->
+                val behandlendeEnhetResponseDTO = behandlendeEnhetClient.getEnhet(pAktivitetskrav.personIdent)
+                behandlendeEnhetResponseDTO?.oppfolgingsenhetDTO?.enhet?.enhetId == NAV_UTLAND_ENHETID || (
+                    behandlendeEnhetResponseDTO?.oppfolgingsenhetDTO == null &&
+                        behandlendeEnhetResponseDTO?.geografiskEnhet?.enhetId == NAV_UTLAND_ENHETID
+                    )
+            }
             .map { it.toAktivitetskrav() }
 
     internal fun lukkAktivitetskrav(aktivitetskrav: Aktivitetskrav) {
