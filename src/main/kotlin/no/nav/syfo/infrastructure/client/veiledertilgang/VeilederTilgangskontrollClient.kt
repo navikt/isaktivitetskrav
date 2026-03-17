@@ -22,29 +22,40 @@ class VeilederTilgangskontrollClient(
     private val tilgangskontrollPersonUrl = "${clientEnvironment.baseUrl}$TILGANGSKONTROLL_PERSON_PATH"
     private val tilgangskontrollBrukereUrl = "${clientEnvironment.baseUrl}$TILGANGSKONTROLL_BRUKERE_PATH"
 
-    suspend fun hasAccess(callId: String, personIdent: PersonIdent, token: String): Boolean {
+    private suspend fun getTilgang(callId: String, personIdent: PersonIdent, token: String): Tilgang? {
         val onBehalfOfToken = azureAdClient.getOnBehalfOfToken(
             scopeClientId = clientEnvironment.clientId,
             token = token,
-        )?.accessToken ?: throw RuntimeException("Failed to request access to Person: Failed to get OBO token")
+        )?.accessToken
+            ?: throw RuntimeException("Failed to request access to Person: Failed to get OBO token")
 
         return try {
-            val tilgang = httpClient.get(tilgangskontrollPersonUrl) {
+            val tilgangResponse = httpClient.get(tilgangskontrollPersonUrl) {
                 header(HttpHeaders.Authorization, bearerHeader(onBehalfOfToken))
                 header(NAV_PERSONIDENT_HEADER, personIdent.value)
                 header(NAV_CALL_ID_HEADER, callId)
                 accept(ContentType.Application.Json)
             }
             COUNT_CALL_TILGANGSKONTROLL_PERSON_SUCCESS.increment()
-            tilgang.body<Tilgang>().erGodkjent
+            tilgangResponse.body<Tilgang>()
         } catch (e: ResponseException) {
             if (e.response.status == HttpStatusCode.Forbidden) {
                 COUNT_CALL_TILGANGSKONTROLL_PERSON_FORBIDDEN.increment()
             } else {
                 handleUnexpectedResponseException(e.response, callId)
             }
-            false
+            null
         }
+    }
+
+    suspend fun hasAccess(callId: String, personIdent: PersonIdent, token: String): Boolean {
+        return getTilgang(callId, personIdent, token)?.erGodkjent ?: false
+    }
+
+    suspend fun hasWriteAccess(callId: String, personIdent: PersonIdent, token: String): Boolean {
+        return getTilgang(callId, personIdent, token)?.let {
+            it.erGodkjent && it.fullTilgang
+        } ?: false
     }
 
     suspend fun veilederPersonerAccess(
