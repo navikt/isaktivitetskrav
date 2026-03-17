@@ -68,6 +68,7 @@ fun Route.registerAktivitetskravApi(
             checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                requiresWriteAccess = true,
             ) {
                 val personIdent = call.personIdent()
                 val requestDTO: NewAktivitetskravDTO? =
@@ -89,6 +90,7 @@ fun Route.registerAktivitetskravApi(
             checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                requiresWriteAccess = true,
             ) {
                 val personIdent = call.personIdent()
                 val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
@@ -113,10 +115,12 @@ fun Route.registerAktivitetskravApi(
                 call.respond(HttpStatusCode.OK)
             }
         }
+
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
             checkVeilederTilgang(
                 action = API_ACTION,
                 veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                requiresWriteAccess = true,
             ) {
                 val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
                 val requestDTO = call.receive<ForhandsvarselDTO>()
@@ -135,6 +139,7 @@ fun Route.registerAktivitetskravApi(
                 call.respond(HttpStatusCode.Created, forhandsvarsel)
             }
         }
+
         post("/get-vurderinger") {
             val token = call.getBearerHeader()
                 ?: throw IllegalArgumentException("Failed to get vurderinger for personer. No Authorization header supplied.")
