@@ -58,11 +58,6 @@ class AktivitetskravApiVurderTest {
             pdlClient = externalMockEnvironment.pdlClient,
         )
     )
-    private val validToken = generateJWT(
-        audience = externalMockEnvironment.environment.azure.appClientId,
-        issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-        navIdent = UserConstants.VEILEDER_IDENT,
-    )
 
     @BeforeEach
     fun setUp() {
@@ -82,11 +77,12 @@ class AktivitetskravApiVurderTest {
         aktivitetskravUuid: UUID,
         vurderingDTO: AktivitetskravVurderingRequestDTO,
         personIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+        token: String = tokenForVeilederWithFullTilgang,
     ): HttpResponse = run {
         val urlVurderAktivitetskrav =
             "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
         post(urlVurderAktivitetskrav) {
-            bearerAuth(validToken)
+            bearerAuth(token)
             header(NAV_PERSONIDENT_HEADER, personIdent.value)
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(vurderingDTO)
@@ -272,17 +268,30 @@ class AktivitetskravApiVurderTest {
 
             @Test
             fun `returns status Forbidden if denied access to person`() {
-                testDeniedPersonAccess(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                testDeniedPersonAccess(urlVurderExistingAktivitetskrav, tokenForVeilederWithFullTilgang, HttpMethod.Post)
+            }
+
+            @Test
+            fun `returns status Forbidden if user has no write access`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                    val response = client.postVurdering(
+                        aktivitetskravUuid = aktivitetskravUuid,
+                        vurderingDTO = vurderingOppfyltRequestDTO,
+                        token = tokenForVeilederWithLeseTilgang,
+                    )
+                    assertEquals(HttpStatusCode.Forbidden, response.status)
+                }
             }
 
             @Test
             fun `returns status BadRequest if no NAV_PERSONIDENT_HEADER is supplied`() {
-                testMissingPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                testMissingPersonIdent(urlVurderExistingAktivitetskrav, tokenForVeilederWithFullTilgang, HttpMethod.Post)
             }
 
             @Test
             fun `returns status BadRequest if NAV_PERSONIDENT_HEADER with invalid PersonIdent is supplied`() {
-                testInvalidPersonIdent(urlVurderExistingAktivitetskrav, validToken, HttpMethod.Post)
+                testInvalidPersonIdent(urlVurderExistingAktivitetskrav, tokenForVeilederWithFullTilgang, HttpMethod.Post)
             }
 
             @Test

@@ -90,12 +90,6 @@ class AktivitetskravApiTest {
         )
     )
 
-    private val validToken = generateJWT(
-        audience = externalMockEnvironment.environment.azure.appClientId,
-        issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-        navIdent = VEILEDER_IDENT,
-    )
-
     @BeforeEach
     fun setUp() {
         clearMocks(kafkaProducer)
@@ -125,7 +119,7 @@ class AktivitetskravApiTest {
                         aktivitetskravRepository.createAktivitetskrav(it)
                     }
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                     }
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -185,7 +179,7 @@ class AktivitetskravApiTest {
                     }
 
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                     }
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -246,7 +240,7 @@ class AktivitetskravApiTest {
                         aktivitetskravRepository.createAktivitetskrav(it)
                     }
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                     }
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -261,6 +255,19 @@ class AktivitetskravApiTest {
                     assertNotNull(aktivitetskrav.createdAt)
                     assertEquals(nyAktivitetskrav.uuid, aktivitetskrav.uuid)
                     assertEquals(nyAktivitetskrav.stoppunktAt, aktivitetskrav.stoppunktAt)
+                }
+            }
+
+            @Test
+            fun `Returns status OK if user has lesetilgang`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+
+                    val response = client.get(urlAktivitetskravPerson) {
+                        bearerAuth(tokenForVeilederWithLeseTilgang)
+                        header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
+                    }
+                    assertEquals(HttpStatusCode.OK, response.status)
                 }
             }
         }
@@ -287,7 +294,7 @@ class AktivitetskravApiTest {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, PERSONIDENT_VEILEDER_NO_ACCESS.value)
                     }
                     assertEquals(HttpStatusCode.Forbidden, response.status)
@@ -300,7 +307,7 @@ class AktivitetskravApiTest {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                     }
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
@@ -312,7 +319,7 @@ class AktivitetskravApiTest {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, "not-a-personident")
                     }
                     assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -335,7 +342,7 @@ class AktivitetskravApiTest {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                     aktivitetskravRepository.createAktivitetskrav(unntakAktivitetskrav)
                     val response = client.post(aktivitetskravApiBasePath) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         setBody(NewAktivitetskravDTO(unntakAktivitetskrav.uuid))
@@ -359,7 +366,7 @@ class AktivitetskravApiTest {
                 testApplication {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                     val response = client.post(aktivitetskravApiBasePath) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
@@ -389,17 +396,30 @@ class AktivitetskravApiTest {
 
             @Test
             fun `returns status Forbidden if denied access to person`() {
-                testDeniedPersonAccess(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
+                testDeniedPersonAccess(aktivitetskravApiBasePath, tokenForVeilederWithFullTilgang, HttpMethod.Post)
+            }
+
+            @Test
+            fun `returns status Forbidden if user has no write access`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                    val response = client.post(aktivitetskravApiBasePath) {
+                        bearerAuth(tokenForVeilederWithLeseTilgang)
+                        header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    }
+                    assertEquals(HttpStatusCode.Forbidden, response.status)
+                }
             }
 
             @Test
             fun `returns status BadRequest if personIdent is missing`() {
-                testMissingPersonIdent(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
+                testMissingPersonIdent(aktivitetskravApiBasePath, tokenForVeilederWithFullTilgang, HttpMethod.Post)
             }
 
             @Test
             fun `returns status BadRequest if personIdent has invalid format`() {
-                testInvalidPersonIdent(aktivitetskravApiBasePath, validToken, HttpMethod.Post)
+                testInvalidPersonIdent(aktivitetskravApiBasePath, tokenForVeilederWithFullTilgang, HttpMethod.Post)
             }
 
             @Test
@@ -407,7 +427,7 @@ class AktivitetskravApiTest {
                 testApplication {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                     val response = client.post(aktivitetskravApiBasePath) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         setBody(NewAktivitetskravDTO(UUID.randomUUID()))
@@ -425,7 +445,7 @@ class AktivitetskravApiTest {
                     aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     val response = client.post(aktivitetskravApiBasePath) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         setBody(NewAktivitetskravDTO(previousAktivitetskravUuid))
@@ -451,7 +471,7 @@ class AktivitetskravApiTest {
                 testApplication {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                     val response = client.get(urlHistorikk) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
@@ -469,7 +489,7 @@ class AktivitetskravApiTest {
                     aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
 
                     val response = client.get(urlHistorikk) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
@@ -495,7 +515,7 @@ class AktivitetskravApiTest {
                         )
                     )
                     val response = client.get(urlHistorikk) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
@@ -527,7 +547,7 @@ class AktivitetskravApiTest {
                     }
 
                     val response = client.get(urlHistorikk) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
@@ -546,7 +566,7 @@ class AktivitetskravApiTest {
                     aktivitetskravRepository.createAktivitetskrav(nyAktivitetskrav)
                     aktivitetskravService.lukkAktivitetskrav(nyAktivitetskrav)
                     val response = client.get(urlHistorikk) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
@@ -587,7 +607,7 @@ class AktivitetskravApiTest {
             testApplication {
                 val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                 val response = client.post("$aktivitetskravApiBasePath/get-vurderinger") {
-                    bearerAuth(validToken)
+                    bearerAuth(tokenForVeilederWithFullTilgang)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(GetVurderingerRequestBody(listOf(ARBEIDSTAKER_PERSONIDENT.value)))
                 }
@@ -600,7 +620,7 @@ class AktivitetskravApiTest {
             testApplication {
                 val client = setupApiAndClient(kafkaProducer = kafkaProducer)
                 val response = client.post("$aktivitetskravApiBasePath/get-vurderinger") {
-                    bearerAuth(validToken)
+                    bearerAuth(tokenForVeilederWithFullTilgang)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 }
                 assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -629,7 +649,7 @@ class AktivitetskravApiTest {
                     pdf
                 )
                 val response = client.post("$aktivitetskravApiBasePath/get-vurderinger") {
-                    bearerAuth(validToken)
+                    bearerAuth(tokenForVeilederWithFullTilgang)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(GetVurderingerRequestBody(listOf(ARBEIDSTAKER_PERSONIDENT.value)))
                 }
@@ -682,7 +702,7 @@ class AktivitetskravApiTest {
                     aktivitetskravRepository.createAktivitetskravVurdering(secondAktivitetskrav, it)
                 }
                 val response = client.post("$aktivitetskravApiBasePath/get-vurderinger") {
-                    bearerAuth(validToken)
+                    bearerAuth(tokenForVeilederWithFullTilgang)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
                         GetVurderingerRequestBody(
@@ -707,7 +727,7 @@ class AktivitetskravApiTest {
     }
 
     @Test
-    fun `Only returns aktivitetskrav for persons with access`() {
+    fun `Only returns aktivitetskrav for persons that the veileder has access too`() {
         testApplication {
             val client = setupApiAndClient(kafkaProducer = kafkaProducer)
             val firstAktivitetskrav = Aktivitetskrav.create(ARBEIDSTAKER_PERSONIDENT)
@@ -719,7 +739,7 @@ class AktivitetskravApiTest {
             val personsWithAktivitetskrav =
                 listOf(ARBEIDSTAKER_PERSONIDENT.value, OTHER_ARBEIDSTAKER_PERSONIDENT.value, PERSONIDENT_VEILEDER_NO_ACCESS.value)
             val response = client.post("$aktivitetskravApiBasePath/get-vurderinger") {
-                bearerAuth(validToken)
+                bearerAuth(tokenForVeilederWithFullTilgang)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     GetVurderingerRequestBody(
