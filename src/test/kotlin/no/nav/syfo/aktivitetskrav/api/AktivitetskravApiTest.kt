@@ -18,6 +18,7 @@ import no.nav.syfo.api.dto.HistorikkDTO
 import no.nav.syfo.api.dto.NewAktivitetskravDTO
 import no.nav.syfo.api.endpoints.aktivitetskravApiHistorikkPath
 import no.nav.syfo.domain.*
+import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
@@ -84,6 +85,7 @@ class AktivitetskravApiTest {
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = mockk(relaxed = true),
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+        behandlendeEnhetClient = mockk<BehandlendeEnhetClient>(relaxed = true),
         varselPdfService = VarselPdfService(
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
@@ -161,6 +163,7 @@ class AktivitetskravApiTest {
                             Arsak.DROFTES_INTERNT
                         ),
                     )
+                    delay(10)
                     val oppfyltVurdering = AktivitetskravVurdering.create(
                         status = AktivitetskravStatus.OPPFYLT,
                         createdBy = VEILEDER_IDENT,
@@ -175,7 +178,6 @@ class AktivitetskravApiTest {
                             document = generateDocumentComponentDTO("Litt fritekst"),
                             callId = "",
                         )
-                        delay(10)
                         aktivitetskravService.vurderAktivitetskrav(
                             aktivitetskrav = nyAktivitetskrav,
                             aktivitetskravVurdering = oppfyltVurdering,
