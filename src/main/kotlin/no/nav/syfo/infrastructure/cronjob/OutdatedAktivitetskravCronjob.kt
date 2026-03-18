@@ -1,6 +1,5 @@
 package no.nav.syfo.infrastructure.cronjob
 
-import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.application.AktivitetskravService
 import org.slf4j.LoggerFactory
@@ -29,11 +28,8 @@ class OutdatedAktivitetskravCronjob(
         val outdatedAktivitetskrav = aktivitetskravService.getOutdatedAktivitetskrav(
             outdatedCutoff = cutoff
         )
-        val outdatedAktivitetskravNavUtland = runBlocking { aktivitetskravService.getOutdatedAktivitetskravNavUtland() }
 
-        (outdatedAktivitetskrav + outdatedAktivitetskravNavUtland).distinctBy {
-            it.uuid
-        }.forEach {
+        outdatedAktivitetskrav.forEach {
             try {
                 aktivitetskravService.lukkAktivitetskrav(aktivitetskrav = it)
                 result.updated++
