@@ -69,6 +69,19 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
             }
         }
 
+    override fun getPotentialNavUtlandOutdatedAktivitetskrav(
+        arenaCutoff: LocalDate,
+        outdatedCutoff: LocalDate,
+    ): List<PAktivitetskrav> =
+        database.connection.use { connection ->
+            connection.prepareStatement(GET_NAV_UTLAND_AKTIVITETSKRAV_OUTDATED).use {
+                it.setObject(1, arenaCutoff)
+                it.setObject(2, outdatedCutoff)
+                it.setObject(3, outdatedCutoff)
+                it.executeQuery().toList { toPAktivitetskrav() }
+            }
+        }
+
     override fun createAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
         previousAktivitetskravUuid: UUID?,
@@ -220,6 +233,16 @@ class AktivitetskravRepository(private val database: DatabaseInterface) : IAktiv
                 AND status = 'NY'
                 AND personident NOT IN (SELECT personident FROM AKTIVITETSKRAV WHERE stoppunkt_at >= ?)
             LIMIT 200;
+            """
+
+        private const val GET_NAV_UTLAND_AKTIVITETSKRAV_OUTDATED =
+            """
+            SELECT * 
+            FROM AKTIVITETSKRAV
+            WHERE stoppunkt_at > ?
+                AND stoppunkt_at < ?
+                AND status = 'NY'
+                AND personident NOT IN (SELECT personident FROM AKTIVITETSKRAV WHERE stoppunkt_at >= ?);
             """
 
         private const val CREATE_AKTIVITETSKRAV =

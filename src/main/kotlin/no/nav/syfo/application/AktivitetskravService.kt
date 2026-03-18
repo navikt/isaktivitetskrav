@@ -153,7 +153,7 @@ class AktivitetskravService(
             .map { it.toAktivitetskrav() }
 
     internal suspend fun getOutdatedAktivitetskravNavUtland(): List<Aktivitetskrav> =
-        aktivitetskravRepository.getOutdatedAktivitetskrav(arenaCutoff, LocalDate.of(2025, Month.NOVEMBER, 1))
+        aktivitetskravRepository.getPotentialNavUtlandOutdatedAktivitetskrav(arenaCutoff, LocalDate.of(2025, Month.NOVEMBER, 1))
             .filter { pAktivitetskrav ->
                 val behandlendeEnhetResponseDTO = behandlendeEnhetClient.getEnhet(pAktivitetskrav.personIdent)
                 behandlendeEnhetResponseDTO?.oppfolgingsenhetDTO?.enhet?.enhetId == NAV_UTLAND_ENHETID || (
