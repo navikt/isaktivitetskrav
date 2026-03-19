@@ -5,7 +5,6 @@ import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.VarselPdfService
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravStatus
-import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
@@ -55,7 +54,6 @@ class KafkaOppfolgingstilfellePersonServiceTest {
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         arenaCutoff = arenaCutoff,
-        behandlendeEnhetClient = mockk<BehandlendeEnhetClient>(relaxed = true),
         varselPdfService = VarselPdfService(
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,

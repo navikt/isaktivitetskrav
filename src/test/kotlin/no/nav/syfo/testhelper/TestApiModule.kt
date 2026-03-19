@@ -7,7 +7,6 @@ import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.application.VarselPdfService
 import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
-import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
@@ -26,7 +25,6 @@ fun Application.testApiModule(
         aktivitetskravVarselRepository = AktivitetskravVarselRepository(database),
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
-        behandlendeEnhetClient = mockk<BehandlendeEnhetClient>(relaxed = true),
         varselPdfService = varselPdfService
     )
     val aktivitetskravVarselService = AktivitetskravVarselService(

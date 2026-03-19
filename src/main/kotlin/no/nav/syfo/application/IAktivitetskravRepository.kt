@@ -21,11 +21,6 @@ interface IAktivitetskravRepository {
         outdatedCutoff: LocalDate,
     ): List<PAktivitetskrav>
 
-    fun getPotentialNavUtlandOutdatedAktivitetskrav(
-        arenaCutoff: LocalDate,
-        outdatedCutoff: LocalDate,
-    ): List<PAktivitetskrav>
-
     fun createAktivitetskrav(
         aktivitetskrav: Aktivitetskrav,
         previousAktivitetskravUuid: UUID? = null,
