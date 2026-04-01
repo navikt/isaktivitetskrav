@@ -10,7 +10,6 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.TestDatabaseNotResponding
-import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
