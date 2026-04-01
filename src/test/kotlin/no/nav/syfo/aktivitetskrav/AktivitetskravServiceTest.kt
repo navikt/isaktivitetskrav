@@ -34,13 +34,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNotNull
-import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.Future
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class AktivitetskravServiceTest {
 
