@@ -14,7 +14,8 @@ import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 
 private val navIdentsWithLeseTilgangOnly = setOf(VEILEDER_IDENT_WITH_LESETILGANG)
 
-// Decode caller NAVident from bearer token so the mock can enforce user-level write access.
+// Decode caller navIdent claim from token so this mock can enforce write access for specific
+// test veileder idents (see src/test/kotlin/no/nav/syfo/testhelper/UserConstants.kt).
 private fun HttpRequestData.navIdent(): String? =
     headers[HttpHeaders.Authorization]
         ?.removePrefix("Bearer ")
