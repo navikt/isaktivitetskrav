@@ -26,6 +26,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
+/**
+ * Unit test for VeilederTilgangControllClient. This is not full API integration testing
+ * like the API tests. azureAdClient and httpClient dependencies are mocked here.
+ */
 class VeilederTilgangskontrollClientTest {
     private val token = "token"
     private val oboToken = "obo-token"
@@ -34,15 +38,15 @@ class VeilederTilgangskontrollClientTest {
     private val clientEnvironment = testEnvironment().clients.istilgangskontroll
 
     @Test
-    fun `hasAccess returns true when tilgang is approved and sends expected headers`() {
-        val azureAdClient = mockAzureAdClientWithToken()
+    fun `hasAccess returns true when tilgang is approved and sends expected headers to istilgangskontroll`() {
+        val azureAdClient = mockAzureAdClientGetOBOToken()
         lateinit var authorizationHeader: String
         lateinit var personidentHeader: String
         lateinit var callIdHeader: String
 
-        // In order to inspect the headers the httpClient is called with, this test is not using the
-        // createClient() helper used by the other tests, and is instead setting up httpClient and
-        // VeilederTilgangskontrollClient manually.
+        // In order to intercept the headers that istilgangskontroll would be called with, this test
+        // is not using the createClient() helper used by the other tests, and is instead setting up
+        // httpClient and VeilederTilgangskontrollClient manually.
         val httpClient = HttpClient(MockEngine) {
             commonConfig()
             engine {
@@ -72,7 +76,7 @@ class VeilederTilgangskontrollClientTest {
 
     @Test
     fun `hasAccess returns false when tilgang is not approved`() {
-        val client = createClient(Tilgang(erGodkjent = false, fullTilgang = true))
+        val client = createMockClientForResponse(Tilgang(erGodkjent = false, fullTilgang = true))
 
         runBlocking {
             assertFalse(client.hasAccess(callId, personIdent, token))
@@ -81,7 +85,7 @@ class VeilederTilgangskontrollClientTest {
 
     @Test
     fun `hasAccess returns false on forbidden response`() {
-        val client = createClient(status = HttpStatusCode.Forbidden)
+        val client = createMockClientForResponse(status = HttpStatusCode.Forbidden)
 
         runBlocking {
             assertFalse(client.hasAccess(callId, personIdent, token))
@@ -90,7 +94,7 @@ class VeilederTilgangskontrollClientTest {
 
     @Test
     fun `hasWriteAccess returns true when tilgang to person is approved and user has fullTilgang`() {
-        val client = createClient(Tilgang(erGodkjent = true, fullTilgang = true))
+        val client = createMockClientForResponse(Tilgang(erGodkjent = true, fullTilgang = true))
 
         runBlocking {
             assertTrue(client.hasWriteAccess(callId, personIdent, token))
@@ -99,7 +103,7 @@ class VeilederTilgangskontrollClientTest {
 
     @Test
     fun `hasWriteAccess returns false when tilgang to person is approved but user does not have fullTilgang`() {
-        val client = createClient(Tilgang(erGodkjent = true, fullTilgang = false))
+        val client = createMockClientForResponse(Tilgang(erGodkjent = true, fullTilgang = false))
 
         runBlocking {
             assertFalse(client.hasWriteAccess(callId, personIdent, token))
@@ -108,7 +112,7 @@ class VeilederTilgangskontrollClientTest {
 
     @Test
     fun `hasWriteAccess returns false when tilgang to person is not approved`() {
-        val client = createClient(Tilgang(erGodkjent = false, fullTilgang = true))
+        val client = createMockClientForResponse(Tilgang(erGodkjent = false, fullTilgang = true))
 
         runBlocking {
             assertFalse(client.hasWriteAccess(callId, personIdent, token))
@@ -117,7 +121,7 @@ class VeilederTilgangskontrollClientTest {
 
     @Test
     fun `hasWriteAccess returns false on unexpected response`() {
-        val client = createClient(status = HttpStatusCode.InternalServerError)
+        val client = createMockClientForResponse(status = HttpStatusCode.InternalServerError)
 
         runBlocking {
             assertFalse(client.hasWriteAccess(callId, personIdent, token))
@@ -151,11 +155,14 @@ class VeilederTilgangskontrollClientTest {
         }
     }
 
-    private fun createClient(
+    /**
+     * Create mock veilederTilgangkontrollClient for a specific response DTO from istilgangskontroll.
+     */
+    private fun createMockClientForResponse(
         tilgang: Tilgang = Tilgang(erGodkjent = true),
         status: HttpStatusCode = HttpStatusCode.OK,
     ): VeilederTilgangskontrollClient {
-        val azureAdClient = mockAzureAdClientWithToken()
+        val azureAdClient = mockAzureAdClientGetOBOToken()
         val httpClient = HttpClient(MockEngine) {
             commonConfig()
             engine {
@@ -176,7 +183,7 @@ class VeilederTilgangskontrollClientTest {
         )
     }
 
-    private fun mockAzureAdClientWithToken(): AzureAdClient {
+    private fun mockAzureAdClientGetOBOToken(): AzureAdClient {
         val azureAdClient = mockk<AzureAdClient>()
         coEvery {
             azureAdClient.getOnBehalfOfToken(scopeClientId = clientEnvironment.clientId, token = token)
