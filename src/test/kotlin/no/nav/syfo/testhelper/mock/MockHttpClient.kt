@@ -11,7 +11,8 @@ fun mockHttpClient(environment: Environment) = HttpClient(MockEngine) {
         addHandler { request ->
             val requestUrl = request.url.encodedPath
             when {
-                requestUrl == "/${environment.azure.openidConfigTokenEndpoint}" -> azureAdMockResponse()
+                requestUrl == "/${environment.azure.openidConfigTokenEndpoint}" -> azureAdMockResponse(request)
+
                 requestUrl.startsWith("/${environment.clients.istilgangskontroll.baseUrl}") -> tilgangskontrollResponse(
                     request
                 )
@@ -21,7 +22,9 @@ fun mockHttpClient(environment: Environment) = HttpClient(MockEngine) {
                 )
 
                 requestUrl.startsWith("/${environment.clients.pdl.baseUrl}") -> pdlMockResponse(request)
+
                 requestUrl.startsWith("/${environment.clients.dokarkiv.baseUrl}") -> dokarkivMockResponse(request)
+
                 else -> error("Unhandled ${request.url.encodedPath}")
             }
         }

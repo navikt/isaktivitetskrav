@@ -33,6 +33,7 @@ fun ApplicationCall.getBearerHeader(): String? =
 suspend fun RoutingContext.checkVeilederTilgang(
     action: String,
     veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
+    requiresWriteAccess: Boolean = false,
     block: suspend () -> Unit,
 ) {
     val callId = call.getCallId()
@@ -41,11 +42,20 @@ suspend fun RoutingContext.checkVeilederTilgang(
     val personident = call.getPersonIdent()
         ?: throw IllegalArgumentException("Failed to $action: No $NAV_PERSONIDENT_HEADER supplied in request header")
 
-    val hasAccess = veilederTilgangskontrollClient.hasAccess(
-        callId = callId,
-        personIdent = personident,
-        token = token,
-    )
+    val hasAccess = if (requiresWriteAccess) {
+        veilederTilgangskontrollClient.hasWriteAccess(
+            callId = callId,
+            personIdent = personident,
+            token = token,
+        )
+    } else {
+        veilederTilgangskontrollClient.hasAccess(
+            callId = callId,
+            personIdent = personident,
+            token = token,
+        )
+    }
+
     if (!hasAccess) {
         throw ForbiddenAccessVeilederException(
             action = action,

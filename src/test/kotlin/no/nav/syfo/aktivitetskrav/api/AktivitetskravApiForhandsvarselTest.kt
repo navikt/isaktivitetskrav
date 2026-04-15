@@ -47,11 +47,6 @@ class AktivitetskravApiForhandsvarselTest {
     private val database = externalMockEnvironment.database
     private val kafkaProducer = mockk<KafkaProducer<String, AktivitetskravVurderingRecord>>()
     private val aktivitetskravRepository = AktivitetskravRepository(database)
-    private val validToken = generateJWT(
-        audience = externalMockEnvironment.environment.azure.appClientId,
-        issuer = externalMockEnvironment.wellKnownInternalAzureAD.issuer,
-        navIdent = UserConstants.VEILEDER_IDENT,
-    )
     private val fritekst = "Dette er et forhåndsvarsel"
     private val svarfrist = LocalDate.now().plusDays(30)
     private val svarfristShortest = LocalDate.now().plusDays(21)
@@ -82,10 +77,11 @@ class AktivitetskravApiForhandsvarselTest {
         aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
         arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
         newForhandsvarselDTO: ForhandsvarselDTO = forhandsvarselDTO,
+        token: String = tokenForVeilederWithFullTilgang,
     ) = run {
         val url = "$aktivitetskravApiBasePath/$aktivitetskravUuid$forhandsvarselPath"
         post(url) {
-            bearerAuth(validToken)
+            bearerAuth(token)
             header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(newForhandsvarselDTO)
@@ -95,10 +91,11 @@ class AktivitetskravApiForhandsvarselTest {
     suspend fun HttpClient.postAvvent(
         aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
         arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+        token: String = tokenForVeilederWithFullTilgang,
     ) = run {
         val url = "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
         post(url) {
-            bearerAuth(validToken)
+            bearerAuth(token)
             header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(
@@ -114,10 +111,11 @@ class AktivitetskravApiForhandsvarselTest {
     suspend fun HttpClient.postUnntak(
         aktivitetskravUuid: UUID = nyAktivitetskrav.uuid,
         arbeidstakerPersonIdent: PersonIdent = UserConstants.ARBEIDSTAKER_PERSONIDENT,
+        token: String = tokenForVeilederWithFullTilgang,
     ) = run {
         val url = "$aktivitetskravApiBasePath/$aktivitetskravUuid$vurderAktivitetskravPath"
         post(url) {
-            bearerAuth(validToken)
+            bearerAuth(token)
             header(NAV_PERSONIDENT_HEADER, arbeidstakerPersonIdent.value)
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(
@@ -155,7 +153,7 @@ class AktivitetskravApiForhandsvarselTest {
                     assertEquals(forhandsvarselDTO.document, createdForhandsvarsel.document)
 
                     val response = client.get(urlAktivitetskravPerson) {
-                        bearerAuth(validToken)
+                        bearerAuth(tokenForVeilederWithFullTilgang)
                         header(NAV_PERSONIDENT_HEADER, UserConstants.ARBEIDSTAKER_PERSONIDENT.value)
                     }
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -240,6 +238,15 @@ class AktivitetskravApiForhandsvarselTest {
                     val varselWithoutDocument = forhandsvarselDTO.copy(document = emptyList())
                     val response = client.postForhandsvarsel(newForhandsvarselDTO = varselWithoutDocument)
                     assertEquals(HttpStatusCode.BadRequest, response.status)
+                }
+            }
+
+            @Test
+            fun `Fails if user has no write access`() {
+                testApplication {
+                    val client = setupApiAndClient(kafkaProducer = kafkaProducer)
+                    val response = client.postForhandsvarsel(token = tokenForVeilederWithLeseTilgang)
+                    assertEquals(HttpStatusCode.Forbidden, response.status)
                 }
             }
 
