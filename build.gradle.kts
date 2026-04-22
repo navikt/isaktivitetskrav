@@ -7,6 +7,7 @@ val confluentVersion = "8.2.0"
 val flywayVersion = "11.19.0"
 val hikariVersion = "7.0.2"
 val jacksonDataTypeVersion = "2.21.2"
+val jacksonDataBindVersion = "3.1.2"
 val jedisVersion = "6.2.0"
 val kafkaVersion = "4.2.0"
 val ktorVersion = "3.4.2"
@@ -15,10 +16,10 @@ val logstashEncoderVersion = "9.0"
 val micrometerRegistryVersion = "1.16.4"
 val mockkVersion = "1.14.9"
 val nettyCodecVersion = "4.2.12.Final"
-val nimbusJoseJwtVersion = "10.8"
+val nimbusJoseJwtVersion = "10.9"
 val postgresVersion = "42.7.10"
 val postgresEmbeddedVersion = "2.2.2"
-val postgresRuntimeVersion = "17.5.0"
+val postgresRuntimeVersion = "17.9.0"
 val redisEmbeddedVersion = "0.7.3"
 
 plugins {
@@ -64,6 +65,7 @@ dependencies {
 
     // (De-)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDataTypeVersion")
+    implementation("tools.jackson.core:jackson-databind:$jacksonDataBindVersion")
 
     // Cache
     implementation("redis.clients:jedis:$jedisVersion")
@@ -72,38 +74,11 @@ dependencies {
     // Kafka
     val excludeLog4j = fun ExternalModuleDependency.() {
         exclude(group = "log4j")
+        exclude(group = "org.apache.logging.log4j")
     }
     implementation("org.apache.kafka:kafka_2.13:$kafkaVersion", excludeLog4j)
-    constraints {
-        implementation("org.bitbucket.b_c:jose4j") {
-            because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://github.com/advisories/GHSA-6qvw-249j-h44c")
-            version {
-                require("0.9.6")
-            }
-        }
-        implementation("commons-beanutils:commons-beanutils") {
-            because("org.apache.kafka:kafka_2.13:$kafkaVersion -> https://www.cve.org/CVERecord?id=CVE-2025-48734")
-            version {
-                require("1.11.0")
-            }
-        }
-    }
 
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion", excludeLog4j)
-    constraints {
-        implementation("org.apache.avro:avro") {
-            because("io.confluent:kafka-avro-serializer:$confluentVersion -> https://www.cve.org/CVERecord?id=CVE-2023-39410")
-            version {
-                require("1.12.0")
-            }
-        }
-        implementation("org.apache.commons:commons-compress") {
-            because("org.apache.commons:commons-compress:1.22 -> https://www.cve.org/CVERecord?id=CVE-2012-2098")
-            version {
-                require("1.27.1")
-            }
-        }
-    }
 
     // Tests
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
