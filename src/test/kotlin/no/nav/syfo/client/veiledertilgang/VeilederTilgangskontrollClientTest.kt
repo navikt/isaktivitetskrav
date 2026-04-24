@@ -38,8 +38,8 @@ class VeilederTilgangskontrollClientTest {
     private val oboToken = "obo-token"
     private val callId = "call-id"
     private val personident = PersonIdent("12345678910")
-    private val azureAdClient = mockk<AzureAdClient>()
     private val clientEnvironment = testEnvironment().clients.istilgangskontroll
+    private val azureAdClient = mockk<AzureAdClient>()
 
     @BeforeEach
     fun setup() {
@@ -93,61 +93,47 @@ class VeilederTilgangskontrollClientTest {
     }
 
     @Test
-    fun `hasAccess returns false when tilgang is not approved`() {
-        val client = createMockClientForResponse(Tilgang(erGodkjent = false, fullTilgang = true))
-
-        runBlocking {
-            assertFalse(client.hasAccess(callId, personident, token))
-        }
-    }
-
-    @Test
-    fun `hasAccess returns false on forbidden response`() {
-        val client = createMockClientForResponse(status = HttpStatusCode.Forbidden)
-
-        runBlocking {
-            assertFalse(client.hasAccess(callId, personident, token))
-        }
-    }
-
-    @Test
-    fun `hasWriteAccess returns true when tilgang to person is approved and user has fullTilgang`() {
+    fun `hasAccess and hasWriteAccess returns true when tilgang to person is approved and user has fullTilgang`() {
         val client = createMockClientForResponse(Tilgang(erGodkjent = true, fullTilgang = true))
 
         runBlocking {
+            assertTrue(client.hasAccess(callId, personident, token))
             assertTrue(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasWriteAccess returns false when tilgang to person is approved but user does not have fullTilgang`() {
+    fun `hasAccess returns true and hasWriteAccess returns false when tilgang to person is approved but user does not have fullTilgang`() {
         val client = createMockClientForResponse(Tilgang(erGodkjent = true, fullTilgang = false))
 
         runBlocking {
+            assertTrue(client.hasAccess(callId, personident, token))
             assertFalse(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasWriteAccess returns false when tilgang to person is not approved`() {
+    fun `hasAccess and hasWriteAccess returns false when tilgang is not approved`() {
         val client = createMockClientForResponse(Tilgang(erGodkjent = false, fullTilgang = true))
 
         runBlocking {
+            assertFalse(client.hasAccess(callId, personident, token))
             assertFalse(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasWriteAccess returns false on unexpected response`() {
+    fun `hasAccess and hasWriteAccess returns false on unexpected response`() {
         val client = createMockClientForResponse(status = HttpStatusCode.InternalServerError)
 
         runBlocking {
+            assertFalse(client.hasAccess(callId, personident, token))
             assertFalse(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasAccess throws when obo token request fails`() {
+    fun `hasAccess and hasWriteAccess throws when obo token request fails`() {
         coEvery {
             azureAdClient.getOnBehalfOfToken(any(), any())
         } returns null
@@ -157,6 +143,11 @@ class VeilederTilgangskontrollClientTest {
         assertThrows(RuntimeException::class.java) {
             runBlocking {
                 client.hasAccess(callId, personident, token)
+            }
+        }
+        assertThrows(RuntimeException::class.java) {
+            runBlocking {
+                client.hasWriteAccess(callId, personident, token)
             }
         }
     }
