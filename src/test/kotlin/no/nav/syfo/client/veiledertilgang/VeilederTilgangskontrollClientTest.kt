@@ -5,6 +5,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -19,10 +20,12 @@ import no.nav.syfo.testhelper.testEnvironment
 import no.nav.syfo.util.NAV_CALL_ID_HEADER
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.util.bearerHeader
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -34,12 +37,27 @@ class VeilederTilgangskontrollClientTest {
     private val token = "token"
     private val oboToken = "obo-token"
     private val callId = "call-id"
-    private val personIdent = PersonIdent("12345678910")
+    private val personident = PersonIdent("12345678910")
     private val clientEnvironment = testEnvironment().clients.istilgangskontroll
+    private val azureAdClient = mockk<AzureAdClient>()
+
+    @BeforeEach
+    fun setup() {
+        coEvery {
+            azureAdClient.getOnBehalfOfToken(any(), any())
+        } returns AzureAdToken(
+            accessToken = oboToken,
+            expires = LocalDateTime.now().plusHours(1),
+        )
+    }
+
+    @AfterEach
+    fun teardown() {
+        clearAllMocks()
+    }
 
     @Test
     fun `hasAccess returns true when tilgang is approved and sends expected headers to istilgangskontroll`() {
-        val azureAdClient = mockAzureAdClientGetOBOToken()
         lateinit var authorizationHeader: String
         lateinit var personidentHeader: String
         lateinit var callIdHeader: String
@@ -66,91 +84,70 @@ class VeilederTilgangskontrollClientTest {
         )
 
         runBlocking {
-            assertTrue(client.hasAccess(callId, personIdent, token))
+            assertTrue(client.hasAccess(callId, personident, token))
         }
 
         assertEquals(bearerHeader(oboToken), authorizationHeader)
-        assertEquals(personIdent.value, personidentHeader)
+        assertEquals(personident.value, personidentHeader)
         assertEquals(callId, callIdHeader)
     }
 
     @Test
-    fun `hasAccess returns false when tilgang is not approved`() {
-        val client = createMockClientForResponse(Tilgang(erGodkjent = false, fullTilgang = true))
-
-        runBlocking {
-            assertFalse(client.hasAccess(callId, personIdent, token))
-        }
-    }
-
-    @Test
-    fun `hasAccess returns false on forbidden response`() {
-        val client = createMockClientForResponse(status = HttpStatusCode.Forbidden)
-
-        runBlocking {
-            assertFalse(client.hasAccess(callId, personIdent, token))
-        }
-    }
-
-    @Test
-    fun `hasWriteAccess returns true when tilgang to person is approved and user has fullTilgang`() {
+    fun `hasAccess and hasWriteAccess returns true when tilgang to person is approved and user has fullTilgang`() {
         val client = createMockClientForResponse(Tilgang(erGodkjent = true, fullTilgang = true))
 
         runBlocking {
-            assertTrue(client.hasWriteAccess(callId, personIdent, token))
+            assertTrue(client.hasAccess(callId, personident, token))
+            assertTrue(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasWriteAccess returns false when tilgang to person is approved but user does not have fullTilgang`() {
+    fun `hasAccess returns true and hasWriteAccess returns false when tilgang to person is approved but user does not have fullTilgang`() {
         val client = createMockClientForResponse(Tilgang(erGodkjent = true, fullTilgang = false))
 
         runBlocking {
-            assertFalse(client.hasWriteAccess(callId, personIdent, token))
+            assertTrue(client.hasAccess(callId, personident, token))
+            assertFalse(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasWriteAccess returns false when tilgang to person is not approved`() {
+    fun `hasAccess and hasWriteAccess returns false when tilgang is not approved`() {
         val client = createMockClientForResponse(Tilgang(erGodkjent = false, fullTilgang = true))
 
         runBlocking {
-            assertFalse(client.hasWriteAccess(callId, personIdent, token))
+            assertFalse(client.hasAccess(callId, personident, token))
+            assertFalse(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasWriteAccess returns false on unexpected response`() {
+    fun `hasAccess and hasWriteAccess returns false on unexpected response`() {
         val client = createMockClientForResponse(status = HttpStatusCode.InternalServerError)
 
         runBlocking {
-            assertFalse(client.hasWriteAccess(callId, personIdent, token))
+            assertFalse(client.hasAccess(callId, personident, token))
+            assertFalse(client.hasWriteAccess(callId, personident, token))
         }
     }
 
     @Test
-    fun `hasAccess throws when obo token request fails`() {
-        val azureAdClient = mockk<AzureAdClient>()
+    fun `hasAccess and hasWriteAccess throws when obo token request fails`() {
         coEvery {
-            azureAdClient.getOnBehalfOfToken(scopeClientId = clientEnvironment.clientId, token = token)
+            azureAdClient.getOnBehalfOfToken(any(), any())
         } returns null
 
-        val httpClient = HttpClient(MockEngine) {
-            commonConfig()
-            engine {
-                addHandler { respond(Tilgang(erGodkjent = true)) }
-            }
-        }
-
-        val client = VeilederTilgangskontrollClient(
-            azureAdClient = azureAdClient,
-            clientEnvironment = clientEnvironment,
-            httpClient = httpClient,
-        )
+        val client = createMockClientForResponse()
 
         assertThrows(RuntimeException::class.java) {
             runBlocking {
-                client.hasAccess(callId, personIdent, token)
+                client.hasAccess(callId, personident, token)
+            }
+        }
+        assertThrows(RuntimeException::class.java) {
+            runBlocking {
+                client.hasWriteAccess(callId, personident, token)
             }
         }
     }
@@ -162,7 +159,6 @@ class VeilederTilgangskontrollClientTest {
         tilgang: Tilgang = Tilgang(erGodkjent = true),
         status: HttpStatusCode = HttpStatusCode.OK,
     ): VeilederTilgangskontrollClient {
-        val azureAdClient = mockAzureAdClientGetOBOToken()
         val httpClient = HttpClient(MockEngine) {
             commonConfig()
             engine {
@@ -181,16 +177,5 @@ class VeilederTilgangskontrollClientTest {
             clientEnvironment = clientEnvironment,
             httpClient = httpClient,
         )
-    }
-
-    private fun mockAzureAdClientGetOBOToken(): AzureAdClient {
-        val azureAdClient = mockk<AzureAdClient>()
-        coEvery {
-            azureAdClient.getOnBehalfOfToken(scopeClientId = clientEnvironment.clientId, token = token)
-        } returns AzureAdToken(
-            accessToken = oboToken,
-            expires = LocalDateTime.now().plusHours(1),
-        )
-        return azureAdClient
     }
 }
