@@ -10,9 +10,12 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.api.exception.ForbiddenAccessVeilederException
-import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
+import no.nav.syfo.tilgangskontroll.ktor.ForbiddenAccessVeilederException
+import no.nav.syfo.tilgangskontroll.ktor.checkVeilederTilgang
+import no.nav.syfo.tilgangskontroll.client.VeilederTilgangskontrollClient
+import no.nav.syfo.util.NAV_CALL_ID_HEADER
+import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
+import no.nav.syfo.util.bearerHeader
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,7 +24,7 @@ import org.junit.jupiter.api.Test
 class PipelineUtilTest {
     private val action = "read aktivitetskrav"
     private val callId = "123"
-    private val personIdent = PersonIdent("12345678910")
+    private val personIdent = "12345678910"
     private val token = "token"
 
     private val veilederTilgangskontrollClient = mockk<VeilederTilgangskontrollClient>()
@@ -31,7 +34,7 @@ class PipelineUtilTest {
         val routingContext = routingContextWithHeaders(
             headers = Headers.build {
                 append(NAV_CALL_ID_HEADER, callId)
-                append(NAV_PERSONIDENT_HEADER, personIdent.value)
+                append(NAV_PERSONIDENT_HEADER, personIdent)
                 append(HttpHeaders.Authorization, bearerHeader(token))
             }
         )
@@ -64,7 +67,7 @@ class PipelineUtilTest {
         val routingContext = routingContextWithHeaders(
             headers = Headers.build {
                 append(NAV_CALL_ID_HEADER, callId)
-                append(NAV_PERSONIDENT_HEADER, personIdent.value)
+                append(NAV_PERSONIDENT_HEADER, personIdent)
                 append(HttpHeaders.Authorization, bearerHeader(token))
             }
         )
@@ -98,7 +101,7 @@ class PipelineUtilTest {
         val routingContext = routingContextWithHeaders(
             headers = Headers.build {
                 append(NAV_CALL_ID_HEADER, callId)
-                append(NAV_PERSONIDENT_HEADER, personIdent.value)
+                append(NAV_PERSONIDENT_HEADER, personIdent)
                 append(HttpHeaders.Authorization, bearerHeader(token))
             }
         )
@@ -130,7 +133,7 @@ class PipelineUtilTest {
         val routingContext = routingContextWithHeaders(
             headers = Headers.build {
                 append(NAV_CALL_ID_HEADER, callId)
-                append(NAV_PERSONIDENT_HEADER, personIdent.value)
+                append(NAV_PERSONIDENT_HEADER, personIdent)
             }
         )
 

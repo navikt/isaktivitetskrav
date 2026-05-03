@@ -6,10 +6,11 @@ import no.nav.syfo.api.apiModule
 import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.application.VarselPdfService
-import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
+import no.nav.syfo.tilgangskontroll.client.VeilederTilgangConfig
+import no.nav.syfo.tilgangskontroll.client.VeilederTilgangskontrollClient
 
 fun Application.testApiModule(
     externalMockEnvironment: ExternalMockEnvironment,
@@ -37,8 +38,11 @@ fun Application.testApiModule(
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
     )
     val veilederTilgangskontrollClient = VeilederTilgangskontrollClient(
-        azureAdClient = externalMockEnvironment.azureAdClient,
-        clientEnvironment = externalMockEnvironment.environment.clients.istilgangskontroll,
+        azureAdClient = externalMockEnvironment.libraryAzureAdClient,
+        config = VeilederTilgangConfig(
+            baseUrl = externalMockEnvironment.environment.clients.istilgangskontroll.baseUrl,
+            clientId = externalMockEnvironment.environment.clients.istilgangskontroll.clientId,
+        ),
         httpClient = externalMockEnvironment.mockHttpClient,
     )
     this.apiModule(
