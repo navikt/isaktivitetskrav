@@ -20,7 +20,7 @@ val nimbusJoseJwtVersion = "10.9"
 val postgresVersion = "42.7.10"
 val postgresEmbeddedVersion = "2.2.2"
 val postgresRuntimeVersion = "17.9.0"
-val redisEmbeddedVersion = "0.7.3"
+val testContainersVersion = "1.21.0"
 
 plugins {
     kotlin("jvm") version "2.3.10"
@@ -79,7 +79,7 @@ dependencies {
 
     // Cache
     implementation("redis.clients:jedis:$jedisVersion")
-    testImplementation("it.ozimov:embedded-redis:$redisEmbeddedVersion")
+    testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
 
     // Kafka
     val excludeLog4j = fun ExternalModuleDependency.() {
