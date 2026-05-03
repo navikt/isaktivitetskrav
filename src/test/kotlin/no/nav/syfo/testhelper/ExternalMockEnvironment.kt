@@ -29,6 +29,15 @@ class ExternalMockEnvironment private constructor() {
         azureEnvironment = environment.azure,
         httpClient = mockHttpClient,
     )
+    val libraryAzureAdClient = no.nav.syfo.azure.AzureAdClient(
+        azureEnvironment = no.nav.syfo.azure.AzureEnvironment(
+            appClientId = environment.azure.appClientId,
+            appClientSecret = environment.azure.appClientSecret,
+            appWellKnownUrl = environment.azure.appWellKnownUrl,
+            openidConfigTokenEndpoint = environment.azure.openidConfigTokenEndpoint,
+        ),
+        httpClient = mockHttpClient,
+    )
     val pdfgenClient = PdfGenClient(
         pdfGenBaseUrl = environment.clients.ispdfgen.baseUrl,
         httpClient = mockHttpClient,

@@ -16,8 +16,9 @@ import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
-import no.nav.syfo.util.*
+import no.nav.syfo.tilgangskontroll.client.VeilederTilgangskontrollClient
+import no.nav.syfo.tilgangskontroll.ktor.*
+import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
@@ -147,7 +148,7 @@ fun Route.registerAktivitetskravApi(
             val personidenter = requestBody.personidenter.map { PersonIdent(it) }
 
             val personerVeilederHasAccessTo = veilederTilgangskontrollClient.veilederPersonerAccess(
-                personidenter = personidenter,
+                personidenter = personidenter.map { it.value },
                 token = token,
                 callId = call.getCallId(),
             )
@@ -157,7 +158,7 @@ fun Route.registerAktivitetskravApi(
                     emptyMap()
                 } else {
                     aktivitetskravService.getAktivitetskravForPersons(
-                        personidenter = personerVeilederHasAccessTo,
+                        personidenter = personerVeilederHasAccessTo.map { PersonIdent(it) },
                     )
                 }
 
@@ -176,5 +177,6 @@ fun Route.registerAktivitetskravApi(
     }
 }
 
-private fun ApplicationCall.personIdent(): PersonIdent = this.getPersonIdent()
+private fun ApplicationCall.personIdent(): PersonIdent = this.getPersonident()
+    ?.let { PersonIdent(it) }
     ?: throw IllegalArgumentException("Failed to $API_ACTION: No $NAV_PERSONIDENT_HEADER supplied in request header")
