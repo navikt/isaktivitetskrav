@@ -24,9 +24,19 @@ class ExternalMockEnvironment private constructor() {
     val mockHttpClient = mockHttpClient(environment = environment)
 
     val redisServer = testValkeyServer(valkeyConfig = environment.valkeyConfig)
+        .also { it.start() }
     val wellKnownInternalAzureAD = wellKnownInternalAzureAD()
     val azureAdClient = AzureAdClient(
         azureEnvironment = environment.azure,
+        httpClient = mockHttpClient,
+    )
+    val libraryAzureAdClient = no.nav.syfo.azure.AzureAdClient(
+        azureEnvironment = no.nav.syfo.azure.AzureEnvironment(
+            appClientId = environment.azure.appClientId,
+            appClientSecret = environment.azure.appClientSecret,
+            appWellKnownUrl = environment.azure.appWellKnownUrl,
+            openidConfigTokenEndpoint = environment.azure.openidConfigTokenEndpoint,
+        ),
         httpClient = mockHttpClient,
     )
     val pdfgenClient = PdfGenClient(
@@ -37,10 +47,10 @@ class ExternalMockEnvironment private constructor() {
         azureAdClient = azureAdClient,
         pdlEnvironment = environment.clients.pdl,
         httpClient = mockHttpClient,
-        cache = testValkeyCache(valkeyConfig = environment.valkeyConfig),
+        cache = testValkeyCache(container = redisServer, valkeyConfig = environment.valkeyConfig),
     )
 
     companion object {
-        val instance: ExternalMockEnvironment = ExternalMockEnvironment().also { it.redisServer.start() }
+        val instance: ExternalMockEnvironment = ExternalMockEnvironment()
     }
 }

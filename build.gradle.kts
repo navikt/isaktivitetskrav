@@ -20,7 +20,7 @@ val nimbusJoseJwtVersion = "10.9"
 val postgresVersion = "42.7.10"
 val postgresEmbeddedVersion = "2.2.2"
 val postgresRuntimeVersion = "17.9.0"
-val redisEmbeddedVersion = "0.7.3"
+val testContainersVersion = "1.21.0"
 
 plugins {
     kotlin("jvm") version "2.3.10"
@@ -30,13 +30,23 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven(url = "https://packages.confluent.io/maven/")
+    maven {
+        url = uri("https://maven.pkg.github.com/navikt/isyfo-backend-utils")
+        credentials {
+            username = project.findProperty("githubUser") as String? ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("githubPassword") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
+
+    implementation("no.nav.syfo:isyfo-backend-utils:0.0.5")
 
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
@@ -69,7 +79,7 @@ dependencies {
 
     // Cache
     implementation("redis.clients:jedis:$jedisVersion")
-    testImplementation("it.ozimov:embedded-redis:$redisEmbeddedVersion")
+    testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
 
     // Kafka
     val excludeLog4j = fun ExternalModuleDependency.() {
