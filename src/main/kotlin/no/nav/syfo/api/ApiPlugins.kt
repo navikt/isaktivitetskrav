@@ -12,7 +12,7 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig
 import no.nav.syfo.api.exception.ConflictException
-import no.nav.syfo.common.tilgangskontroll.ktor.ForbiddenAccessVeilederException
+import no.nav.syfo.common.tilgangskontroll.ktor.VeilederTilgangForbiddenException
 import no.nav.syfo.common.util.ktor.getCallId
 import no.nav.syfo.common.util.ktor.getConsumerClientId
 import no.nav.syfo.api.metric.METRICS_REGISTRY
@@ -53,7 +53,7 @@ fun Application.installStatusPages() {
             val logExceptionMessage = "Caught exception, callId=$callId, consumerClientId=$consumerClientId"
             val log = call.application.log
             when (cause) {
-                is ForbiddenAccessVeilederException -> {
+                is VeilederTilgangForbiddenException -> {
                     log.warn(logExceptionMessage, cause)
                 }
                 else -> {
@@ -73,7 +73,7 @@ fun Application.installStatusPages() {
                 is ConflictException -> {
                     HttpStatusCode.Conflict
                 }
-                is ForbiddenAccessVeilederException -> {
+                is VeilederTilgangForbiddenException -> {
                     HttpStatusCode.Forbidden
                 }
                 else -> {
