@@ -1,6 +1,6 @@
 package no.nav.syfo.api.cache
 
-import no.nav.syfo.util.configuredJacksonMapper
+import no.nav.syfo.common.util.configuredJacksonMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisPool

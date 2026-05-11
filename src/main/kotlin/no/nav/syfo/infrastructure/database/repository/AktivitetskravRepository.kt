@@ -10,7 +10,7 @@ import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 import no.nav.syfo.infrastructure.database.NoElementInsertedException
 import no.nav.syfo.infrastructure.database.toList
-import no.nav.syfo.util.configuredJacksonMapper
+import no.nav.syfo.common.util.configuredJacksonMapper
 import no.nav.syfo.util.nowUTC
 import java.sql.Connection
 import java.sql.Date

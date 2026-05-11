@@ -7,10 +7,10 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.testing.*
 import io.mockk.mockk
+import no.nav.syfo.common.util.applyCommonJacksonConfig
 import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
-import no.nav.syfo.util.configure
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.junit.jupiter.api.Assertions.assertEquals
 
@@ -27,7 +27,7 @@ fun ApplicationTestBuilder.setupApiAndClient(
     }
     val client = createClient {
         install(ContentNegotiation) {
-            jackson { configure() }
+            jackson { applyCommonJacksonConfig() }
         }
     }
     return client

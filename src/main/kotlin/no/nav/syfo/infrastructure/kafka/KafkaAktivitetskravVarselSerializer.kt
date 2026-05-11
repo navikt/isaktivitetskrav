@@ -1,7 +1,7 @@
 package no.nav.syfo.infrastructure.kafka
 
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVarselRecord
-import no.nav.syfo.util.configuredJacksonMapper
+import no.nav.syfo.common.util.configuredJacksonMapper
 import org.apache.kafka.common.serialization.Serializer
 
 class KafkaAktivitetskravVarselSerializer : Serializer<AktivitetskravVarselRecord> {
