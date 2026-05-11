@@ -13,8 +13,8 @@ import io.ktor.server.response.*
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig
 import no.nav.syfo.api.exception.ConflictException
 import no.nav.syfo.common.tilgangskontroll.ktor.ForbiddenAccessVeilederException
-import no.nav.syfo.common.tilgangskontroll.ktor.getCallId
-import no.nav.syfo.common.tilgangskontroll.ktor.getConsumerClientId
+import no.nav.syfo.common.util.ktor.getCallId
+import no.nav.syfo.common.util.ktor.getConsumerClientId
 import no.nav.syfo.api.metric.METRICS_REGISTRY
 import no.nav.syfo.util.*
 import java.time.Duration
