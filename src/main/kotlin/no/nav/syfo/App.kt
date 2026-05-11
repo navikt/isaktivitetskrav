@@ -138,7 +138,7 @@ fun main() {
                 wellKnownInternalAzureAD = wellKnownInternalAzureAD,
                 aktivitetskravService = aktivitetskravService,
                 aktivitetskravVarselService = aktivitetskravVarselService,
-                veilederTilgangskontrollClient = tilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
             )
 
             monitor.subscribe(ApplicationStarted) {

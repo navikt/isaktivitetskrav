@@ -32,7 +32,7 @@ const val forhandsvarselPath = "/forhandsvarsel"
 private const val API_ACTION = "access aktivitetskrav for person"
 
 fun Route.registerAktivitetskravApi(
-    veilederTilgangskontrollClient: TilgangskontrollClient,
+    tilgangskontrollClient: TilgangskontrollClient,
     aktivitetskravService: AktivitetskravService,
     aktivitetskravVarselService: AktivitetskravVarselService,
 ) {
@@ -40,7 +40,7 @@ fun Route.registerAktivitetskravApi(
         get(aktivitetskravApiPersonidentPath) {
             checkVeilederTilgang(
                 action = API_ACTION,
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
             ) {
                 val personIdent = call.personIdent()
                 val aktivitetskravAfterCutoff = aktivitetskravService.getAktivitetskravAfterCutoff(
@@ -60,7 +60,7 @@ fun Route.registerAktivitetskravApi(
         get(aktivitetskravApiHistorikkPath) {
             checkVeilederTilgang(
                 action = API_ACTION,
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
             ) {
                 val personIdent = call.personIdent()
                 call.respond(aktivitetskravService.getAktivitetskravHistorikk(personIdent))
@@ -69,7 +69,7 @@ fun Route.registerAktivitetskravApi(
         post {
             checkVeilederTilgang(
                 action = API_ACTION,
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
             ) {
                 val personIdent = call.personIdent()
@@ -91,7 +91,7 @@ fun Route.registerAktivitetskravApi(
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
             checkVeilederTilgang(
                 action = API_ACTION,
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
             ) {
                 val personIdent = call.personIdent()
@@ -121,7 +121,7 @@ fun Route.registerAktivitetskravApi(
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
             checkVeilederTilgang(
                 action = API_ACTION,
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
             ) {
                 val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
@@ -148,7 +148,7 @@ fun Route.registerAktivitetskravApi(
             val requestBody = call.receive<GetVurderingerRequestBody>()
             val personidenter = requestBody.personidenter.map { PersonIdent(it) }
 
-            val personerVeilederHasAccessTo = veilederTilgangskontrollClient.veilederPersonerAccess(
+            val personerVeilederHasAccessTo = tilgangskontrollClient.veilederPersonerAccess(
                 personidenter = personidenter.map { it.value },
                 token = token,
                 callId = call.getCallId(),

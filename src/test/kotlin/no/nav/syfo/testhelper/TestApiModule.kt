@@ -37,7 +37,7 @@ fun Application.testApiModule(
         aktivitetskravVarselProducer = mockk(),
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
     )
-    val veilederTilgangskontrollClient = TilgangskontrollClient(
+    val tilgangskontrollClient = TilgangskontrollClient(
         azureAdClient = externalMockEnvironment.libraryAzureAdClient,
         config = TilgangskontrollClientConfig(
             baseUrl = externalMockEnvironment.environment.clients.istilgangskontroll.baseUrl,
@@ -52,6 +52,6 @@ fun Application.testApiModule(
         wellKnownInternalAzureAD = externalMockEnvironment.wellKnownInternalAzureAD,
         aktivitetskravService = aktivitetskravService,
         aktivitetskravVarselService = aktivitetskravVarselService,
-        veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+        tilgangskontrollClient = tilgangskontrollClient,
     )
 }

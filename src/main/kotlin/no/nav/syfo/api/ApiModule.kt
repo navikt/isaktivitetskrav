@@ -24,7 +24,7 @@ fun Application.apiModule(
     wellKnownInternalAzureAD: WellKnown,
     aktivitetskravService: AktivitetskravService,
     aktivitetskravVarselService: AktivitetskravVarselService,
-    veilederTilgangskontrollClient: TilgangskontrollClient,
+    tilgangskontrollClient: TilgangskontrollClient,
 ) {
     installMetrics()
     installCallId()
@@ -48,7 +48,7 @@ fun Application.apiModule(
         registerMetricApi()
         authenticate(JwtIssuerType.INTERNAL_AZUREAD.name) {
             registerAktivitetskravApi(
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                tilgangskontrollClient = tilgangskontrollClient,
                 aktivitetskravService = aktivitetskravService,
                 aktivitetskravVarselService = aktivitetskravVarselService,
             )
