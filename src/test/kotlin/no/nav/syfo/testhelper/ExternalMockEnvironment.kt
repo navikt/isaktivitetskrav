@@ -29,8 +29,8 @@ class ExternalMockEnvironment private constructor() {
         azureEnvironment = environment.azure,
         httpClient = mockHttpClient,
     )
-    val libraryAzureAdClient = no.nav.syfo.azure.AzureAdClient(
-        azureEnvironment = no.nav.syfo.azure.AzureEnvironment(
+    val libraryAzureAdClient = no.nav.syfo.common.azure.AzureAdClient(
+        azureEnvironment = no.nav.syfo.common.azure.AzureEnvironment(
             appClientId = environment.azure.appClientId,
             appClientSecret = environment.azure.appClientSecret,
             appWellKnownUrl = environment.azure.appWellKnownUrl,

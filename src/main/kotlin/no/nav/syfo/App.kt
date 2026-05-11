@@ -11,8 +11,8 @@ import no.nav.syfo.application.*
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
-import no.nav.syfo.tilgangskontroll.client.VeilederTilgangConfig
-import no.nav.syfo.tilgangskontroll.client.VeilederTilgangskontrollClient as LibraryVeilederTilgangskontrollClient
+import no.nav.syfo.common.tilgangskontroll.client.VeilederTilgangConfig
+import no.nav.syfo.common.tilgangskontroll.client.VeilederTilgangskontrollClient as LibraryVeilederTilgangskontrollClient
 import no.nav.syfo.infrastructure.client.wellknown.getWellKnown
 import no.nav.syfo.infrastructure.cronjob.launchCronjobModule
 import no.nav.syfo.infrastructure.database.applicationDatabase
@@ -60,8 +60,8 @@ fun main() {
         cache = cache,
     )
     val veilederTilgangskontrollClient = LibraryVeilederTilgangskontrollClient(
-        azureAdClient = no.nav.syfo.azure.AzureAdClient(
-            azureEnvironment = no.nav.syfo.azure.AzureEnvironment(
+        azureAdClient = no.nav.syfo.common.azure.AzureAdClient(
+            azureEnvironment = no.nav.syfo.common.azure.AzureEnvironment(
                 appClientId = environment.azure.appClientId,
                 appClientSecret = environment.azure.appClientSecret,
                 appWellKnownUrl = environment.azure.appWellKnownUrl,
