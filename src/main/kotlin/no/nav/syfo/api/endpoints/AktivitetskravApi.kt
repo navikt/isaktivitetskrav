@@ -16,7 +16,7 @@ import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.common.tilgangskontroll.client.VeilederTilgangskontrollClient
+import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
 import no.nav.syfo.common.tilgangskontroll.ktor.*
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import java.util.*
@@ -31,7 +31,7 @@ const val forhandsvarselPath = "/forhandsvarsel"
 private const val API_ACTION = "access aktivitetskrav for person"
 
 fun Route.registerAktivitetskravApi(
-    veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
+    veilederTilgangskontrollClient: TilgangskontrollClient,
     aktivitetskravService: AktivitetskravService,
     aktivitetskravVarselService: AktivitetskravVarselService,
 ) {

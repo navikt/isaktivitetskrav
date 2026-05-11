@@ -13,7 +13,7 @@ import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
-import no.nav.syfo.common.tilgangskontroll.client.VeilederTilgangskontrollClient
+import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
 import no.nav.syfo.infrastructure.client.wellknown.WellKnown
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 
@@ -24,7 +24,7 @@ fun Application.apiModule(
     wellKnownInternalAzureAD: WellKnown,
     aktivitetskravService: AktivitetskravService,
     aktivitetskravVarselService: AktivitetskravVarselService,
-    veilederTilgangskontrollClient: VeilederTilgangskontrollClient,
+    veilederTilgangskontrollClient: TilgangskontrollClient,
 ) {
     installMetrics()
     installCallId()

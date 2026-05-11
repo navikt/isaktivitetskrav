@@ -11,8 +11,8 @@ import no.nav.syfo.application.*
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
-import no.nav.syfo.common.tilgangskontroll.client.VeilederTilgangConfig
-import no.nav.syfo.common.tilgangskontroll.client.VeilederTilgangskontrollClient as LibraryVeilederTilgangskontrollClient
+import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClientConfig
+import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
 import no.nav.syfo.infrastructure.client.wellknown.getWellKnown
 import no.nav.syfo.infrastructure.cronjob.launchCronjobModule
 import no.nav.syfo.infrastructure.database.applicationDatabase
@@ -59,7 +59,7 @@ fun main() {
         pdlEnvironment = environment.clients.pdl,
         cache = cache,
     )
-    val veilederTilgangskontrollClient = LibraryVeilederTilgangskontrollClient(
+    val tilgangskontrollClient = TilgangskontrollClient(
         azureAdClient = no.nav.syfo.common.azure.AzureAdClient(
             azureEnvironment = no.nav.syfo.common.azure.AzureEnvironment(
                 appClientId = environment.azure.appClientId,
@@ -68,7 +68,7 @@ fun main() {
                 openidConfigTokenEndpoint = environment.azure.openidConfigTokenEndpoint,
             )
         ),
-        config = VeilederTilgangConfig(
+        config = TilgangskontrollClientConfig(
             baseUrl = environment.clients.istilgangskontroll.baseUrl,
             clientId = environment.clients.istilgangskontroll.clientId,
         ),
@@ -138,7 +138,7 @@ fun main() {
                 wellKnownInternalAzureAD = wellKnownInternalAzureAD,
                 aktivitetskravService = aktivitetskravService,
                 aktivitetskravVarselService = aktivitetskravVarselService,
-                veilederTilgangskontrollClient = veilederTilgangskontrollClient,
+                veilederTilgangskontrollClient = tilgangskontrollClient,
             )
 
             monitor.subscribe(ApplicationStarted) {
