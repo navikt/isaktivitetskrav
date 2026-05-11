@@ -48,6 +48,10 @@ fun testEnvironment() = Environment(
             baseUrl = "isTilgangskontrollUrl",
             clientId = "dev-fss.teamsykefravr.istilgangskontroll",
         ),
+        behandlendeEnhet = ClientEnvironment(
+            baseUrl = "behandlendeEnhetUrl",
+            clientId = "behandlendeEnhetClientId",
+        ),
         pdl = ClientEnvironment(
             baseUrl = "pdlUrl",
             clientId = "pdlClientId",

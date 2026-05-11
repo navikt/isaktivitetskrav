@@ -8,6 +8,7 @@ import no.nav.syfo.api.dto.Arsak
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.domain.*
+import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.cronjob.OutdatedAktivitetskravCronjob
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
@@ -37,6 +38,7 @@ class OutdatedAktivitetskravCronjobTest {
         aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(producer = kafkaProducer),
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         arenaCutoff = arenaCutoff,
+        behandlendeEnhetClient = mockk<BehandlendeEnhetClient>(relaxed = true),
         varselPdfService = VarselPdfService(
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,

@@ -11,6 +11,7 @@ import no.nav.syfo.domain.VarselType
 import no.nav.syfo.api.exception.ConflictException
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.AktivitetskravVarsel
+import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
@@ -55,6 +56,7 @@ class AktivitetskravServiceTest {
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+        behandlendeEnhetClient = mockk<BehandlendeEnhetClient>(relaxed = true),
         varselPdfService = VarselPdfService(
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,

@@ -15,6 +15,7 @@ import no.nav.syfo.api.endpoints.aktivitetskravApiBasePath
 import no.nav.syfo.api.endpoints.vurderAktivitetskravPath
 import no.nav.syfo.domain.*
 import no.nav.syfo.domain.PersonIdent
+import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord
@@ -53,6 +54,7 @@ class AktivitetskravApiVurderTest {
         aktivitetskravVarselRepository = aktivitetskravVarselRepository,
         aktivitetskravVurderingProducer = mockk(relaxed = true),
         arenaCutoff = externalMockEnvironment.environment.arenaCutoff,
+        behandlendeEnhetClient = mockk<BehandlendeEnhetClient>(relaxed = true),
         varselPdfService = VarselPdfService(
             pdfGenClient = externalMockEnvironment.pdfgenClient,
             pdlClient = externalMockEnvironment.pdlClient,
