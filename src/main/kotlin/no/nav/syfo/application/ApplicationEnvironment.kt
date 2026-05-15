@@ -53,6 +53,10 @@ data class Environment(
             baseUrl = getEnvVar("ISTILGANGSKONTROLL_URL"),
             clientId = getEnvVar("ISTILGANGSKONTROLL_CLIENT_ID"),
         ),
+        behandlendeEnhet = ClientEnvironment(
+            baseUrl = getEnvVar("SYFOBEHANDLENDEENHET_URL"),
+            clientId = getEnvVar("SYFOBEHANDLENDEENHET_CLIENT_ID"),
+        ),
         pdl = ClientEnvironment(
             baseUrl = getEnvVar("PDL_URL"),
             clientId = getEnvVar("PDL_CLIENT_ID"),
