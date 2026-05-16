@@ -106,7 +106,7 @@ fun Route.registerAktivitetskravApi(
                     throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on aktivitetskrav differs from request")
                 }
 
-                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(createdByIdent = call.getNAVIdent())
+                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(createdByIdent = call.getNavIdent())
                 aktivitetskravService.vurderAktivitetskrav(
                     aktivitetskrav = aktivitetskrav,
                     aktivitetskravVurdering = aktivitetskravVurdering,
@@ -133,7 +133,7 @@ fun Route.registerAktivitetskravApi(
 
                 val forhandsvarsel = aktivitetskravVarselService.sendForhandsvarsel(
                     aktivitetskrav = aktivitetskrav,
-                    veilederIdent = call.getNAVIdent(),
+                    veilederIdent = call.getNavIdent(),
                     personIdent = call.personIdent(),
                     forhandsvarselDTO = requestDTO,
                     callId = call.getCallId(),
@@ -143,7 +143,7 @@ fun Route.registerAktivitetskravApi(
         }
 
         post("/get-vurderinger") {
-            val token = call.getBearerHeader()
+            val token = call.getBearerToken()
                 ?: throw IllegalArgumentException("Failed to get vurderinger for personer. No Authorization header supplied.")
             val requestBody = call.receive<GetVurderingerRequestBody>()
             val personidenter = requestBody.personidenter.map { PersonIdent(it) }
@@ -178,6 +178,6 @@ fun Route.registerAktivitetskravApi(
     }
 }
 
-private fun ApplicationCall.personIdent(): PersonIdent = this.getPersonident()
+private fun ApplicationCall.personIdent(): PersonIdent = this.getPersonIdent()
     ?.let { PersonIdent(it) }
     ?: throw IllegalArgumentException("Failed to $API_ACTION: No $NAV_PERSONIDENT_HEADER supplied in request header")
