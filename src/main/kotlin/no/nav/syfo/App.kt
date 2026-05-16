@@ -60,14 +60,7 @@ fun main() {
         cache = cache,
     )
     val tilgangskontrollClient = TilgangskontrollClient(
-        azureAdClient = no.nav.syfo.common.azure.AzureAdClient(
-            azureEnvironment = no.nav.syfo.common.azure.AzureEnvironment(
-                appClientId = environment.azure.appClientId,
-                appClientSecret = environment.azure.appClientSecret,
-                appWellKnownUrl = environment.azure.appWellKnownUrl,
-                openidConfigTokenEndpoint = environment.azure.openidConfigTokenEndpoint,
-            )
-        ),
+        oboTokenProvider = { scopeClientId, token -> azureAdClient.getOnBehalfOfToken(scopeClientId, token)?.accessToken },
         config = TilgangskontrollClientConfig(
             baseUrl = environment.clients.istilgangskontroll.baseUrl,
             clientId = environment.clients.istilgangskontroll.clientId,
