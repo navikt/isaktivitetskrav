@@ -60,7 +60,12 @@ fun main() {
         cache = cache,
     )
     val tilgangskontrollClient = TilgangskontrollClient(
-        oboTokenProvider = { scopeClientId, token -> azureAdClient.getOnBehalfOfToken(scopeClientId, token)?.accessToken },
+        oboTokenProvider = { scopeClientId, token ->
+            azureAdClient.getOnBehalfOfToken(
+                scopeClientId,
+                token
+            )?.accessToken
+        },
         config = TilgangskontrollClientConfig(
             baseUrl = environment.clients.istilgangskontroll.baseUrl,
             clientId = environment.clients.istilgangskontroll.clientId,

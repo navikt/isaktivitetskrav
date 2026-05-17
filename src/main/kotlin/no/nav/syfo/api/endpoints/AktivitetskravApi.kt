@@ -148,8 +148,8 @@ fun Route.registerAktivitetskravApi(
             val requestBody = call.receive<GetVurderingerRequestBody>()
             val personidenter = requestBody.personidenter.map { PersonIdent(it) }
 
-            val personerVeilederHasAccessTo = tilgangskontrollClient.veilederPersonerAccess(
-                personidenter = personidenter.map { it.value },
+            val personerVeilederHasAccessTo = tilgangskontrollClient.personsVeilederHasAccessTo(
+                personIdenter = personidenter.map { it.value },
                 token = token,
                 callId = call.getCallId(),
             )
