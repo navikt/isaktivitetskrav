@@ -38,7 +38,12 @@ fun Application.testApiModule(
         aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
     )
     val tilgangskontrollClient = TilgangskontrollClient(
-        azureAdClient = externalMockEnvironment.libraryAzureAdClient,
+        oboTokenProvider = { scopeClientId, token ->
+            externalMockEnvironment.azureAdClient.getOnBehalfOfToken(
+                scopeClientId,
+                token
+            )?.accessToken
+        },
         config = TilgangskontrollClientConfig(
             baseUrl = externalMockEnvironment.environment.clients.istilgangskontroll.baseUrl,
             clientId = externalMockEnvironment.environment.clients.istilgangskontroll.clientId,
