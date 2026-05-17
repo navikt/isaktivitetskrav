@@ -7,18 +7,18 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.syfo.common.http.defaultHttpClient
 import no.nav.syfo.common.util.ClientConfig
 import no.nav.syfo.common.util.bearerHeader
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.dokarkiv.model.JournalpostRequest
 import no.nav.syfo.infrastructure.client.dokarkiv.model.JournalpostResponse
-import no.nav.syfo.infrastructure.client.httpClientDefault
 import org.slf4j.LoggerFactory
 
 class DokarkivClient(
     private val azureAdClient: AzureAdClient,
     private val clientConfig: ClientConfig,
-    private val httpClient: HttpClient = httpClientDefault(),
+    private val httpClient: HttpClient = defaultHttpClient(),
 ) {
     private val journalpostUrl: String = "${clientConfig.baseUrl}$JOURNALPOST_PATH"
 

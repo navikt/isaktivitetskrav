@@ -12,7 +12,7 @@ import no.nav.syfo.common.util.bearerHeader
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.azuread.AzureAdToken
-import no.nav.syfo.infrastructure.client.httpClientDefault
+import no.nav.syfo.common.http.defaultHttpClient
 import no.nav.syfo.infrastructure.client.pdl.model.*
 import org.slf4j.LoggerFactory
 
@@ -20,7 +20,7 @@ class PdlClient(
     private val azureAdClient: AzureAdClient,
     private val clientConfig: ClientConfig,
     private val cache: ValkeyStore,
-    private val httpClient: HttpClient = httpClientDefault(),
+    private val httpClient: HttpClient = defaultHttpClient(),
 ) {
     suspend fun getPdlIdenter(
         personIdent: PersonIdent,
