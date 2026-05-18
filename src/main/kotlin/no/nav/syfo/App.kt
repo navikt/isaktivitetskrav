@@ -13,7 +13,6 @@ import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.infrastructure.client.veiledertilgang.VeilederTilgangskontrollClient
 import no.nav.syfo.infrastructure.client.wellknown.getWellKnown
-import no.nav.syfo.infrastructure.clients.behandlendeenhet.BehandlendeEnhetClient
 import no.nav.syfo.infrastructure.cronjob.launchCronjobModule
 import no.nav.syfo.infrastructure.database.applicationDatabase
 import no.nav.syfo.infrastructure.database.databaseModule
@@ -67,11 +66,6 @@ fun main() {
     val pdfGenClient = PdfGenClient(
         pdfGenBaseUrl = environment.clients.ispdfgen.baseUrl,
     )
-    val behandlendeEnhetClient = BehandlendeEnhetClient(
-        azureAdClient = azureAdClient,
-        clientEnvironment = environment.clients.behandlendeEnhet,
-    )
-
     val aktivitetskravVurderingProducer = AktivitetskravVurderingProducer(
         producer = KafkaProducer(
             aktivitetskravVurderingProducerConfig(kafkaEnvironment = environment.kafka)
@@ -118,7 +112,6 @@ fun main() {
                 aktivitetskravRepository = aktivitetskravRepository,
                 aktivitetskravVarselRepository = aktivitetskravVarselRepository,
                 varselPdfService = varselPdfService,
-                behandlendeEnhetClient = behandlendeEnhetClient,
                 aktivitetskravVurderingProducer = aktivitetskravVurderingProducer,
                 arenaCutoff = environment.arenaCutoff,
             )
