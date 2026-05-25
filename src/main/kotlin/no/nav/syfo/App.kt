@@ -5,6 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.micrometer.core.instrument.Metrics
+import no.nav.syfo.api.metric.METRICS_REGISTRY
 import no.nav.syfo.api.apiModule
 import no.nav.syfo.api.cache.ValkeyStore
 import no.nav.syfo.application.*
@@ -33,6 +35,11 @@ fun main() {
     val applicationState = ApplicationState()
     val logger = LoggerFactory.getLogger("ktor.application")
     val environment = Environment()
+
+    // Wire METRICS_REGISTRY into Micrometer's global registry so that counters registered
+    // on Metrics.globalRegistry (e.g. by shared libraries like isyfo-backend-common) are
+    // also exposed at /internal/metrics and scraped by Prometheus.
+    Metrics.addRegistry(METRICS_REGISTRY)
 
     val valkeyConfig = environment.valkeyConfig
     val cache = ValkeyStore(
