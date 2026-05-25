@@ -18,7 +18,7 @@ val mockkVersion = "1.14.9"
 val nimbusJoseJwtVersion = "10.9"
 val postgresVersion = "42.7.11"
 val postgresEmbeddedVersion = "2.2.2"
-val postgresRuntimeVersion = "17.9.0"
+val postgresRuntimeVersion = "18.3.0"
 val redisEmbeddedVersion = "0.7.3"
 
 plugins {
