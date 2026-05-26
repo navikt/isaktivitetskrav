@@ -1,7 +1,7 @@
 package no.nav.syfo.testhelper
 
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
+import no.nav.syfo.common.token.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.infrastructure.client.wellknown.WellKnown
@@ -26,7 +26,7 @@ class ExternalMockEnvironment private constructor() {
     val redisServer = testValkeyServer(valkeyConfig = environment.valkeyConfig)
     val wellKnownInternalAzureAD = wellKnownInternalAzureAD()
     val azureAdClient = AzureAdClient(
-        azureEnvironment = environment.azure,
+        config = environment.azure,
         httpClient = mockHttpClient,
     )
     val pdfgenClient = PdfGenClient(
@@ -34,7 +34,7 @@ class ExternalMockEnvironment private constructor() {
         httpClient = mockHttpClient,
     )
     val pdlClient = PdlClient(
-        azureAdClient = azureAdClient,
+        systemTokenProvider = azureAdClient,
         clientConfig = environment.clients.pdl,
         httpClient = mockHttpClient,
         cache = testValkeyCache(valkeyConfig = environment.valkeyConfig),

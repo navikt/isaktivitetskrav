@@ -15,7 +15,7 @@ import java.util.*
 class DokarkivClientTest {
     private val externalMockEnvironment = ExternalMockEnvironment.instance
     private val dokarkivClient = DokarkivClient(
-        azureAdClient = externalMockEnvironment.azureAdClient,
+        systemTokenProvider = externalMockEnvironment.azureAdClient,
         clientConfig = externalMockEnvironment.environment.clients.dokarkiv,
         httpClient = externalMockEnvironment.mockHttpClient,
     )

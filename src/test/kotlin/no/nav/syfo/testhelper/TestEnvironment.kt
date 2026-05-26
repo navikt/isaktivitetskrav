@@ -3,10 +3,10 @@ package no.nav.syfo.testhelper
 import no.nav.syfo.api.cache.ValkeyConfig
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
+import no.nav.syfo.common.token.azuread.AzureAdClientConfig
 import no.nav.syfo.common.util.ClientConfig
 import no.nav.syfo.common.util.OpenClientConfig
 import no.nav.syfo.infrastructure.client.ClientsConfig
-import no.nav.syfo.infrastructure.client.azuread.AzureEnvironment
 import no.nav.syfo.infrastructure.database.DatabaseEnvironment
 import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
 import java.net.URI
@@ -20,7 +20,7 @@ fun testEnvironment() = Environment(
         username = "username",
         password = "password",
     ),
-    azure = AzureEnvironment(
+    azure = AzureAdClientConfig(
         appClientId = "isaktivitetskrav-client-id",
         appClientSecret = "isaktivitetskrav-secret",
         appWellKnownUrl = "wellknown",

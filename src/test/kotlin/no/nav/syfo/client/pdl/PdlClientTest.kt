@@ -20,7 +20,7 @@ class PdlClientTest {
     private val externalMockEnvironment = ExternalMockEnvironment.instance
     private val cacheMock = mockk<ValkeyStore>(relaxed = true)
     private val pdlClient = PdlClient(
-        azureAdClient = externalMockEnvironment.azureAdClient,
+        systemTokenProvider = externalMockEnvironment.azureAdClient,
         clientConfig = externalMockEnvironment.environment.clients.pdl,
         cache = cacheMock,
         httpClient = externalMockEnvironment.mockHttpClient,

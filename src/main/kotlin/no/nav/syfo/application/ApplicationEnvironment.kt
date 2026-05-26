@@ -2,10 +2,10 @@ package no.nav.syfo.application
 
 import io.ktor.server.application.*
 import no.nav.syfo.api.cache.ValkeyConfig
+import no.nav.syfo.common.token.azuread.AzureAdClientConfig
 import no.nav.syfo.common.util.ClientConfig
 import no.nav.syfo.common.util.OpenClientConfig
 import no.nav.syfo.infrastructure.client.ClientsConfig
-import no.nav.syfo.infrastructure.client.azuread.AzureEnvironment
 import no.nav.syfo.infrastructure.database.DatabaseEnvironment
 import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
 import java.net.URI
@@ -21,7 +21,7 @@ data class Environment(
         username = getEnvVar("${NAIS_DATABASE_ENV_PREFIX}_USERNAME"),
         password = getEnvVar("${NAIS_DATABASE_ENV_PREFIX}_PASSWORD"),
     ),
-    val azure: AzureEnvironment = AzureEnvironment(
+    val azure: AzureAdClientConfig = AzureAdClientConfig(
         appClientId = getEnvVar("AZURE_APP_CLIENT_ID"),
         appClientSecret = getEnvVar("AZURE_APP_CLIENT_SECRET"),
         appWellKnownUrl = getEnvVar("AZURE_APP_WELL_KNOWN_URL"),

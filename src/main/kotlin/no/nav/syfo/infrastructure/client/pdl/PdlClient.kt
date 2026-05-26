@@ -6,18 +6,17 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import no.nav.syfo.api.cache.ValkeyStore
+import no.nav.syfo.common.token.SystemTokenProvider
 import no.nav.syfo.common.util.ClientConfig
 import no.nav.syfo.common.util.NAV_CALL_ID_HEADER
 import no.nav.syfo.common.util.bearerHeader
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
-import no.nav.syfo.infrastructure.client.azuread.AzureAdToken
 import no.nav.syfo.infrastructure.client.httpClientDefault
 import no.nav.syfo.infrastructure.client.pdl.model.*
 import org.slf4j.LoggerFactory
 
 class PdlClient(
-    private val azureAdClient: AzureAdClient,
+    private val systemTokenProvider: SystemTokenProvider,
     private val clientConfig: ClientConfig,
     private val cache: ValkeyStore,
     private val httpClient: HttpClient = httpClientDefault(),
@@ -26,7 +25,7 @@ class PdlClient(
         personIdent: PersonIdent,
         callId: String? = null,
     ): PdlHentIdenter? {
-        val token = azureAdClient.getSystemToken(clientConfig.clientId)
+        val systemToken = systemTokenProvider.getSystemToken(clientConfig.clientId)
             ?: throw RuntimeException("Failed to send PdlHentIdenterRequest to PDL: No token was found")
 
         val query = getPdlQuery(
@@ -45,7 +44,7 @@ class PdlClient(
         )
 
         val response: HttpResponse = httpClient.post(clientConfig.baseUrl) {
-            header(HttpHeaders.Authorization, bearerHeader(token.accessToken))
+            header(HttpHeaders.Authorization, bearerHeader(systemToken))
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header(BEHANDLINGSNUMMER_HEADER_KEY, BEHANDLINGSNUMMER_HEADER_VALUE)
             header(NAV_CALL_ID_HEADER, callId)
@@ -86,9 +85,9 @@ class PdlClient(
             cachedNavn
         } else {
             COUNT_CALL_PDL_PERSON_CACHE_NAVN_MISS.increment()
-            val token = azureAdClient.getSystemToken(clientConfig.clientId)
+            val systemToken = systemTokenProvider.getSystemToken(clientConfig.clientId)
                 ?: throw RuntimeException("Failed to send request to PDL: No token was found")
-            val navn = person(personIdent, token)?.fullName()
+            val navn = person(personIdent, systemToken)?.fullName()
                 ?: throw RuntimeException("PDL returned empty navn for given fnr")
             cache.set(key = cacheKey, value = navn, expireSeconds = CACHE_EXPIRE_SECONDS)
             navn
@@ -97,7 +96,7 @@ class PdlClient(
 
     private suspend fun person(
         personIdent: PersonIdent,
-        token: AzureAdToken,
+        token: String,
     ): PdlPerson? {
         val query = getPdlQuery("/pdl/hentPerson.graphql")
         val request = PdlHentPersonRequest(query, PdlHentPersonRequestVariables(personIdent.value))
@@ -105,7 +104,7 @@ class PdlClient(
         val response: HttpResponse = httpClient.post(clientConfig.baseUrl) {
             setBody(request)
             header(HttpHeaders.ContentType, "application/json")
-            header(HttpHeaders.Authorization, bearerHeader(token.accessToken))
+            header(HttpHeaders.Authorization, bearerHeader(token))
             header(BEHANDLINGSNUMMER_HEADER_KEY, BEHANDLINGSNUMMER_HEADER_VALUE)
         }
 

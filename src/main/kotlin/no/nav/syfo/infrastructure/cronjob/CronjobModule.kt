@@ -1,7 +1,7 @@
 package no.nav.syfo.infrastructure.cronjob
 
 import no.nav.syfo.application.*
-import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
+import no.nav.syfo.common.token.SystemTokenProvider
 import no.nav.syfo.infrastructure.client.dokarkiv.DokarkivClient
 import no.nav.syfo.infrastructure.client.leaderelection.LeaderPodClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
@@ -14,7 +14,7 @@ fun launchCronjobModule(
     aktivitetskravService: AktivitetskravService,
     aktivitetskravVarselService: AktivitetskravVarselService,
     pdlClient: PdlClient,
-    azureAdClient: AzureAdClient,
+    systemTokenProvider: SystemTokenProvider,
 ) {
     val leaderPodClient = LeaderPodClient(
         electorPath = environment.electorPath
@@ -26,7 +26,7 @@ fun launchCronjobModule(
     val cronjobs = mutableListOf<Cronjob>()
 
     val dokarkivClient = DokarkivClient(
-        azureAdClient = azureAdClient,
+        systemTokenProvider = systemTokenProvider,
         clientConfig = environment.clients.dokarkiv,
     )
     val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(

@@ -10,7 +10,7 @@ import no.nav.syfo.api.metric.METRICS_REGISTRY
 import no.nav.syfo.api.apiModule
 import no.nav.syfo.api.cache.ValkeyStore
 import no.nav.syfo.application.*
-import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
+import no.nav.syfo.common.token.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
@@ -57,21 +57,14 @@ fun main() {
     val wellKnownInternalAzureAD = getWellKnown(
         wellKnownUrl = environment.azure.appWellKnownUrl,
     )
-    val azureAdClient = AzureAdClient(
-        azureEnvironment = environment.azure
-    )
+    val azureAdClient = AzureAdClient()
     val pdlClient = PdlClient(
-        azureAdClient = azureAdClient,
+        systemTokenProvider = azureAdClient,
         clientConfig = environment.clients.pdl,
-        cache = cache,
+        cache = cache
     )
     val tilgangskontrollClient = TilgangskontrollClient(
-        oboTokenProvider = { scopeClientId, token ->
-            azureAdClient.getOnBehalfOfToken(
-                scopeClientId,
-                token
-            )?.accessToken
-        },
+        oboTokenProvider = azureAdClient,
         clientConfig = environment.clients.istilgangskontroll,
     )
     val pdfGenClient = PdfGenClient(
@@ -159,7 +152,7 @@ fun main() {
                     aktivitetskravService = aktivitetskravService,
                     aktivitetskravVarselService = aktivitetskravVarselService,
                     pdlClient = pdlClient,
-                    azureAdClient = azureAdClient,
+                    systemTokenProvider = azureAdClient,
                 )
             }
         }
