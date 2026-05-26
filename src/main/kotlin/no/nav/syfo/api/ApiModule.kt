@@ -3,9 +3,10 @@ package no.nav.syfo.api
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
-import no.nav.syfo.api.auth.JwtIssuer
-import no.nav.syfo.api.auth.JwtIssuerType
-import no.nav.syfo.api.auth.installJwtAuthentication
+import no.nav.syfo.common.auth.JwtIssuer
+import no.nav.syfo.common.auth.JwtIssuerType
+import no.nav.syfo.common.auth.WellKnown
+import no.nav.syfo.common.auth.installJwtAuthentication
 import no.nav.syfo.api.endpoints.registerAktivitetskravApi
 import no.nav.syfo.api.endpoints.registerPodApi
 import no.nav.syfo.api.metric.registerMetricApi
@@ -14,7 +15,6 @@ import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
-import no.nav.syfo.infrastructure.client.wellknown.WellKnown
 import no.nav.syfo.infrastructure.database.DatabaseInterface
 
 fun Application.apiModule(

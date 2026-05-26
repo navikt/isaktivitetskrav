@@ -4,7 +4,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
-import no.nav.syfo.infrastructure.client.wellknown.WellKnown
+import no.nav.syfo.common.auth.WellKnown
 import no.nav.syfo.testhelper.mock.mockHttpClient
 import java.nio.file.Paths
 
