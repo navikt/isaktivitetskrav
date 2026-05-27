@@ -8,11 +8,11 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.common.util.ClientConfig
+import no.nav.syfo.common.util.bearerHeader
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.dokarkiv.model.JournalpostRequest
 import no.nav.syfo.infrastructure.client.dokarkiv.model.JournalpostResponse
 import no.nav.syfo.infrastructure.client.httpClientDefault
-import no.nav.syfo.util.bearerHeader
 import org.slf4j.LoggerFactory
 
 class DokarkivClient(
