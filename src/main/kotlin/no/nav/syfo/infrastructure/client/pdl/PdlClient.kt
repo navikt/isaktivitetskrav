@@ -7,12 +7,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import no.nav.syfo.api.cache.ValkeyStore
 import no.nav.syfo.common.util.ClientConfig
+import no.nav.syfo.common.util.NAV_CALL_ID_HEADER
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.azuread.AzureAdToken
 import no.nav.syfo.infrastructure.client.httpClientDefault
 import no.nav.syfo.infrastructure.client.pdl.model.*
-import no.nav.syfo.util.NAV_CALL_ID_HEADER
 import no.nav.syfo.util.bearerHeader
 import org.slf4j.LoggerFactory
 

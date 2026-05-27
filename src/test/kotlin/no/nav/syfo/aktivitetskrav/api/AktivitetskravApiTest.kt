@@ -17,6 +17,7 @@ import no.nav.syfo.api.dto.GetVurderingerRequestBody
 import no.nav.syfo.api.dto.HistorikkDTO
 import no.nav.syfo.api.dto.NewAktivitetskravDTO
 import no.nav.syfo.api.endpoints.aktivitetskravApiHistorikkPath
+import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
@@ -30,7 +31,6 @@ import no.nav.syfo.testhelper.generator.createAktivitetskravAutomatiskOppfylt
 import no.nav.syfo.testhelper.generator.createAktivitetskravNy
 import no.nav.syfo.testhelper.generator.createAktivitetskravUnntak
 import no.nav.syfo.testhelper.generator.generateDocumentComponentDTO
-import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.util.nowUTC
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord

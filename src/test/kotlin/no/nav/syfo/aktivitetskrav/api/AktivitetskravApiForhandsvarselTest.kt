@@ -14,6 +14,7 @@ import no.nav.syfo.api.endpoints.aktivitetskravApiBasePath
 import no.nav.syfo.api.endpoints.aktivitetskravApiPersonidentPath
 import no.nav.syfo.api.endpoints.forhandsvarselPath
 import no.nav.syfo.api.endpoints.vurderAktivitetskravPath
+import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.domain.*
 import no.nav.syfo.infrastructure.kafka.model.AktivitetskravVurderingRecord

@@ -18,8 +18,8 @@ import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
 import no.nav.syfo.common.tilgangskontroll.ktor.*
+import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.common.util.ktor.*
-import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"

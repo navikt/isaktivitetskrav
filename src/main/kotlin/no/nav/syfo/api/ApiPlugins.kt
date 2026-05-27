@@ -5,18 +5,19 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig
 import no.nav.syfo.api.exception.ConflictException
+import no.nav.syfo.api.metric.METRICS_REGISTRY
 import no.nav.syfo.common.tilgangskontroll.ktor.VeilederTilgangForbiddenException
+import no.nav.syfo.common.util.NAV_CALL_ID_HEADER
 import no.nav.syfo.common.util.ktor.getCallId
 import no.nav.syfo.common.util.ktor.getConsumerClientId
-import no.nav.syfo.api.metric.METRICS_REGISTRY
-import no.nav.syfo.util.*
+import no.nav.syfo.util.configure
 import java.time.Duration
 import java.util.*
 

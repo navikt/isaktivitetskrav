@@ -13,6 +13,7 @@ import no.nav.syfo.api.dto.AktivitetskravVurderingRequestDTO
 import no.nav.syfo.api.dto.Arsak
 import no.nav.syfo.api.endpoints.aktivitetskravApiBasePath
 import no.nav.syfo.api.endpoints.vurderAktivitetskravPath
+import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.domain.*
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
