@@ -1,6 +1,5 @@
 package no.nav.syfo.client.dokarkiv
 
-import io.ktor.client.plugins.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.infrastructure.client.dokarkiv.DokarkivClient
 import no.nav.syfo.infrastructure.client.dokarkiv.model.BrevkodeType
@@ -17,7 +16,7 @@ class DokarkivClientTest {
     private val externalMockEnvironment = ExternalMockEnvironment.instance
     private val dokarkivClient = DokarkivClient(
         azureAdClient = externalMockEnvironment.azureAdClient,
-        dokarkivEnvironment = externalMockEnvironment.environment.clients.dokarkiv,
+        clientConfig = externalMockEnvironment.environment.clients.dokarkiv,
         httpClient = externalMockEnvironment.mockHttpClient,
     )
     private val pdf = byteArrayOf(23)

@@ -6,8 +6,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import no.nav.syfo.api.cache.ValkeyStore
+import no.nav.syfo.common.util.ClientConfig
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.infrastructure.client.ClientEnvironment
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.azuread.AzureAdToken
 import no.nav.syfo.infrastructure.client.httpClientDefault
@@ -18,16 +18,15 @@ import org.slf4j.LoggerFactory
 
 class PdlClient(
     private val azureAdClient: AzureAdClient,
-    private val pdlEnvironment: ClientEnvironment,
+    private val clientConfig: ClientConfig,
     private val cache: ValkeyStore,
     private val httpClient: HttpClient = httpClientDefault(),
 ) {
-
     suspend fun getPdlIdenter(
         personIdent: PersonIdent,
         callId: String? = null,
     ): PdlHentIdenter? {
-        val token = azureAdClient.getSystemToken(pdlEnvironment.clientId)
+        val token = azureAdClient.getSystemToken(clientConfig.clientId)
             ?: throw RuntimeException("Failed to send PdlHentIdenterRequest to PDL: No token was found")
 
         val query = getPdlQuery(
@@ -45,7 +44,7 @@ class PdlClient(
             ),
         )
 
-        val response: HttpResponse = httpClient.post(pdlEnvironment.baseUrl) {
+        val response: HttpResponse = httpClient.post(clientConfig.baseUrl) {
             header(HttpHeaders.Authorization, bearerHeader(token.accessToken))
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header(BEHANDLINGSNUMMER_HEADER_KEY, BEHANDLINGSNUMMER_HEADER_VALUE)
@@ -71,7 +70,7 @@ class PdlClient(
 
             else -> {
                 COUNT_CALL_PDL_IDENTER_FAIL.increment()
-                logger.error("Request to get IdentList with url: ${pdlEnvironment.baseUrl} failed with reponse code ${response.status.value}")
+                logger.error("Request to get IdentList with url: ${clientConfig.baseUrl} failed with reponse code ${response.status.value}")
                 return null
             }
         }
@@ -87,7 +86,7 @@ class PdlClient(
             cachedNavn
         } else {
             COUNT_CALL_PDL_PERSON_CACHE_NAVN_MISS.increment()
-            val token = azureAdClient.getSystemToken(pdlEnvironment.clientId)
+            val token = azureAdClient.getSystemToken(clientConfig.clientId)
                 ?: throw RuntimeException("Failed to send request to PDL: No token was found")
             val navn = person(personIdent, token)?.fullName()
                 ?: throw RuntimeException("PDL returned empty navn for given fnr")
@@ -103,7 +102,7 @@ class PdlClient(
         val query = getPdlQuery("/pdl/hentPerson.graphql")
         val request = PdlHentPersonRequest(query, PdlHentPersonRequestVariables(personIdent.value))
 
-        val response: HttpResponse = httpClient.post(pdlEnvironment.baseUrl) {
+        val response: HttpResponse = httpClient.post(clientConfig.baseUrl) {
             setBody(request)
             header(HttpHeaders.ContentType, "application/json")
             header(HttpHeaders.Authorization, bearerHeader(token.accessToken))
@@ -127,7 +126,7 @@ class PdlClient(
 
             else -> {
                 COUNT_CALL_PDL_PERSON_FAIL.increment()
-                logger.error("Request with url: ${pdlEnvironment.baseUrl} failed with reponse code ${response.status.value}")
+                logger.error("Request with url: ${clientConfig.baseUrl} failed with reponse code ${response.status.value}")
                 return null
             }
         }

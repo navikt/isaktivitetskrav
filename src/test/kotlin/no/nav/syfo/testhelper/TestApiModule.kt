@@ -9,8 +9,8 @@ import no.nav.syfo.application.VarselPdfService
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
-import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClientConfig
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
+import no.nav.syfo.common.util.ClientConfig
 
 fun Application.testApiModule(
     externalMockEnvironment: ExternalMockEnvironment,
@@ -44,7 +44,7 @@ fun Application.testApiModule(
                 token
             )?.accessToken
         },
-        config = TilgangskontrollClientConfig(
+        clientConfig = ClientConfig(
             baseUrl = externalMockEnvironment.environment.clients.istilgangskontroll.baseUrl,
             clientId = externalMockEnvironment.environment.clients.istilgangskontroll.clientId,
         ),

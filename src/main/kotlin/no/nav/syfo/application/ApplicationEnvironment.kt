@@ -2,9 +2,9 @@ package no.nav.syfo.application
 
 import io.ktor.server.application.*
 import no.nav.syfo.api.cache.ValkeyConfig
-import no.nav.syfo.infrastructure.client.ClientEnvironment
-import no.nav.syfo.infrastructure.client.ClientsEnvironment
-import no.nav.syfo.infrastructure.client.OpenClientEnvironment
+import no.nav.syfo.common.util.ClientConfig
+import no.nav.syfo.common.util.OpenClientConfig
+import no.nav.syfo.infrastructure.client.ClientsConfig
 import no.nav.syfo.infrastructure.client.azuread.AzureEnvironment
 import no.nav.syfo.infrastructure.database.DatabaseEnvironment
 import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
@@ -48,19 +48,19 @@ data class Environment(
     val outdatedCutoffMonths: Int = getEnvVar("OUTDATED_AKTIVITETSKRAV_CUTOFF_MONTHS").toInt(),
     val outdatedCronJobEnabled: Boolean = getEnvVar("OUTDATED_AKTIVITETSKRAV_CRONJOB_ENABLED").toBoolean(),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
-    val clients: ClientsEnvironment = ClientsEnvironment(
-        istilgangskontroll = ClientEnvironment(
+    val clients: ClientsConfig = ClientsConfig(
+        istilgangskontroll = ClientConfig(
             baseUrl = getEnvVar("ISTILGANGSKONTROLL_URL"),
             clientId = getEnvVar("ISTILGANGSKONTROLL_CLIENT_ID"),
         ),
-        pdl = ClientEnvironment(
+        pdl = ClientConfig(
             baseUrl = getEnvVar("PDL_URL"),
             clientId = getEnvVar("PDL_CLIENT_ID"),
         ),
-        ispdfgen = OpenClientEnvironment(
+        ispdfgen = OpenClientConfig(
             baseUrl = "http://ispdfgen",
         ),
-        dokarkiv = ClientEnvironment(
+        dokarkiv = ClientConfig(
             baseUrl = getEnvVar("DOKARKIV_URL"),
             clientId = getEnvVar("DOKARKIV_CLIENT_ID"),
         ),

@@ -27,7 +27,7 @@ fun launchCronjobModule(
 
     val dokarkivClient = DokarkivClient(
         azureAdClient = azureAdClient,
-        dokarkivEnvironment = environment.clients.dokarkiv,
+        clientConfig = environment.clients.dokarkiv,
     )
     val journalforAktivitetskravVarselCronjob = JournalforAktivitetskravVarselCronjob(
         aktivitetskravVarselService = aktivitetskravVarselService,

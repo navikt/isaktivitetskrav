@@ -35,7 +35,7 @@ class ExternalMockEnvironment private constructor() {
     )
     val pdlClient = PdlClient(
         azureAdClient = azureAdClient,
-        pdlEnvironment = environment.clients.pdl,
+        clientConfig = environment.clients.pdl,
         httpClient = mockHttpClient,
         cache = testValkeyCache(valkeyConfig = environment.valkeyConfig),
     )

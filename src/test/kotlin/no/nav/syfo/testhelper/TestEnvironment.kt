@@ -3,9 +3,9 @@ package no.nav.syfo.testhelper
 import no.nav.syfo.api.cache.ValkeyConfig
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.Environment
-import no.nav.syfo.infrastructure.client.ClientEnvironment
-import no.nav.syfo.infrastructure.client.ClientsEnvironment
-import no.nav.syfo.infrastructure.client.OpenClientEnvironment
+import no.nav.syfo.common.util.ClientConfig
+import no.nav.syfo.common.util.OpenClientConfig
+import no.nav.syfo.infrastructure.client.ClientsConfig
 import no.nav.syfo.infrastructure.client.azuread.AzureEnvironment
 import no.nav.syfo.infrastructure.database.DatabaseEnvironment
 import no.nav.syfo.infrastructure.kafka.KafkaEnvironment
@@ -43,20 +43,20 @@ fun testEnvironment() = Environment(
         valkeyPassword = "valkeyPassword",
         ssl = false,
     ),
-    clients = ClientsEnvironment(
-        istilgangskontroll = ClientEnvironment(
+    clients = ClientsConfig(
+        istilgangskontroll = ClientConfig(
             baseUrl = "isTilgangskontrollUrl",
             clientId = "dev-fss.teamsykefravr.istilgangskontroll",
         ),
-        pdl = ClientEnvironment(
+        pdl = ClientConfig(
             baseUrl = "pdlUrl",
             clientId = "pdlClientId",
         ),
-        dokarkiv = ClientEnvironment(
+        dokarkiv = ClientConfig(
             baseUrl = "dokarkivUrl",
             clientId = "dokarkivClientId",
         ),
-        ispdfgen = OpenClientEnvironment(
+        ispdfgen = OpenClientConfig(
             baseUrl = "ispdfgenUrl",
         ),
     ),
