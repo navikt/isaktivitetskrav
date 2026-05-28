@@ -14,12 +14,15 @@ import no.nav.syfo.api.dto.GetVurderingerRequestBody
 import no.nav.syfo.api.dto.NewAktivitetskravDTO
 import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
+import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
+import no.nav.syfo.common.tilgangskontroll.ktor.checkVeilederTilgangToPerson
+import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
+import no.nav.syfo.common.util.ktor.getBearerToken
+import no.nav.syfo.common.util.ktor.getCallId
+import no.nav.syfo.common.util.ktor.getNavIdent
+import no.nav.syfo.common.util.ktor.getPersonIdent
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
-import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
-import no.nav.syfo.common.tilgangskontroll.ktor.*
-import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
-import no.nav.syfo.common.util.ktor.*
 import java.util.*
 
 const val aktivitetskravApiBasePath = "/api/internad/v1/aktivitetskrav"
@@ -38,7 +41,7 @@ fun Route.registerAktivitetskravApi(
 ) {
     route(aktivitetskravApiBasePath) {
         get(aktivitetskravApiPersonidentPath) {
-            checkVeilederTilgang(
+            checkVeilederTilgangToPerson(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
             ) {
@@ -58,7 +61,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         get(aktivitetskravApiHistorikkPath) {
-            checkVeilederTilgang(
+            checkVeilederTilgangToPerson(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
             ) {
@@ -67,7 +70,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         post {
-            checkVeilederTilgang(
+            checkVeilederTilgangToPerson(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
@@ -89,7 +92,7 @@ fun Route.registerAktivitetskravApi(
             }
         }
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
-            checkVeilederTilgang(
+            checkVeilederTilgangToPerson(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
@@ -119,7 +122,7 @@ fun Route.registerAktivitetskravApi(
         }
 
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
-            checkVeilederTilgang(
+            checkVeilederTilgangToPerson(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
