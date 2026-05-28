@@ -14,7 +14,6 @@ import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
 import no.nav.syfo.infrastructure.client.pdfgen.PdfGenClient
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
-import no.nav.syfo.common.util.ClientConfig
 import no.nav.syfo.infrastructure.client.wellknown.getWellKnown
 import no.nav.syfo.infrastructure.cronjob.launchCronjobModule
 import no.nav.syfo.infrastructure.database.applicationDatabase
@@ -73,10 +72,7 @@ fun main() {
                 token
             )?.accessToken
         },
-        clientConfig = ClientConfig(
-            baseUrl = environment.clients.istilgangskontroll.baseUrl,
-            clientId = environment.clients.istilgangskontroll.clientId,
-        ),
+        clientConfig = environment.clients.istilgangskontroll,
     )
     val pdfGenClient = PdfGenClient(
         pdfGenBaseUrl = environment.clients.ispdfgen.baseUrl,

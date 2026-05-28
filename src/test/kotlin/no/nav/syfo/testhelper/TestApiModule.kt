@@ -10,7 +10,6 @@ import no.nav.syfo.infrastructure.database.repository.AktivitetskravRepository
 import no.nav.syfo.infrastructure.database.repository.AktivitetskravVarselRepository
 import no.nav.syfo.infrastructure.kafka.AktivitetskravVurderingProducer
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
-import no.nav.syfo.common.util.ClientConfig
 
 fun Application.testApiModule(
     externalMockEnvironment: ExternalMockEnvironment,
@@ -44,10 +43,7 @@ fun Application.testApiModule(
                 token
             )?.accessToken
         },
-        clientConfig = ClientConfig(
-            baseUrl = externalMockEnvironment.environment.clients.istilgangskontroll.baseUrl,
-            clientId = externalMockEnvironment.environment.clients.istilgangskontroll.clientId,
-        ),
+        clientConfig = externalMockEnvironment.environment.clients.istilgangskontroll,
         httpClient = externalMockEnvironment.mockHttpClient,
     )
     this.apiModule(
