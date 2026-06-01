@@ -109,7 +109,7 @@ fun Route.registerAktivitetskravApi(
                     throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on aktivitetskrav differs from request")
                 }
 
-                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(createdByIdent = call.navIdent())
+                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(createdByIdent = call.navIdent)
                 aktivitetskravService.vurderAktivitetskrav(
                     aktivitetskrav = aktivitetskrav,
                     aktivitetskravVurdering = aktivitetskravVurdering,
@@ -136,7 +136,7 @@ fun Route.registerAktivitetskravApi(
 
                 val forhandsvarsel = aktivitetskravVarselService.sendForhandsvarsel(
                     aktivitetskrav = aktivitetskrav,
-                    veilederIdent = call.navIdent(),
+                    veilederIdent = call.navIdent,
                     personIdent = call.getPersonIdent(),
                     forhandsvarselDTO = requestDTO,
                     callId = call.callId,
