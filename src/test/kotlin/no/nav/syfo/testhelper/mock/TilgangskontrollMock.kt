@@ -5,14 +5,13 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.common.mock.MockTilgangResponse
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient.Companion.TILGANGSKONTROLL_BRUKERE_PATH
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient.Companion.TILGANGSKONTROLL_PERSON_PATH
 import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
 import no.nav.syfo.common.util.ktor.JWT_CLAIM_NAVIDENT
 import no.nav.syfo.testhelper.UserConstants.PERSONIDENT_VEILEDER_NO_ACCESS
 import no.nav.syfo.testhelper.UserConstants.VEILEDER_IDENT_WITH_LESETILGANG
-
-private data class TilgangResponse(val erGodkjent: Boolean, val fullTilgang: Boolean = false)
 
 private val navIdentsWithLeseTilgangOnly = setOf(VEILEDER_IDENT_WITH_LESETILGANG)
 
@@ -32,7 +31,7 @@ fun MockRequestHandleScope.tilgangskontrollResponse(request: HttpRequestData): H
         requestUrl.endsWith(TILGANGSKONTROLL_PERSON_PATH) -> {
             val erGodkjent = request.headers[NAV_PERSONIDENT_HEADER] != PERSONIDENT_VEILEDER_NO_ACCESS.value
             val fullTilgang = request.navIdent() !in navIdentsWithLeseTilgangOnly
-            respond(TilgangResponse(erGodkjent = erGodkjent, fullTilgang = fullTilgang))
+            respond(MockTilgangResponse(erGodkjent = erGodkjent, fullTilgang = fullTilgang))
         }
         requestUrl.endsWith(TILGANGSKONTROLL_BRUKERE_PATH) -> {
             val body = runBlocking<List<String>> { request.receiveBody() }.toMutableList()
