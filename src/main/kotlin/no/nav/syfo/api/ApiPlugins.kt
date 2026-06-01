@@ -15,8 +15,8 @@ import no.nav.syfo.api.exception.ConflictException
 import no.nav.syfo.api.metric.METRICS_REGISTRY
 import no.nav.syfo.common.tilgangskontroll.VeilederTilgangForbiddenException
 import no.nav.syfo.common.util.NAV_CALL_ID_HEADER
-import no.nav.syfo.common.util.ktor.getCallId
-import no.nav.syfo.common.util.ktor.getConsumerClientId
+import no.nav.syfo.common.util.ktor.callIdOrNull
+import no.nav.syfo.common.util.ktor.consumerClientIdOrNull
 import no.nav.syfo.util.configure
 import java.time.Duration
 import java.util.*
@@ -49,8 +49,8 @@ fun Application.installCallId() {
 fun Application.installStatusPages() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            val callId = call.getCallId()
-            val consumerClientId = call.getConsumerClientId()
+            val callId = call.callIdOrNull ?: "unknown"
+            val consumerClientId = call.consumerClientIdOrNull() ?: "unknown"
             val logExceptionMessage = "Caught exception, callId=$callId, consumerClientId=$consumerClientId"
             val log = call.application.log
             when (cause) {

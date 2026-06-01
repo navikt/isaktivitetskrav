@@ -1,7 +1,7 @@
 package no.nav.syfo.api.endpoints
 
 import io.ktor.http.*
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -15,12 +15,12 @@ import no.nav.syfo.api.dto.NewAktivitetskravDTO
 import no.nav.syfo.application.AktivitetskravService
 import no.nav.syfo.application.AktivitetskravVarselService
 import no.nav.syfo.common.tilgangskontroll.client.TilgangskontrollClient
-import no.nav.syfo.common.tilgangskontroll.ktor.checkVeilederTilgangToPerson
+import no.nav.syfo.common.tilgangskontroll.ktor.checkPersonAndSyfoTilgang
 import no.nav.syfo.common.util.NAV_PERSONIDENT_HEADER
-import no.nav.syfo.common.util.ktor.getBearerToken
-import no.nav.syfo.common.util.ktor.getCallId
-import no.nav.syfo.common.util.ktor.getNavIdent
-import no.nav.syfo.common.util.ktor.getPersonIdent
+import no.nav.syfo.common.util.ktor.bearerTokenOrNull
+import no.nav.syfo.common.util.ktor.callId
+import no.nav.syfo.common.util.ktor.navIdent
+import no.nav.syfo.common.util.ktor.personIdentOrNull
 import no.nav.syfo.domain.Aktivitetskrav
 import no.nav.syfo.domain.PersonIdent
 import java.util.*
@@ -41,11 +41,11 @@ fun Route.registerAktivitetskravApi(
 ) {
     route(aktivitetskravApiBasePath) {
         get(aktivitetskravApiPersonidentPath) {
-            checkVeilederTilgangToPerson(
+            checkPersonAndSyfoTilgang(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
             ) {
-                val personIdent = call.personIdent()
+                val personIdent = call.getPersonIdent()
                 val aktivitetskravAfterCutoff = aktivitetskravService.getAktivitetskravAfterCutoff(
                     personIdent = personIdent,
                 )
@@ -61,21 +61,21 @@ fun Route.registerAktivitetskravApi(
             }
         }
         get(aktivitetskravApiHistorikkPath) {
-            checkVeilederTilgangToPerson(
+            checkPersonAndSyfoTilgang(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
             ) {
-                val personIdent = call.personIdent()
+                val personIdent = call.getPersonIdent()
                 call.respond(aktivitetskravService.getAktivitetskravHistorikk(personIdent))
             }
         }
         post {
-            checkVeilederTilgangToPerson(
+            checkPersonAndSyfoTilgang(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
             ) {
-                val personIdent = call.personIdent()
+                val personIdent = call.getPersonIdent()
                 val requestDTO: NewAktivitetskravDTO? =
                     runCatching { call.receiveNullable<NewAktivitetskravDTO>() }.getOrNull()
                 val previousAktivitetskrav = requestDTO?.previousAktivitetskravUuid?.let {
@@ -92,12 +92,12 @@ fun Route.registerAktivitetskravApi(
             }
         }
         post("/{$aktivitetskravParam}$vurderAktivitetskravPath") {
-            checkVeilederTilgangToPerson(
+            checkPersonAndSyfoTilgang(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
             ) {
-                val personIdent = call.personIdent()
+                val personIdent = call.getPersonIdent()
                 val aktivitetskravUUID = UUID.fromString(call.parameters[aktivitetskravParam])
                 val requestDTO = call.receive<AktivitetskravVurderingRequestDTO>()
 
@@ -109,12 +109,12 @@ fun Route.registerAktivitetskravApi(
                     throw IllegalArgumentException("Failed to vurdere aktivitetskrav: personIdent on aktivitetskrav differs from request")
                 }
 
-                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(createdByIdent = call.getNavIdent())
+                val aktivitetskravVurdering = requestDTO.toAktivitetskravVurdering(createdByIdent = call.navIdent())
                 aktivitetskravService.vurderAktivitetskrav(
                     aktivitetskrav = aktivitetskrav,
                     aktivitetskravVurdering = aktivitetskravVurdering,
                     document = requestDTO.document ?: emptyList(),
-                    callId = call.getCallId(),
+                    callId = call.callId,
                 )
 
                 call.respond(HttpStatusCode.OK)
@@ -122,7 +122,7 @@ fun Route.registerAktivitetskravApi(
         }
 
         post("/{$aktivitetskravParam}$forhandsvarselPath") {
-            checkVeilederTilgangToPerson(
+            checkPersonAndSyfoTilgang(
                 action = API_ACTION,
                 tilgangskontrollClient = tilgangskontrollClient,
                 requiresWriteAccess = true,
@@ -136,33 +136,33 @@ fun Route.registerAktivitetskravApi(
 
                 val forhandsvarsel = aktivitetskravVarselService.sendForhandsvarsel(
                     aktivitetskrav = aktivitetskrav,
-                    veilederIdent = call.getNavIdent(),
-                    personIdent = call.personIdent(),
+                    veilederIdent = call.navIdent(),
+                    personIdent = call.getPersonIdent(),
                     forhandsvarselDTO = requestDTO,
-                    callId = call.getCallId(),
+                    callId = call.callId,
                 )
                 call.respond(HttpStatusCode.Created, forhandsvarsel)
             }
         }
 
         post("/get-vurderinger") {
-            val token = call.getBearerToken()
+            val token = call.bearerTokenOrNull
                 ?: throw IllegalArgumentException("Failed to get vurderinger for personer. No Authorization header supplied.")
             val requestBody = call.receive<GetVurderingerRequestBody>()
-            val personidenter = requestBody.personidenter.map { PersonIdent(it) }
+            val personIdenter = requestBody.personidenter.map { PersonIdent(it) }
 
-            val personerVeilederHasAccessTo = tilgangskontrollClient.personsVeilederHasAccessTo(
-                personIdenter = personidenter.map { it.value },
+            val personerUserHasAccessTo = tilgangskontrollClient.personsUserHasAccessTo(
+                personIdenter = personIdenter.map { it.value },
                 token = token,
-                callId = call.getCallId(),
-            )
+                callId = call.callId,
+            )?.map { PersonIdent(it) }
 
             val aktivitetskravvurderinger: Map<PersonIdent, Aktivitetskrav> =
-                if (personerVeilederHasAccessTo.isNullOrEmpty()) {
+                if (personerUserHasAccessTo.isNullOrEmpty()) {
                     emptyMap()
                 } else {
                     aktivitetskravService.getAktivitetskravForPersons(
-                        personidenter = personerVeilederHasAccessTo.map { PersonIdent(it) },
+                        personidenter = personerUserHasAccessTo,
                     )
                 }
 
@@ -181,6 +181,6 @@ fun Route.registerAktivitetskravApi(
     }
 }
 
-private fun ApplicationCall.personIdent(): PersonIdent = this.getPersonIdent()
+private fun ApplicationCall.getPersonIdent(): PersonIdent = this.personIdentOrNull
     ?.let { PersonIdent(it) }
     ?: throw IllegalArgumentException("Failed to $API_ACTION: No $NAV_PERSONIDENT_HEADER supplied in request header")
