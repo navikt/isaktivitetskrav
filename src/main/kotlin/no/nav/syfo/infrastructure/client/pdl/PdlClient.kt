@@ -5,7 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import no.nav.syfo.api.cache.ValkeyStore
+import no.nav.syfo.api.cache.IValkeyStore
 import no.nav.syfo.domain.PersonIdent
 import no.nav.syfo.infrastructure.client.ClientEnvironment
 import no.nav.syfo.infrastructure.client.azuread.AzureAdClient
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 class PdlClient(
     private val azureAdClient: AzureAdClient,
     private val pdlEnvironment: ClientEnvironment,
-    private val cache: ValkeyStore,
+    private val cache: IValkeyStore,
     private val httpClient: HttpClient = httpClientDefault(),
 ) {
 
