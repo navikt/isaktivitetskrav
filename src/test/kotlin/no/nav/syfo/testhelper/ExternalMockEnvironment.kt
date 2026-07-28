@@ -23,7 +23,7 @@ class ExternalMockEnvironment private constructor() {
     val environment = testEnvironment()
     val mockHttpClient = mockHttpClient(environment = environment)
 
-    val redisServer = testValkeyServer(valkeyConfig = environment.valkeyConfig)
+    val valkeyCache = InMemoryValkeyStore()
     val wellKnownInternalAzureAD = wellKnownInternalAzureAD()
     val azureAdClient = AzureAdClient(
         azureEnvironment = environment.azure,
@@ -37,10 +37,10 @@ class ExternalMockEnvironment private constructor() {
         azureAdClient = azureAdClient,
         pdlEnvironment = environment.clients.pdl,
         httpClient = mockHttpClient,
-        cache = testValkeyCache(valkeyConfig = environment.valkeyConfig),
+        cache = valkeyCache,
     )
 
     companion object {
-        val instance: ExternalMockEnvironment = ExternalMockEnvironment().also { it.redisServer.start() }
+        val instance: ExternalMockEnvironment = ExternalMockEnvironment()
     }
 }

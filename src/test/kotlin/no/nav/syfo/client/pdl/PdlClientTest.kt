@@ -1,15 +1,12 @@
 package no.nav.syfo.client.pdl
 
-import io.mockk.clearMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.api.cache.ValkeyStore
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -18,18 +15,22 @@ import org.junit.jupiter.api.Test
 
 class PdlClientTest {
     private val externalMockEnvironment = ExternalMockEnvironment.instance
-    private val cacheMock = mockk<ValkeyStore>(relaxed = true)
+    private val cache = externalMockEnvironment.valkeyCache
     private val pdlClient = PdlClient(
         azureAdClient = externalMockEnvironment.azureAdClient,
         pdlEnvironment = externalMockEnvironment.environment.clients.pdl,
-        cache = cacheMock,
+        cache = cache,
         httpClient = externalMockEnvironment.mockHttpClient,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(cacheMock)
-        every { cacheMock.get(any()) } returns null
+        cache.clear()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        cache.clear()
     }
 
     @Nested
@@ -66,6 +67,8 @@ class PdlClientTest {
 
         @Test
         fun `caches name when person has name in pdl`() {
+            val cacheKey = "pdl-navn-${UserConstants.ARBEIDSTAKER_PERSONIDENT.value}"
+
             runBlocking {
                 assertEquals(
                     UserConstants.PERSON_FULLNAME,
@@ -73,34 +76,34 @@ class PdlClientTest {
                 )
             }
 
-            verify(exactly = 1) { cacheMock.set(any(), any(), any()) }
+            assertEquals(UserConstants.PERSON_FULLNAME, cache.get(cacheKey))
         }
 
         @Test
         fun `caches no name when person is missing name in pdl`() {
+            val cacheKey = "pdl-navn-${UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME.value}"
+
             assertThrows(RuntimeException::class.java) {
                 runBlocking {
                     pdlClient.navn(UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME)
                 }
             }
 
-            verify(exactly = 0) { cacheMock.set(any(), any(), any()) }
+            assertNull(cache.get(cacheKey))
         }
 
         @Test
         fun `returns cached name when name is cached`() {
             val cachedName = "Navn Navnesen"
-            every { cacheMock.get(any()) } returns cachedName
+            val cacheKey = "pdl-navn-${UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME.value}"
+            cache.set(key = cacheKey, value = cachedName, expireSeconds = 3600)
 
             runBlocking {
                 assertEquals(
                     cachedName,
-                    pdlClient.navn(UserConstants.ARBEIDSTAKER_PERSONIDENT)
+                    pdlClient.navn(UserConstants.ARBEIDSTAKER_PERSONIDENT_NO_NAME)
                 )
             }
-
-            verify(exactly = 1) { cacheMock.get(any()) }
-            verify(exactly = 0) { cacheMock.set(any(), any(), any()) }
         }
     }
 }
