@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.infrastructure.client.pdl.PdlClient
 import no.nav.syfo.testhelper.ExternalMockEnvironment
 import no.nav.syfo.testhelper.UserConstants
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -24,6 +25,11 @@ class PdlClientTest {
 
     @BeforeEach
     fun setUp() {
+        cache.clear()
+    }
+
+    @AfterEach
+    fun tearDown() {
         cache.clear()
     }
 
