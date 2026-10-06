@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
     inputs:
       gitCommit:
-        description: "Complete git commit to deploy"
-        required: true
+        description: "Complete git commit to deploy (leave blank for the latest commit on the selected branch)"
+        required: false
         default: ""
 
 jobs:
@@ -14,6 +14,7 @@ jobs:
     name: Deploy to NAIS Dev-gcp
     permissions:
       contents: read
+      packages: read
       id-token: write
     uses: navikt/isworkflows/.github/workflows/manual-deploy-dev.yml@master
     with:
