@@ -5,10 +5,10 @@ import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.infrastructure.client.httpClientProxy
 
+private val httpClient = httpClientProxy()
+
 fun getWellKnown(
     wellKnownUrl: String,
 ): WellKnown = runBlocking {
-    httpClientProxy().use { client ->
-        client.get(wellKnownUrl).body<WellKnownDTO>().toWellKnown()
-    }
+    httpClient.get(wellKnownUrl).body<WellKnownDTO>().toWellKnown()
 }
