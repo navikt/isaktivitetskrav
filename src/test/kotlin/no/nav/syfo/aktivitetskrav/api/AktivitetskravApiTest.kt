@@ -437,7 +437,7 @@ class AktivitetskravApiTest {
             }
 
             @Test
-            fun `returns status Conflict if previous aktivitetskrav is not final`() {
+            fun `returns status Conflict if previous or latest aktivitetskrav is not final`() {
                 testApplication {
                     val client = setupApiAndClient(kafkaProducer = kafkaProducer)
 
@@ -451,6 +451,13 @@ class AktivitetskravApiTest {
                         setBody(NewAktivitetskravDTO(previousAktivitetskravUuid))
                     }
                     assertEquals(HttpStatusCode.Conflict, response.status)
+
+                    val responseWithoutPrevious = client.post(aktivitetskravApiBasePath) {
+                        bearerAuth(tokenForVeilederWithFullTilgang)
+                        header(NAV_PERSONIDENT_HEADER, ARBEIDSTAKER_PERSONIDENT.value)
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    }
+                    assertEquals(HttpStatusCode.Conflict, responseWithoutPrevious.status)
                 }
             }
         }
