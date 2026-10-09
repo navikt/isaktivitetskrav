@@ -48,7 +48,10 @@ class AktivitetskravService(
         val latestAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(personIdent)
             .maxByOrNull { it.createdAt }
             ?.toAktivitetskrav()
-        if (latestAktivitetskrav != null && !latestAktivitetskrav.isInFinalState()) {
+        if (latestAktivitetskrav != null &&
+            latestAktivitetskrav.stoppunktAt.isAfter(arenaCutoff) &&
+            !latestAktivitetskrav.isInFinalState()
+        ) {
             throw ConflictException("Personen har allerede et aktivitetskrav som ikke har en avsluttende vurdering")
         }
 
