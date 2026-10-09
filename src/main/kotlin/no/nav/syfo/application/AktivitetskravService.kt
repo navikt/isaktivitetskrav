@@ -45,13 +45,8 @@ class AktivitetskravService(
             throw ConflictException("Forrige aktivitetskrav har ikke en avsluttende vurdering")
         }
 
-        val latestAktivitetskrav = aktivitetskravRepository.getAktivitetskrav(personIdent)
-            .maxByOrNull { it.createdAt }
-            ?.toAktivitetskrav()
-        if (latestAktivitetskrav != null &&
-            latestAktivitetskrav.stoppunktAt.isAfter(arenaCutoff) &&
-            !latestAktivitetskrav.isInFinalState()
-        ) {
+        val latestAktivitetskrav = getAktivitetskravAfterCutoff(personIdent).maxByOrNull { it.createdAt }
+        if (latestAktivitetskrav != null && !latestAktivitetskrav.isInFinalState()) {
             throw ConflictException("Personen har allerede et aktivitetskrav som ikke har en avsluttende vurdering")
         }
 
